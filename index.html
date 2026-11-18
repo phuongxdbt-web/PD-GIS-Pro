@@ -21,7 +21,6 @@
         .hud-interactive { pointer-events: auto; }
         .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; pointer-events: none; width: 30px; height: 30px; border: 2px solid rgba(239, 68, 68, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .crosshair::after { content: ''; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; }
-        /* CSS bổ sung để ẩn/hiện menu trượt mượt mà */
         .sidebar { transition: transform 0.3s ease-in-out; z-index: 1100; }
         .sidebar.collapsed { transform: translateX(-100%); }
     </style>
@@ -39,7 +38,7 @@
 
     <!-- Giao diện HUD Trắc địa & Điều khiển (Trên cùng) -->
     <div class="hud-overlay top-2 left-2 right-2 flex justify-between items-center gap-2 p-2">
-        <!-- Nút Bật/Tắt Menu & Brand -->
+        <!-- Nút Menu & Brand -->
         <div class="hud-interactive flex items-center gap-2">
             <button onclick="toggleSidebar()" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl shadow-xl flex items-center justify-center">
                 <i class="fa-solid fa-bars text-lg text-yellow-400"></i>
@@ -75,7 +74,7 @@
             <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
-        <!-- Nội dung menu cuộn dọc (Giữ nguyên bản toàn bộ các mục cũ) -->
+        <!-- Nội dung menu cuộn dọc -->
         <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
             
             <!-- Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh Thành) -->
@@ -163,7 +162,7 @@
         </div>
 
         <div class="relative w-full max-w-lg h-[65vh] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex items-center justify-center">
-            <video id="cameraStream" autoplay playsinline class="w-full h-full object-cover"></video>
+            <video id="cameraStream" autoplay playsinline muted class="w-full h-full object-cover"></video>
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="w-16 h-16 border-2 border-dashed border-red-500 rounded-full flex items-center justify-center animate-pulse">
                     <div class="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -373,9 +372,10 @@
             if (activeRouteLayer) map.removeLayer(activeRouteLayer);
             activeRouteLayer = L.polyline(projectRoutes[key], { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(map);
             map.fitBounds(activeRouteLayer.getBounds());
-            toggleSidebar(); // Tự động đóng menu sau khi chọn tuyến trên di động
+            toggleSidebar();
         }
 
+        // Xử lý nạp tệp GIS an toàn, tránh lỗi Bounds are not valid
         document.getElementById('gisFileLoader').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
@@ -383,11 +383,25 @@
             reader.onload = function(event) {
                 try {
                     var customLayer = omnivore.kml.parse(event.target.result);
-                    customLayer.addTo(map);
-                    map.fitBounds(customLayer.getBounds());
-                    alert("Nạp tệp bản đồ KML/KMZ thành công!");
-                    toggleSidebar();
-                } catch(err) { alert("Lỗi đọc tệp GIS: " + err); }
+                    customLayer.on('ready', function() {
+                        try {
+                            var bounds = customLayer.getBounds();
+                            if (bounds && bounds.isValid()) {
+                                map.fitBounds(bounds);
+                            }
+                        } catch (bErr) {
+                            console.log("Không thể tự động zoom đến ranh giới, giữ nguyên vị trí bản đồ.");
+                        }
+                        customLayer.addTo(map);
+                        alert("Nạp tệp bản đồ KML/KMZ thành công!");
+                        toggleSidebar();
+                    });
+                    customLayer.on('error', function(err) {
+                        alert("Lỗi cấu trúc tệp GIS: Tệp không chứa dữ liệu tọa độ hợp lệ.");
+                    });
+                } catch(err) { 
+                    alert("Lỗi đọc tệp GIS: " + err.message); 
+                }
             };
             reader.readAsText(file);
         });
@@ -398,21 +412,56 @@
             document.getElementById('cameraModal').classList.remove('hidden');
             var selectElement = document.getElementById('provinceSelect');
             document.getElementById('cam-zone-label').innerText = "Hệ chiếu: " + selectElement.options[selectElement.selectedIndex].text;
-            startCamera();
+            await startCamera();
         }
+
         async function startCamera() {
-            if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
             try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: useFrontCamera ? "user" : "environment" }, audio: false });
-                document.getElementById('cameraStream').srcObject = mediaStream;
+                const constraints = {
+                    video: {
+                        facingMode: useFrontCamera ? "user" : { ideal: "environment" },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoElement = document.getElementById('cameraStream');
+                videoElement.srcObject = mediaStream;
+                await videoElement.play().catch(e => console.log("Auto-play prevented:", e));
                 updateCamCoordinates();
-            } catch (err) { alert("Lỗi mở camera: " + err.message); closeCameraModal(); }
+            } catch (err) {
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    const videoElement = document.getElementById('cameraStream');
+                    videoElement.srcObject = mediaStream;
+                    await videoElement.play();
+                    updateCamCoordinates();
+                } catch (fallbackErr) {
+                    alert("Không thể truy cập Camera. Vui lòng kiểm tra quyền cấp phép trên trình duyệt (" + fallbackErr.message + ")");
+                    closeCameraModal();
+                }
+            }
         }
+
         function closeCameraModal() {
-            if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+            if (mediaStream) { 
+                mediaStream.getTracks().forEach(t => t.stop()); 
+                mediaStream = null; 
+            }
+            const videoElement = document.getElementById('cameraStream');
+            if (videoElement) videoElement.srcObject = null;
             document.getElementById('cameraModal').classList.add('hidden');
         }
-        function switchCamera() { useFrontCamera = !useFrontCamera; startCamera(); }
+
+        function switchCamera() { 
+            useFrontCamera = !useFrontCamera; 
+            startCamera(); 
+        }
 
         function updateCamCoordinates() {
             if (navigator.geolocation) {
@@ -436,7 +485,8 @@
         function capturePhoto() {
             const video = document.getElementById('cameraStream');
             const canvas = document.getElementById('snapshotCanvas');
-            canvas.width = video.videoWidth || 1280; canvas.height = video.videoHeight || 720;
+            canvas.width = video.videoWidth || 1280; 
+            canvas.height = video.videoHeight || 720;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
