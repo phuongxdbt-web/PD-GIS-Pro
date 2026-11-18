@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PD GIS Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,11 +16,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #map { width: 100%; height: 100vh; position: absolute; z-index: 1; }
+        #map { width: 100%; height: 100vh; position: absolute; z-index: 1; top: 0; left: 0; }
         .hud-overlay { position: absolute; z-index: 1000; pointer-events: none; }
         .hud-interactive { pointer-events: auto; }
         .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; pointer-events: none; width: 30px; height: 30px; border: 2px solid rgba(239, 68, 68, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .crosshair::after { content: ''; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; }
+        /* CSS bổ sung để ẩn/hiện menu trượt mượt mà */
+        .sidebar { transition: transform 0.3s ease-in-out; z-index: 1100; }
+        .sidebar.collapsed { transform: translateX(-100%); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100">
@@ -31,16 +34,24 @@
     <!-- Tâm ngắm định vị giữa màn hình -->
     <div class="crosshair"></div>
 
+    <!-- LỚP NỀN MỜ (BACKDROP) TỰ ĐỘNG ĐÓNG MENU KHI CHẠM RA NGOÀI -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-[1050] hidden md:hidden"></div>
+
     <!-- Giao diện HUD Trắc địa & Điều khiển (Trên cùng) -->
-    <div class="hud-overlay top-2 left-2 right-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 p-2">
-        <!-- Brand & Trạng thái GPS -->
-        <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-blue-500/50 px-4 py-2 rounded-xl shadow-xl flex items-center gap-3">
-            <div class="bg-blue-700 text-white p-2 rounded-lg font-bold text-xs flex items-center gap-1">
-                <i class="fa-solid fa-compass-drafting"></i> PD GIS Pro
-            </div>
-            <div>
-                <h1 class="text-xs font-bold uppercase tracking-wider text-blue-400">PD GIS Pro</h1>
-                <p id="gps-status" class="text-[11px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-satellite-dish animate-pulse"></i> RTK / VN-2000 Ready</p>
+    <div class="hud-overlay top-2 left-2 right-2 flex justify-between items-center gap-2 p-2">
+        <!-- Nút Bật/Tắt Menu & Brand -->
+        <div class="hud-interactive flex items-center gap-2">
+            <button onclick="toggleSidebar()" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl shadow-xl flex items-center justify-center">
+                <i class="fa-solid fa-bars text-lg text-yellow-400"></i>
+            </button>
+            <div class="bg-slate-900/90 backdrop-blur border border-blue-500/50 px-4 py-2 rounded-xl shadow-xl hidden sm:flex items-center gap-3">
+                <div class="bg-blue-700 text-white p-2 rounded-lg font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-compass-drafting"></i> PD GIS Pro
+                </div>
+                <div>
+                    <h1 class="text-xs font-bold uppercase tracking-wider text-blue-400">PD GIS Pro</h1>
+                    <p id="gps-status" class="text-[11px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-satellite-dish animate-pulse"></i> RTK / VN-2000 Ready</p>
+                </div>
             </div>
         </div>
 
@@ -52,59 +63,72 @@
         </div>
     </div>
 
-    <!-- Bảng điều khiển bên trái -->
-    <div class="hud-overlay top-20 left-2 w-80 max-h-[calc(100vh-170px)] overflow-y-auto flex flex-col gap-2 p-1">
+    <!-- Bảng điều khiển bên trái (Sidebar Ngăn Kéo Trượt) -->
+    <div id="sidebar" class="sidebar collapsed fixed top-0 left-0 h-full w-80 max-h-full bg-slate-900/95 backdrop-blur shadow-2xl flex flex-col border-r border-slate-700">
         
-        <!-- Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh Thành) -->
-        <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-            <h2 class="text-xs font-bold text-cyan-400 uppercase mb-1 flex items-center justify-between">
-                <span><i class="fa-solid fa-earth-asia"></i> Hệ Chiếu VN-2000</span>
-                <span class="text-[10px] text-slate-400" id="group-mode-lbl">Cơ chế 34 Tỉnh</span>
-            </h2>
-            <div class="flex gap-1 mb-2">
-                <button onclick="setProvinceMode('34')" id="btn-mode-34" class="flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold">Cấp 34 Tỉnh</button>
-                <button onclick="setProvinceMode('63')" id="btn-mode-63" class="bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold flex-1">63 Tỉnh</button>
+        <!-- Header Menu kèm nút đóng -->
+        <div class="bg-indigo-900 px-4 py-3.5 flex items-center justify-between border-b border-indigo-800">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-layer-group text-yellow-400 text-lg"></i>
+                <span class="font-bold text-sm tracking-wide">QUẢN LÝ & TIỆN ÍCH GIS</span>
             </div>
-            <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
-                <!-- Được load động -->
-            </select>
+            <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
-        <!-- Camera Khảo Sát & AR VN-2000 -->
-        <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-            <h2 class="text-xs font-bold text-amber-400 uppercase mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-camera"></i> Camera Khảo Sát & AR VN-2000
-            </h2>
-            <button onclick="openCameraModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-2">
-                <i class="fa-solid fa-video"></i> Bật Camera Quét Tọa Độ & Chụp Ảnh
-            </button>
-        </div>
+        <!-- Nội dung menu cuộn dọc (Giữ nguyên bản toàn bộ các mục cũ) -->
+        <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
+            
+            <!-- Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh Thành) -->
+            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
+                <h2 class="text-xs font-bold text-cyan-400 uppercase mb-1 flex items-center justify-between">
+                    <span><i class="fa-solid fa-earth-asia"></i> Hệ Chiếu VN-2000</span>
+                    <span class="text-[10px] text-slate-400" id="group-mode-lbl">Cơ chế 34 Tỉnh</span>
+                </h2>
+                <div class="flex gap-1 mb-2">
+                    <button onclick="setProvinceMode('34')" id="btn-mode-34" class="flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold">Cấp 34 Tỉnh</button>
+                    <button onclick="setProvinceMode('63')" id="btn-mode-63" class="bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold flex-1">63 Tỉnh</button>
+                </div>
+                <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                    <!-- Được load động -->
+                </select>
+            </div>
 
-        <!-- Nạp Tệp KML / KMZ / GeoJSON -->
-        <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-            <h2 class="text-xs font-bold text-blue-400 uppercase mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch
-            </h2>
-            <input type="file" id="gisFileLoader" accept=".kml,.kmz,.json,.geojson" class="block w-full text-[11px] text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"/>
-        </div>
+            <!-- Camera Khảo Sát & AR VN-2000 -->
+            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
+                <h2 class="text-xs font-bold text-amber-400 uppercase mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-camera"></i> Camera Khảo Sát & AR VN-2000
+                </h2>
+                <button onclick="openCameraModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-video"></i> Bật Camera Quét Tọa Độ & Chụp Ảnh
+                </button>
+            </div>
 
-        <!-- Quản lý Tuyến & Dự án -->
-        <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-            <h2 class="text-xs font-bold text-emerald-400 uppercase mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-route"></i> Chọn Tuyến / Dự Án
-            </h2>
-            <select id="routeSelect" onchange="zoomToRoute(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500 mb-2">
-                <option value="">-- Chọn tuyến đường / khu vực --</option>
-                <option value="tuyphong">KCN Tuy Phong (150 ha)</option>
-                <option value="d1">KCN Tuy Phong - Tuyến D1 (1,759.73m)</option>
-                <option value="d2">KCN Tuy Phong - Tuyến D2 (1,759.81m)</option>
-                <option value="d3">KCN Tuy Phong - Tuyến D3 (1,778.28m)</option>
-                <option value="n1">KCN Tuy Phong - Tuyến N1 (592.33m)</option>
-                <option value="hamkiem">KCN Hàm Kiệm I & NOXH (13.5 ha)</option>
-            </select>
-            <button onclick="openLogModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-1.5 px-2 rounded-lg font-semibold flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-clipboard-list"></i> Ghi Nhật Ký Thi Công Nhanh
-            </button>
+            <!-- Nạp Tệp KML / KMZ / GeoJSON -->
+            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
+                <h2 class="text-xs font-bold text-blue-400 uppercase mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch
+                </h2>
+                <input type="file" id="gisFileLoader" accept=".kml,.kmz,.json,.geojson" class="block w-full text-[11px] text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"/>
+            </div>
+
+            <!-- Quản lý Tuyến & Dự án -->
+            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
+                <h2 class="text-xs font-bold text-emerald-400 uppercase mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-route"></i> Chọn Tuyến / Dự Án
+                </h2>
+                <select id="routeSelect" onchange="zoomToRoute(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500 mb-2">
+                    <option value="">-- Chọn tuyến đường / khu vực --</option>
+                    <option value="tuyphong">KCN Tuy Phong (150 ha)</option>
+                    <option value="d1">KCN Tuy Phong - Tuyến D1 (1,759.73m)</option>
+                    <option value="d2">KCN Tuy Phong - Tuyến D2 (1,759.81m)</option>
+                    <option value="d3">KCN Tuy Phong - Tuyến D3 (1,778.28m)</option>
+                    <option value="n1">KCN Tuy Phong - Tuyến N1 (592.33m)</option>
+                    <option value="hamkiem">KCN Hàm Kiệm I & NOXH (13.5 ha)</option>
+                </select>
+                <button onclick="openLogModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-1.5 px-2 rounded-lg font-semibold flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-clipboard-list"></i> Ghi Nhật Ký Thi Công Nhanh
+                </button>
+            </div>
         </div>
     </div>
 
@@ -229,6 +253,14 @@
             }
         }
 
+        // Hàm ẩn/hiện thanh menu trượt & lớp nền mờ
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('collapsed');
+            backdrop.classList.toggle('hidden');
+        }
+
         const provinces34 = [
             { name: "Lâm Đồng - Bình Thuận - Đắk Nông", meridian: 108.5 },
             { name: "Hà Nội - Vĩnh Phúc - Bắc Ninh", meridian: 105.0 },
@@ -341,6 +373,7 @@
             if (activeRouteLayer) map.removeLayer(activeRouteLayer);
             activeRouteLayer = L.polyline(projectRoutes[key], { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(map);
             map.fitBounds(activeRouteLayer.getBounds());
+            toggleSidebar(); // Tự động đóng menu sau khi chọn tuyến trên di động
         }
 
         document.getElementById('gisFileLoader').addEventListener('change', function(e) {
@@ -353,6 +386,7 @@
                     customLayer.addTo(map);
                     map.fitBounds(customLayer.getBounds());
                     alert("Nạp tệp bản đồ KML/KMZ thành công!");
+                    toggleSidebar();
                 } catch(err) { alert("Lỗi đọc tệp GIS: " + err); }
             };
             reader.readAsText(file);
@@ -360,6 +394,7 @@
 
         let mediaStream = null, useFrontCamera = false;
         async function openCameraModal() {
+            toggleSidebar();
             document.getElementById('cameraModal').classList.remove('hidden');
             var selectElement = document.getElementById('provinceSelect');
             document.getElementById('cam-zone-label').innerText = "Hệ chiếu: " + selectElement.options[selectElement.selectedIndex].text;
@@ -429,6 +464,7 @@
         }
 
         function openLogModal() {
+            toggleSidebar();
             var center = map.getCenter();
             var vnCoord = latLngToVN2000(center.lat, center.lng, currentMeridian);
             document.getElementById('logX').value = vnCoord.x;
