@@ -31,52 +31,29 @@
         <div class="bg-indigo-900 px-4 py-3 flex items-center justify-between border-b border-indigo-800">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-layer-group text-yellow-400 text-lg"></i>
-                <span class="font-bold text-sm tracking-wide">QUẢN LÝ CÁC LỚP</span>
+                <span class="font-bold text-sm tracking-wide">QUẢN LÝ CÁC LỚP & TIỆN ÍCH</span>
             </div>
             <div class="flex items-center space-x-3">
                 <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
         </div>
 
-        <!-- Danh mục lớp bản đồ & Dữ liệu chuyên ngành -->
+        <!-- Danh mục tính năng & lớp bản đồ -->
         <div class="flex-1 overflow-y-auto text-xs divide-y divide-slate-800">
-            <!-- Nhóm Khảo sát & Vector -->
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-image text-purple-400 w-5"></i><span>HÌNH ẢNH KHẢO SÁT</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-flag text-blue-400 w-5"></i><span>ĐIỂM MỐC TỌA ĐỘ</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-location-dot text-indigo-400 w-5"></i><span>DỮ LIỆU ĐIỂM</span></div></div>
-            <div class="layer-item">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-route text-cyan-400 w-5"></i><span>DỮ LIỆU ĐƯỜNG</span></div>
-                <span class="bg-indigo-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">1</span>
+            <!-- Khu vực Cấu hình VN-2000 -->
+            <div class="p-3 bg-slate-800/50">
+                <div class="font-bold text-blue-400 mb-2 flex items-center space-x-2">
+                    <i class="fa-solid fa-earth-asia"></i><span>HỆ CHIẾU VN-2000</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button class="bg-blue-600 hover:bg-blue-500 py-1.5 px-2 rounded text-center font-semibold">Cấp 34 Tỉnh</button>
+                    <button class="bg-slate-700 hover:bg-slate-600 py-1.5 px-2 rounded text-center text-slate-300">63 Tỉnh</button>
+                </div>
+                <select class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200">
+                    <option>Lâm Đồng - Bình Thuận - Đắk Nông</option>
+                </select>
             </div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-draw-polygon text-blue-500 w-5"></i><span>DỮ LIỆU VÙNG</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-person-hiking text-emerald-400 w-5"></i><span>TUYẾN TRACKLOG</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-mountain text-amber-500 w-5"></i><span>ĐƯỜNG BÌNH ĐỘ</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
 
-            <!-- Nhóm Định dạng CAD / GIS -->
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-file-code text-emerald-500 w-5"></i><span>DỮ LIỆU DXF/DWG</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-file-lines text-green-400 w-5"></i><span>DỮ LIỆU GPX</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map text-emerald-600 w-5"></i><span>DỮ LIỆU KML/KMZ</span></div><span class="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">2</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-code text-yellow-500 w-5"></i><span>DỮ LIỆU GEOJSON</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-database text-teal-400 w-5"></i><span>DỮ LIỆU MBTILES</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-layer-group text-lime-500 w-5"></i><span>LỚP PHỦ TIF/JPG/PNG/PDF/KMZ</span></div></div>
-            
-            <!-- Nhóm Bản đồ nền & Ảnh vệ tinh -->
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-earth-americas text-blue-400 w-5"></i><span>LỚP ẢNH VỆ TINH</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map-location-dot text-indigo-400 w-5"></i><span>LỚP BẢN ĐỒ WMS</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-globe text-cyan-500 w-5"></i><span>LỚP BẢN ĐỒ TMS</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-clock-rotate-left text-orange-400 w-5"></i><span>LỊCH SỬ ẢNH VỆ TINH</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
-        </div>
-
-        <!-- Footer Menu -->
-        <div class="p-3 bg-teal-900 border-t border-teal-700 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-map text-teal-300"></i>
-                <span class="font-bold text-[11px]">DỊCH VỤ BẢN ĐỒ NỀN</span>
-            </div>
-            <span class="bg-teal-700 text-[10px] px-2 py-1 rounded text-teal-100 font-semibold">Google Hybrid</span>
-        </div>
-    </div>
-
-    <!-- THANH ĐIỀU KHIỂN HUD (TRÊN CÙNG) -->
-    <div class="hud-overlay absolute top-3 left-3 right-3 flex items-center justify-between">
-        <button
+            <!-- Camera AR & Khảo sát -->
+            <div class="p-3 bg-slate-800/30">
+                <button class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px
