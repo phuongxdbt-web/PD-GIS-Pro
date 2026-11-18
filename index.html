@@ -16,92 +16,67 @@
         .sidebar.collapsed { transform: translateX(-100%); }
         .layer-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); transition: background 0.2s; cursor: pointer; }
         .layer-item:hover { background: rgba(255,255,255,0.05); }
+        .hud-overlay { z-index: 900; pointer-events: none; }
+        .hud-interactive { pointer-events: auto; }
     </style>
 </head>
 <body>
 
-    <!-- THANH MENU TRÁI (QUẢN LÝ CÁC LỚP & HỆ THỌ CHIẾU) -->
-    <div id="sidebar" class="sidebar absolute top-0 left-0 h-full w-80 bg-slate-900/95 backdrop-blur-md shadow-2xl flex flex-col border-r border-slate-700">
+    <!-- LỚP NỀN MỜ KHI MỞ MENU TRÊN DI ĐỘNG -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-[950] hidden md:hidden"></div>
+
+    <!-- THANH MENU TRÁI (QUẢN LÝ CÁC LỚP & HỆ THỐNG) -->
+    <div id="sidebar" class="sidebar collapsed fixed top-0 left-0 h-full w-[85vw] max-w-xs bg-slate-900/95 backdrop-blur-md shadow-2xl flex flex-col border-r border-slate-700">
         <!-- Header Menu -->
         <div class="bg-indigo-900 px-4 py-3 flex items-center justify-between border-b border-indigo-800">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-layer-group text-yellow-400 text-lg"></i>
-                <span class="font-bold text-base tracking-wide">QUẢN LÝ CÁC LỚP</span>
+                <span class="font-bold text-sm tracking-wide">QUẢN LÝ CÁC LỚP</span>
             </div>
             <div class="flex items-center space-x-3">
-                <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-bars text-lg"></i></button>
-                <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
         </div>
 
         <!-- Danh mục lớp bản đồ & Dữ liệu chuyên ngành -->
-        <div class="flex-1 overflow-y-auto text-sm divide-y divide-slate-800">
+        <div class="flex-1 overflow-y-auto text-xs divide-y divide-slate-800">
             <!-- Nhóm Khảo sát & Vector -->
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-image text-purple-400 w-5"></i><span>HÌNH ẢNH KHẢO SÁT</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-flag text-blue-400 w-5"></i><span>ĐIỂM MỐC TỌA ĐỘ</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-location-dot text-indigo-400 w-5"></i><span>DỮ LIỆU ĐIỂM</span></div></div>
             <div class="layer-item">
                 <div class="flex items-center space-x-3"><i class="fa-solid fa-route text-cyan-400 w-5"></i><span>DỮ LIỆU ĐƯỜNG</span></div>
-                <span class="bg-indigo-600 text-xs px-2 py-0.5 rounded-full font-semibold">1</span>
+                <span class="bg-indigo-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">1</span>
             </div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-draw-polygon text-blue-500 w-5"></i><span>DỮ LIỆU VÙNG</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-person-hiking text-emerald-400 w-5"></i><span>TUYẾN TRACKLOG</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-mountain text-amber-500 w-5"></i><span>ĐƯỜNG BÌNH ĐỘ</span></div><span class="text-xs text-emerald-400 font-medium">● Online</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-mountain text-amber-500 w-5"></i><span>ĐƯỜNG BÌNH ĐỘ</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
 
             <!-- Nhóm Định dạng CAD / GIS -->
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-file-code text-emerald-500 w-5"></i><span>DỮ LIỆU DXF/DWG</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-file-lines text-green-400 w-5"></i><span>DỮ LIỆU GPX</span></div></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map text-emerald-600 w-5"></i><span>DỮ LIỆU KML/KMZ</span></div><span class="bg-emerald-600 text-xs px-2 py-0.5 rounded-full font-semibold">2</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map text-emerald-600 w-5"></i><span>DỮ LIỆU KML/KMZ</span></div><span class="bg-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">2</span></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-code text-yellow-500 w-5"></i><span>DỮ LIỆU GEOJSON</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-database text-teal-400 w-5"></i><span>DỮ LIỆU MBTILES</span></div></div>
             <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-layer-group text-lime-500 w-5"></i><span>LỚP PHỦ TIF/JPG/PNG/PDF/KMZ</span></div></div>
             
             <!-- Nhóm Bản đồ nền & Ảnh vệ tinh -->
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-earth-americas text-blue-400 w-5"></i><span>LỚP ẢNH VỆ TINH</span></div><span class="text-xs text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map-location-dot text-indigo-400 w-5"></i><span>LỚP BẢN ĐỒ WMS</span></div><span class="text-xs text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-globe text-cyan-500 w-5"></i><span>LỚP BẢN ĐỒ TMS</span></div><span class="text-xs text-emerald-400 font-medium">● Online</span></div>
-            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-clock-rotate-left text-orange-400 w-5"></i><span>LỊCH SỬ ẢNH VỆ TINH</span></div><span class="text-xs text-emerald-400 font-medium">● Online</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-earth-americas text-blue-400 w-5"></i><span>LỚP ẢNH VỆ TINH</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-map-location-dot text-indigo-400 w-5"></i><span>LỚP BẢN ĐỒ WMS</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-globe text-cyan-500 w-5"></i><span>LỚP BẢN ĐỒ TMS</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
+            <div class="layer-item"><div class="flex items-center space-x-3"><i class="fa-solid fa-clock-rotate-left text-orange-400 w-5"></i><span>LỊCH SỬ ẢNH VỆ TINH</span></div><span class="text-[10px] text-emerald-400 font-medium">● Online</span></div>
         </div>
 
-        <!-- Footer Menu: Dịch vụ bản đồ nền -->
+        <!-- Footer Menu -->
         <div class="p-3 bg-teal-900 border-t border-teal-700 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-map text-teal-300"></i>
-                <span class="font-bold text-xs">DỊCH VỤ BẢN ĐỒ NỀN</span>
+                <span class="font-bold text-[11px]">DỊCH VỤ BẢN ĐỒ NỀN</span>
             </div>
-            <span class="bg-teal-700 text-xs px-2 py-1 rounded text-teal-100 font-semibold">Google Hybrid</span>
+            <span class="bg-teal-700 text-[10px] px-2 py-1 rounded text-teal-100 font-semibold">Google Hybrid</span>
         </div>
     </div>
 
-    <!-- NÚT BẬT/TẮT MENU NỔI (ĐỂ MỞ RỘNG MÀN HÌNH) -->
-    <button onclick="toggleSidebar()" id="menuToggleBtn" class="absolute top-3 left-3 z-[1001] bg-slate-900/90 text-white p-3 rounded-lg shadow-lg border border-slate-700 hover:bg-slate-800 transition">
-        <i class="fa-solid fa-bars text-lg"></i>
-    </button>
-
-    <!-- KHUNG BẢN ĐỒ LEAFLET -->
-    <div id="map"></div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Khởi tạo bản đồ trọng tâm tại Bình Thuận / Lâm Đồng
-        const map = L.map('map', { zoomControl: false }).setView([10.92, 108.10], 12);
-
-        // Thêm layer bản đồ vệ tinh Google Hybrid
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: 'PD GIS Pro - Ban QLDA Phương Đông'
-        }).addTo(map);
-
-        // Thêm điều khiển zoom góc phải
-        L.control.zoom({ position: 'topright' }).addTo(map);
-
-        // Hàm ẩn/hiện thanh menu bên trái để mở rộng màn hình
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-        }
-    </script>
-</body>
-</html>
+    <!-- THANH ĐIỀU KHIỂN HUD (TRÊN CÙNG) -->
+    <div class="hud-overlay absolute top-3 left-3 right-3 flex items-center justify-between">
+        <button
