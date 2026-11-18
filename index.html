@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PD GIS Pro - Ban QLDA Phương Đông</title>
+    <title>PD GIS Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
@@ -15,8 +15,8 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0f1d; color: #fff; }
-        #map { width: 100%; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+        body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { width: 100%; height: 100vh; position: absolute; z-index: 1; top: 0; left: 0; }
         .hud-overlay { position: absolute; z-index: 1000; pointer-events: none; }
         .hud-interactive { pointer-events: auto; }
         .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; pointer-events: none; width: 30px; height: 30px; border: 2px solid rgba(239, 68, 68, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -38,17 +38,17 @@
 
     <!-- Giao diện HUD Trắc địa & Điều khiển (Trên cùng) -->
     <div class="hud-overlay top-2 left-2 right-2 flex justify-between items-center gap-2 p-2">
-        <!-- Nút bật/tắt Menu & Brand -->
+        <!-- Nút Menu & Brand -->
         <div class="hud-interactive flex items-center gap-2">
             <button onclick="toggleSidebar()" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl shadow-xl flex items-center justify-center">
                 <i class="fa-solid fa-bars text-lg text-yellow-400"></i>
             </button>
-            <div class="bg-slate-900/90 backdrop-blur border border-blue-500/50 px-3 py-2 rounded-xl shadow-xl hidden sm:flex items-center gap-3">
-                <div class="bg-blue-700 text-white p-1.5 rounded-lg font-bold text-xs flex items-center gap-1">
+            <div class="bg-slate-900/90 backdrop-blur border border-blue-500/50 px-4 py-2 rounded-xl shadow-xl hidden sm:flex items-center gap-3">
+                <div class="bg-blue-700 text-white p-2 rounded-lg font-bold text-xs flex items-center gap-1">
                     <i class="fa-solid fa-compass-drafting"></i> PD GIS Pro
                 </div>
                 <div>
-                    <h1 class="text-xs font-bold uppercase tracking-wider text-blue-400">Ban QLDA Phương Đông</h1>
+                    <h1 class="text-xs font-bold uppercase tracking-wider text-blue-400">PD GIS Pro</h1>
                     <p id="gps-status" class="text-[11px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-satellite-dish animate-pulse"></i> RTK / VN-2000 Ready</p>
                 </div>
             </div>
@@ -62,7 +62,7 @@
         </div>
     </div>
 
-    <!-- Bảng điều khiển bên trái (Sidebar Ngăn Kéo Trượt Ẩn/Hiện) -->
+    <!-- Bảng điều khiển bên trái (Sidebar Ngăn Kéo Trượt) -->
     <div id="sidebar" class="sidebar collapsed fixed top-0 left-0 h-full w-[88vw] max-w-xs bg-slate-900/95 backdrop-blur-md shadow-2xl flex flex-col border-r border-slate-700">
         <!-- Header Menu -->
         <div class="bg-indigo-900 px-4 py-3.5 flex items-center justify-between border-b border-indigo-800">
@@ -73,28 +73,28 @@
             <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
-        <!-- Nội dung Menu cuộn dọc -->
+        <!-- Nội dung menu cuộn dọc -->
         <div class="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
             
             <!-- Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh Thành) -->
-            <div class="bg-slate-800/60 border border-slate-700 p-3 rounded-xl shadow">
-                <h2 class="text-xs font-bold text-cyan-400 uppercase mb-2 flex items-center justify-between">
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
+                <h2 class="text-xs font-bold text-cyan-400 uppercase mb-1 flex items-center justify-between">
                     <span><i class="fa-solid fa-earth-asia"></i> Hệ Chiếu VN-2000</span>
                     <span class="text-[10px] text-slate-400" id="group-mode-lbl">Cơ chế 34 Tỉnh</span>
                 </h2>
                 <div class="flex gap-1 mb-2">
-                    <button onclick="setProvinceMode('34')" id="btn-mode-34" class="flex-1 bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold">Cấp 34 Tỉnh</button>
-                    <button onclick="setProvinceMode('63')" id="btn-mode-63" class="bg-slate-800 text-slate-300 text-[10px] py-1.5 rounded font-semibold flex-1">63 Tỉnh</button>
+                    <button onclick="setProvinceMode('34')" id="btn-mode-34" class="flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold">Cấp 34 Tỉnh</button>
+                    <button onclick="setProvinceMode('63')" id="btn-mode-63" class="bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold flex-1">63 Tỉnh</button>
                 </div>
-                <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
                     <!-- Được load động -->
                 </select>
             </div>
 
             <!-- Camera Khảo Sát & AR VN-2000 -->
-            <div class="bg-slate-800/60 border border-slate-700 p-3 rounded-xl shadow">
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
                 <h2 class="text-xs font-bold text-amber-400 uppercase mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-camera"></i> Camera Khảo Sát & AR
+                    <i class="fa-solid fa-camera"></i> Camera Khảo Sát & AR VN-2000
                 </h2>
                 <button onclick="openCameraModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-2">
                     <i class="fa-solid fa-video"></i> Bật Camera Quét Tọa Độ & Chụp Ảnh
@@ -102,7 +102,7 @@
             </div>
 
             <!-- Nạp Tệp KML / KMZ / GeoJSON -->
-            <div class="bg-slate-800/60 border border-slate-700 p-3 rounded-xl shadow">
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
                 <h2 class="text-xs font-bold text-blue-400 uppercase mb-2 flex items-center gap-1.5">
                     <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch
                 </h2>
@@ -110,11 +110,11 @@
             </div>
 
             <!-- Quản lý Tuyến & Dự án -->
-            <div class="bg-slate-800/60 border border-slate-700 p-3 rounded-xl shadow">
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
                 <h2 class="text-xs font-bold text-emerald-400 uppercase mb-2 flex items-center gap-1.5">
                     <i class="fa-solid fa-route"></i> Chọn Tuyến / Dự Án
                 </h2>
-                <select id="routeSelect" onchange="zoomToRoute(this.value)" class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500 mb-2">
+                <select id="routeSelect" onchange="zoomToRoute(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500 mb-2">
                     <option value="">-- Chọn tuyến đường / khu vực --</option>
                     <option value="tuyphong">KCN Tuy Phong (150 ha)</option>
                     <option value="d1">KCN Tuy Phong - Tuyến D1 (1,759.73m)</option>
@@ -123,7 +123,7 @@
                     <option value="n1">KCN Tuy Phong - Tuyến N1 (592.33m)</option>
                     <option value="hamkiem">KCN Hàm Kiệm I & NOXH (13.5 ha)</option>
                 </select>
-                <button onclick="openLogModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-2 px-2 rounded-lg font-semibold flex items-center justify-center gap-1.5">
+                <button onclick="openLogModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-1.5 px-2 rounded-lg font-semibold flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-clipboard-list"></i> Ghi Nhật Ký Thi Công Nhanh
                 </button>
             </div>
@@ -187,7 +187,7 @@
                     <span>Cao độ quốc gia (H): <span id="cam-alt" class="text-amber-400 font-bold">---</span> m</span>
                     <span>Hướng: <span id="cam-heading" class="text-blue-400 font-bold">---°</span></span>
                 </div>
-                <div class="text-[9px] text-slate-400 italic">PD GIS Pro - Ban QLDA Phương Đông</div>
+                <div class="text-[9px] text-slate-400 italic">PD GIS Pro</div>
             </div>
         </div>
 
@@ -300,8 +300,8 @@
 
         function setProvinceMode(mode) {
             currentMode = mode;
-            document.getElementById('btn-mode-34').className = mode === '34' ? "flex-1 bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1.5 rounded font-semibold";
-            document.getElementById('btn-mode-63').className = mode === '63' ? "flex-1 bg-blue-600 text-white text-[10px] py-1.5 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1.5 rounded font-semibold";
+            document.getElementById('btn-mode-34').className = mode === '34' ? "flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold";
+            document.getElementById('btn-mode-63').className = mode === '63' ? "flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold";
             document.getElementById('group-mode-lbl').innerText = mode === '34' ? "Cơ chế 34 Tỉnh" : "Cơ chế 63 Tỉnh";
             populateProvinces();
         }
@@ -380,7 +380,7 @@
             if (activeRouteLayer) map.removeLayer(activeRouteLayer);
             activeRouteLayer = L.polyline(projectRoutes[key], { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(map);
             map.fitBounds(activeRouteLayer.getBounds());
-            toggleSidebar(); // Tự động đóng menu trên di động sau khi chọn tuyến
+            toggleSidebar(); // Tự động đóng menu sau khi chọn tuyến trên di động
         }
 
         document.getElementById('gisFileLoader').addEventListener('change', function(e) {
