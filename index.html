@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Leaflet Omnivore để đọc file KML/KMZ -->
+    <!-- Leaflet Omnivore để đọc file KML -->
     <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -102,12 +102,13 @@
                 </button>
             </div>
 
-            <!-- Nạp Tệp KML / KMZ / GeoJSON -->
+            <!-- Nạp Tệp KML / GeoJSON -->
             <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
                 <h2 class="text-xs font-bold text-blue-400 uppercase mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch
+                    <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch (.KML, .GeoJSON)
                 </h2>
-                <input type="file" id="gisFileLoader" accept=".kml,.kmz,.json,.geojson" class="block w-full text-[11px] text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"/>
+                <input type="file" id="gisFileLoader" accept=".kml,.json,.geojson" class="block w-full text-[11px] text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"/>
+                <p class="text-[10px] text-slate-400 mt-1 italic">* Lưu ý: Với tệp KMZ, vui lòng giải nén lấy tệp .KML bên trong trước khi nạp.</p>
             </div>
 
             <!-- Quản lý Tuyến & Dự án -->
@@ -375,30 +376,50 @@
             toggleSidebar();
         }
 
-        // Xử lý nạp tệp GIS an toàn, tránh lỗi Bounds are not valid
+        // Xử lý nạp tệp GIS an toàn (.kml, .geojson)
         document.getElementById('gisFileLoader').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
+            
+            // Kiểm tra nếu là file KMZ
+            if (file.name.toLowerCase().endsWith('.kmz')) {
+                alert("Tệp .KMZ là tệp nén nhị phân. Vui lòng giải nén tệp .KMZ trên máy tính để lấy tệp .KML bên trong rồi nạp vào đây!");
+                return;
+            }
+
             var reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    var customLayer = omnivore.kml.parse(event.target.result);
-                    customLayer.on('ready', function() {
-                        try {
-                            var bounds = customLayer.getBounds();
-                            if (bounds && bounds.isValid()) {
-                                map.fitBounds(bounds);
-                            }
-                        } catch (bErr) {
-                            console.log("Không thể tự động zoom đến ranh giới, giữ nguyên vị trí bản đồ.");
-                        }
+                    var content = event.target.result;
+                    var customLayer;
+
+                    if (file.name.toLowerCase().endsWith('.geojson') || file.name.toLowerCase().endsWith('.json')) {
+                        customLayer = L.geoJSON(JSON.parse(content));
                         customLayer.addTo(map);
-                        alert("Nạp tệp bản đồ KML/KMZ thành công!");
+                        try {
+                            if (customLayer.getBounds().isValid()) {
+                                map.fitBounds(customLayer.getBounds());
+                            }
+                        } catch(bErr) {}
+                        alert("Nạp tệp GeoJSON thành công!");
                         toggleSidebar();
-                    });
-                    customLayer.on('error', function(err) {
-                        alert("Lỗi cấu trúc tệp GIS: Tệp không chứa dữ liệu tọa độ hợp lệ.");
-                    });
+                    } else {
+                        customLayer = omnivore.kml.parse(content);
+                        customLayer.on('ready', function() {
+                            try {
+                                var bounds = customLayer.getBounds();
+                                if (bounds && bounds.isValid()) {
+                                    map.fitBounds(bounds);
+                                }
+                            } catch (bErr) {}
+                            customLayer.addTo(map);
+                            alert("Nạp tệp KML thành công!");
+                            toggleSidebar();
+                        });
+                        customLayer.on('error', function(err) {
+                            alert("Lỗi cấu trúc tệp KML: Tệp không chứa tọa độ hợp lệ.");
+                        });
+                    }
                 } catch(err) { 
                     alert("Lỗi đọc tệp GIS: " + err.message); 
                 }
