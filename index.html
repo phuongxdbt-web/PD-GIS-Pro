@@ -170,7 +170,7 @@
         </div>
 
         <div class="relative w-full max-w-lg h-[65vh] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex items-center justify-center">
-            <video id="cameraStream" autoplay playsinline class="w-full h-full object-cover"></video>
+            <video id="cameraStream" autoplay playsinline muted class="w-full h-full object-cover"></video>
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="w-16 h-16 border-2 border-dashed border-red-500 rounded-full flex items-center justify-center animate-pulse">
                     <div class="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -380,7 +380,7 @@
             if (activeRouteLayer) map.removeLayer(activeRouteLayer);
             activeRouteLayer = L.polyline(projectRoutes[key], { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(map);
             map.fitBounds(activeRouteLayer.getBounds());
-            toggleSidebar(); // Tự động đóng menu sau khi chọn tuyến trên di động
+            toggleSidebar();
         }
 
         document.getElementById('gisFileLoader').addEventListener('change', function(e) {
@@ -405,21 +405,59 @@
             document.getElementById('cameraModal').classList.remove('hidden');
             var selectElement = document.getElementById('provinceSelect');
             document.getElementById('cam-zone-label').innerText = "Hệ chiếu: " + selectElement.options[selectElement.selectedIndex].text;
-            startCamera();
+            await startCamera();
         }
+
         async function startCamera() {
-            if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
             try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: useFrontCamera ? "user" : "environment" }, audio: false });
-                document.getElementById('cameraStream').srcObject = mediaStream;
+                // Thử khởi tạo camera với ưu tiên camera sau (environment)
+                const constraints = {
+                    video: {
+                        facingMode: useFrontCamera ? "user" : { ideal: "environment" },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoElement = document.getElementById('cameraStream');
+                videoElement.srcObject = mediaStream;
+                await videoElement.play().catch(e => console.log("Auto-play prevented:", e));
                 updateCamCoordinates();
-            } catch (err) { alert("Lỗi mở camera: " + err.message); closeCameraModal(); }
+            } catch (err) {
+                console.warn("Không mở được camera sau chuẩn, thử cấu hình dự phòng...", err);
+                try {
+                    // Cấu hình dự phòng tối giản cho các dòng máy hạn chế quyền
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    const videoElement = document.getElementById('cameraStream');
+                    videoElement.srcObject = mediaStream;
+                    await videoElement.play();
+                    updateCamCoordinates();
+                } catch (fallbackErr) {
+                    alert("Không thể truy cập Camera. Vui lòng kiểm tra quyền cấp phép camera trên trình duyệt điện thoại của bạn (" + fallbackErr.message + ")");
+                    closeCameraModal();
+                }
+            }
         }
+
         function closeCameraModal() {
-            if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+            if (mediaStream) { 
+                mediaStream.getTracks().forEach(t => t.stop()); 
+                mediaStream = null; 
+            }
+            const videoElement = document.getElementById('cameraStream');
+            if (videoElement) videoElement.srcObject = null;
             document.getElementById('cameraModal').classList.add('hidden');
         }
-        function switchCamera() { useFrontCamera = !useFrontCamera; startCamera(); }
+
+        function switchCamera() { 
+            useFrontCamera = !useFrontCamera; 
+            startCamera(); 
+        }
 
         function updateCamCoordinates() {
             if (navigator.geolocation) {
@@ -443,7 +481,8 @@
         function capturePhoto() {
             const video = document.getElementById('cameraStream');
             const canvas = document.getElementById('snapshotCanvas');
-            canvas.width = video.videoWidth || 1280; canvas.height = video.videoHeight || 720;
+            canvas.width = video.videoWidth || 1280; 
+            canvas.height = video.videoHeight || 720;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
