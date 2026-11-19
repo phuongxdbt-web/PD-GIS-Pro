@@ -3,557 +3,1119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PD GIS Pro</title>
+    <title>PD GIS Pro - Ban QLDA Phương Đông</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Leaflet Omnivore để đọc file KML -->
-    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
+    <!-- JSZip để giải nén trực tiếp file KMZ trên trình duyệt -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Leaflet Omnivore đọc KML/GPX -->
+    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #map { width: 100%; height: 100vh; position: absolute; z-index: 1; top: 0; left: 0; }
-        .hud-overlay { position: absolute; z-index: 1000; pointer-events: none; }
-        .hud-interactive { pointer-events: auto; }
-        .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999; pointer-events: none; width: 30px; height: 30px; border: 2px solid rgba(239, 68, 68, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .crosshair::after { content: ''; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; }
-        .sidebar { transition: transform 0.3s ease-in-out; z-index: 1100; }
-        .sidebar.collapsed { transform: translateX(-100%); }
+        body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; background: #090d16; user-select: none; }
+        #map { width: 100%; height: 100vh; position: absolute; inset: 0; z-index: 1; }
+        
+        /* Tâm ngắm trắc địa giữa màn hình */
+        .crosshair-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+        .crosshair-corner { position: absolute; width: 10px; height: 10px; border-color: #ef4444; border-style: solid; }
+        .tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+        .tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+        .bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+        .br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+        .crosshair-plus { color: #ef4444; font-size: 18px; font-weight: bold; text-shadow: 0 0 3px #000; }
+
+        /* Ngăn kéo trượt (Drawers) */
+        .drawer-left { transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1200; }
+        .drawer-left.closed { transform: translateX(-100%); }
+        .drawer-right { transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1200; }
+        .drawer-right.closed { transform: translateX(100%); }
+
+        /* Switch Toggle CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
+
+        /* Ẩn thanh cuộn nhưng vẫn cuộn được */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Chế độ chỉ hiện bản đồ */
+        body.map-only .hud-item { opacity: 0; pointer-events: none; }
+        body.map-only #btnRestoreHud { opacity: 1 !important; pointer-events: auto !important; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100">
+<body class="text-slate-100">
 
-    <!-- Bản đồ nền GIS -->
+    <!-- BẢN ĐỒ NỀN -->
     <div id="map"></div>
 
-    <!-- Tâm ngắm định vị giữa màn hình -->
-    <div class="crosshair"></div>
+    <!-- TÂM NGẮM GIỮA MÀN HÌNH -->
+    <div id="crosshair" class="crosshair-box">
+        <div class="crosshair-corner tl"></div>
+        <div class="crosshair-corner tr"></div>
+        <div class="crosshair-corner bl"></div>
+        <div class="crosshair-corner br"></div>
+        <span class="crosshair-plus">+</span>
+    </div>
 
-    <!-- LỚP NỀN MỜ (BACKDROP) TỰ ĐỘNG ĐÓNG MENU KHI CHẠM RA NGOÀI -->
-    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-[1050] hidden md:hidden"></div>
+    <!-- THƯỚC CÂN BẰNG ĐIỆN TỬ (Ẩn mặc định, bật trong Cài đặt) -->
+    <div id="spiritLevel" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[600] bg-slate-900/90 border border-emerald-500/60 px-4 py-1.5 rounded-full text-xs font-mono text-emerald-400 shadow-lg flex items-center gap-3">
+        <span><i class="fa-solid fa-ruler-horizontal"></i> Nghiêng X: <b id="tiltX">0.0°</b></span>
+        <span>Y: <b id="tiltY">0.0°</b></span>
+    </div>
 
-    <!-- Giao diện HUD Trắc địa & Điều khiển (Trên cùng) -->
-    <div class="hud-overlay top-2 left-2 right-2 flex justify-between items-center gap-2 p-2">
-        <!-- Nút Menu & Brand -->
-        <div class="hud-interactive flex items-center gap-2">
-            <button onclick="toggleSidebar()" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white p-2.5 rounded-xl shadow-xl flex items-center justify-center">
-                <i class="fa-solid fa-bars text-lg text-yellow-400"></i>
-            </button>
-            <div class="bg-slate-900/90 backdrop-blur border border-blue-500/50 px-4 py-2 rounded-xl shadow-xl hidden sm:flex items-center gap-3">
-                <div class="bg-blue-700 text-white p-2 rounded-lg font-bold text-xs flex items-center gap-1">
-                    <i class="fa-solid fa-compass-drafting"></i> PD GIS Pro
+    <!-- NÚT KHÔI PHỤC GIAO DIỆN KHI BẬT "MÀN HÌNH CHỈ HIỆN BẢN ĐỒ" -->
+    <button id="btnRestoreHud" onclick="toggleMapOnly(false)" class="opacity-0 pointer-events-none fixed top-3 left-3 z-[900] bg-slate-900/90 text-amber-400 border border-amber-500/50 px-3 py-2 rounded-xl shadow-xl text-xs font-bold flex items-center gap-2 transition">
+        <i class="fa-solid fa-eye"></i> Hiện công cụ
+    </button>
+
+    <!-- THANH CÔNG CỤ TRÊN CÙNG (TOP BAR) -->
+    <div class="hud-item fixed top-2.5 left-2.5 right-2.5 z-[800] flex justify-between items-start pointer-events-none">
+        <!-- Góc trái trên: Logo mở Menu chính & Thước tỉ lệ & Tốc độ -->
+        <div class="flex flex-col gap-2 pointer-events-auto">
+            <div class="flex items-center gap-2">
+                <button onclick="openDrawer('mainMenuDrawer')" class="w-11 h-11 rounded-full bg-slate-900/90 border-2 border-amber-500/80 shadow-xl flex items-center justify-center text-amber-400 active:scale-95 transition" title="Menu Hệ Thống">
+                    <i class="fa-solid fa-atom text-xl"></i>
+                </button>
+                <!-- Thước đo tỉ lệ -->
+                <div id="scaleBox" class="bg-slate-900/80 backdrop-blur px-2.5 py-1 rounded-lg border border-slate-700/80">
+                    <div id="scaleText" class="text-[11px] font-bold text-red-400 leading-none mb-1">50 m</div>
+                    <div id="scaleLine" class="h-1 bg-red-500 w-16 rounded"></div>
+                </div>
+            </div>
+            <!-- Đồng hồ tốc độ di chuyển -->
+            <div class="bg-slate-900/85 backdrop-blur border border-amber-500/40 rounded-lg px-2.5 py-1 w-fit text-center shadow">
+                <div id="speedVal" class="text-sm font-bold text-white leading-tight">0.0</div>
+                <div class="text-[9px] text-slate-400 uppercase">km/h</div>
+            </div>
+        </div>
+
+        <!-- Góc phải trên: 4 nút chức năng nhanh + La bàn + Vệ tinh + Zoom -->
+        <div class="flex flex-col items-end gap-2 pointer-events-auto">
+            <!-- Hàng 4 nút icon trên cùng -->
+            <div class="flex items-center gap-2 bg-slate-900/85 backdrop-blur p-1.5 rounded-2xl border border-slate-700/80 shadow-xl">
+                <button onclick="openCameraModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-amber-600 text-white flex items-center justify-center transition" title="Camera AR Tọa Độ">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+                <button onclick="openModal('searchModal')" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center transition" title="Tìm tọa độ / Điểm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button onclick="openDrawer('layerDrawer')" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-indigo-600 text-white flex items-center justify-center transition" title="Quản lý các lớp">
+                    <i class="fa-solid fa-layer-group"></i>
+                </button>
+                <button onclick="openDrawer('settingsDrawer')" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-emerald-600 text-amber-400 flex items-center justify-center transition" title="Cài đặt & Tùy chọn">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+
+            <!-- La bàn số & Chỉ số vệ tinh & Zoom -->
+            <div class="flex flex-col items-center gap-1.5">
+                <div id="compassBox" onclick="resetNorth()" class="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-600 shadow-lg flex items-center justify-center cursor-pointer" title="La bàn số">
+                    <i id="compassNeedle" class="fa-solid fa-location-arrow text-red-500 text-base -rotate-45 transition-transform"></i>
+                </div>
+                <div class="bg-slate-900/90 border border-slate-700 px-2 py-1 rounded-lg text-center shadow">
+                    <div class="text-[10px] font-bold text-emerald-400 leading-none">29/30</div>
+                    <i class="fa-solid fa-satellite text-slate-300 text-xs mt-0.5"></i>
+                </div>
+                <div class="bg-slate-900/90 border border-slate-700 px-2 py-0.5 rounded text-[10px] font-mono text-white font-bold shadow">
+                    Z<span id="zoomLevel">16.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CỤM NÚT ĐIỀU KHIỂN BÊN PHẢI (Tracklog, 3D/Nền, Zoom +/-, Vị trí GPS) -->
+    <div class="hud-item fixed right-2.5 bottom-4 z-[800] flex flex-col gap-2 pointer-events-auto">
+        <button id="btnTracklog" onclick="toggleTracklog()" class="w-10 h-10 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-200 hover:bg-emerald-700 shadow-lg flex items-center justify-center" title="Bật/Tắt Ghi Tuyến Tracklog">
+            <i class="fa-solid fa-route"></i>
+        </button>
+        <button onclick="cycleBaseMap()" class="w-10 h-10 rounded-xl bg-slate-900/90 border border-slate-700 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-lg flex items-center justify-center" title="Đổi nền bản đồ (Vệ tinh / Giao thông)">
+            3D
+        </button>
+        <button onclick="map.zoomIn()" class="w-10 h-10 rounded-xl bg-slate-900/90 border border-slate-700 text-red-400 hover:bg-slate-800 shadow-lg flex items-center justify-center text-lg font-bold">
+            +
+        </button>
+        <button onclick="map.zoomOut()" class="w-10 h-10 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-200 hover:bg-slate-800 shadow-lg flex items-center justify-center text-lg font-bold">
+            −
+        </button>
+        <button onclick="centerToGPS()" class="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-500 border-2 border-white/80 text-white shadow-xl flex items-center justify-center active:scale-95 transition" title="Vị trí GPS của tôi">
+            <i class="fa-solid fa-crosshairs text-lg"></i>
+        </button>
+    </div>
+
+    <!-- BẢNG TỌA ĐỘ HUD PHÍA DƯỚI (CÓ THỂ THU GỌN / MỞ RỘNG) -->
+    <div id="hudCoordPanel" class="hud-item fixed bottom-2.5 left-2.5 right-16 md:right-auto md:w-96 z-[800] bg-slate-950/90 backdrop-blur-md border border-slate-700/90 rounded-2xl shadow-2xl overflow-hidden transition-all">
+        <!-- Thanh tiêu đề HUD -->
+        <div class="bg-slate-900/95 px-3 py-1.5 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <button onclick="toggleHudBody()" class="text-slate-300 hover:text-white px-1" title="Thu gọn / Mở rộng">
+                    <i id="hudChevron" class="fa-solid fa-angles-down text-xs"></i>
+                </button>
+                <span class="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">VN</span>
+                <span id="hudProvinceTitle" class="text-[11px] font-bold text-amber-400 truncate max-w-[160px]">VN-2000 / LÂM ĐỒNG [m]</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-300 text-xs">
+                <span class="bg-slate-800 text-emerald-400 text-[9px] px-1.5 py-0.5 rounded font-mono border border-emerald-500/30">A-GPS</span>
+                <button onclick="copyCoordinates()" title="Sao chép tọa độ"><i class="fa-regular fa-copy hover:text-white"></i></button>
+                <button onclick="openModal('logModal')" title="Ghi nhật ký công trình"><i class="fa-solid fa-share hover:text-white"></i></button>
+                <button onclick="openModal('crsModal')" title="Chọn tỉnh thành VN-2000"><i class="fa-solid fa-gear text-amber-400 hover:text-white"></i></button>
+            </div>
+        </div>
+        <!-- Nội dung tọa độ chi tiết -->
+        <div id="hudCoordBody" class="p-2.5 text-xs space-y-1 font-mono">
+            <div class="flex justify-between">
+                <span class="text-slate-400">Tọa độ X(E):</span>
+                <span id="gpsX" class="text-white font-bold text-sm">---</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Tọa độ Y(N):</span>
+                <span id="gpsY" class="text-white font-bold text-sm">---</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-300 pt-0.5 border-t border-slate-800/80">
+                <span>Độ cao: <b id="gpsAlt" class="text-white">0.0 m</b></span>
+                <span>Sai số: <b id="gpsAcc" class="text-emerald-400">-- m</b></span>
+            </div>
+            <div class="pt-1 border-t border-slate-800/80 text-[11px] text-amber-300">
+                <div class="flex justify-between">
+                    <span>Tâm độ X(E):</span>
+                    <span id="centerX" class="font-bold text-white">536368.429</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tâm độ Y(N):</span>
+                    <span id="centerY" class="font-bold text-white">1208271.754</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LỚP NỀN MỜ CHUNG CHO CÁC MENU TRƯỢT -->
+    <div id="drawerBackdrop" onclick="closeAllDrawers()" class="fixed inset-0 bg-black/60 z-[1150] hidden"></div>
+
+    <!-- ========================================================= -->
+    <!-- 1. MENU CHÍNH BÊN TRÁI (HỆ CHIẾU, CÔNG CỤ TRẮC ĐỊA, DỮ LIỆU) -->
+    <!-- ========================================================= -->
+    <div id="mainMenuDrawer" class="drawer-left closed fixed top-0 left-0 h-full w-[86vw] max-w-sm bg-white text-slate-800 shadow-2xl flex flex-col">
+        <!-- Banner thông tin thiết bị & Dự án -->
+        <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white p-4 relative">
+            <button onclick="closeAllDrawers()" class="absolute top-3 right-3 text-slate-300 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-12 h-12 rounded-2xl bg-blue-600/30 border border-blue-400 flex items-center justify-center text-amber-400 text-2xl">
+                    <i class="fa-solid fa-atom"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs font-bold uppercase tracking-wider text-blue-400">PD GIS Pro</h1>
-                    <p id="gps-status" class="text-[11px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-satellite-dish animate-pulse"></i> RTK / VN-2000 Ready</p>
+                    <div class="font-bold text-base tracking-wide">PD GIS PRO</div>
+                    <div class="text-[11px] text-blue-300">Ban QLDA Phương Đông</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] bg-black/30 p-2.5 rounded-xl border border-white/10">
+                <div><span class="text-slate-400 block">Mã thiết bị:</span><b class="font-mono text-emerald-400">PD-QLDA-2026</b></div>
+                <div><span class="text-slate-400 block">Phiên bản:</span><b class="text-amber-400">9.3.1 Pro</b></div>
+                <div class="col-span-2 pt-1 border-t border-white/10 flex justify-between items-center">
+                    <span>Dự án: <b id="activeProjectLabel" class="text-white">KCN TUY PHONG</b></span>
+                    <button onclick="openModal('projectModal')" class="text-xs bg-blue-600 px-2 py-0.5 rounded text-white">Đổi</button>
                 </div>
             </div>
         </div>
 
-        <!-- Công cụ nhanh HUD -->
-        <div class="hud-interactive flex flex-wrap gap-2">
-            <button onclick="toggleLayer('satellite')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-xs px-3 py-2 rounded-xl shadow font-semibold flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-blue-400"></i> Vệ tinh</button>
-            <button onclick="toggleLayer('streets')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-xs px-3 py-2 rounded-xl shadow font-semibold flex items-center gap-1.5"><i class="fa-solid fa-map text-emerald-400"></i> Giao thông</button>
-            <button onclick="centerToCurrentLocation()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-2 rounded-xl shadow font-semibold flex items-center gap-1.5 text-white"><i class="fa-solid fa-crosshairs"></i> Vị trí tôi</button>
+        <!-- Danh sách chức năng cuộn dọc -->
+        <div class="flex-1 overflow-y-auto divide-y divide-slate-200 text-sm font-semibold">
+            <div onclick="openModal('crsModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-teal-700">
+                <i class="fa-solid fa-globe text-lg w-6 text-center"></i>
+                <span>HỆ CHIẾU TỌA ĐỘ (VN-2000)</span>
+            </div>
+            <div onclick="openDrawer('settingsDrawer')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-indigo-800">
+                <i class="fa-solid fa-gear text-lg w-6 text-center"></i>
+                <span>Cài đặt bản đồ</span>
+            </div>
+            <div onclick="openModal('searchModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-blue-800">
+                <i class="fa-solid fa-location-crosshairs text-lg w-6 text-center"></i>
+                <span>Tìm tọa độ điểm (VN-2000 / WGS84)</span>
+            </div>
+            <div onclick="openModal('convertModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-blue-800">
+                <i class="fa-solid fa-right-left text-lg w-6 text-center"></i>
+                <span>Chuyển tọa độ điểm</span>
+            </div>
+            <div onclick="openModal('addPointModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-blue-800">
+                <i class="fa-solid fa-map-pin text-lg w-6 text-center"></i>
+                <span>Nhập mốc tọa độ</span>
+            </div>
+            <div onclick="openModal('soDoModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-red-700">
+                <i class="fa-solid fa-expand text-lg w-6 text-center"></i>
+                <span>Quét tọa độ sổ đỏ (Nhập bảng góc ranh)</span>
+            </div>
+            <div onclick="exportGeoJSON()" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-indigo-800">
+                <i class="fa-solid fa-file-export text-lg w-6 text-center"></i>
+                <span>Xuất file dữ liệu (.GeoJSON)</span>
+            </div>
+            <div onclick="triggerFileUpload()" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-indigo-800">
+                <i class="fa-solid fa-file-import text-lg w-6 text-center"></i>
+                <span>Nhập file dữ liệu (KMZ / KML / GeoJSON)</span>
+            </div>
+            <div onclick="backupData()" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-sky-700">
+                <i class="fa-solid fa-cloud-arrow-up text-lg w-6 text-center"></i>
+                <span>Sao lưu dữ liệu</span>
+            </div>
+            <div onclick="restoreData()" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-sky-700">
+                <i class="fa-solid fa-clock-rotate-left text-lg w-6 text-center"></i>
+                <span>Khôi phục dữ liệu</span>
+            </div>
+            <div onclick="openModal('logModal')" class="p-3.5 flex items-center gap-3.5 hover:bg-slate-100 cursor-pointer text-emerald-700">
+                <i class="fa-solid fa-clipboard-check text-lg w-6 text-center"></i>
+                <span>Nhật ký nghiệm thu hiện trường</span>
+            </div>
+            <div onclick="clearAllLayers()" class="p-3.5 flex items-center gap-3.5 bg-red-600 text-white hover:bg-red-700 cursor-pointer">
+                <i class="fa-solid fa-trash-can text-lg w-6 text-center"></i>
+                <span>Thùng rác (Xóa lớp tạm)</span>
+            </div>
         </div>
     </div>
 
-    <!-- Bảng điều khiển bên trái (Sidebar Ngăn Kéo Trượt) -->
-    <div id="sidebar" class="sidebar collapsed fixed top-0 left-0 h-full w-80 max-h-full bg-slate-900/95 backdrop-blur shadow-2xl flex flex-col border-r border-slate-700">
-        
-        <!-- Header Menu kèm nút đóng -->
-        <div class="bg-indigo-900 px-4 py-3.5 flex items-center justify-between border-b border-indigo-800">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-layer-group text-yellow-400 text-lg"></i>
-                <span class="font-bold text-sm tracking-wide">QUẢN LÝ & TIỆN ÍCH GIS</span>
+    <!-- ========================================================= -->
+    <!-- 2. NGĂN KÉO QUẢN LÝ CÁC LỚP (LAYER MANAGER) -->
+    <!-- ========================================================= -->
+    <div id="layerDrawer" class="drawer-right closed fixed top-0 right-0 h-full w-[86vw] max-w-sm bg-white text-slate-800 shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="bg-indigo-900 text-white px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+                <span class="font-bold text-sm tracking-wide">QUẢN LÝ CÁC LỚP</span>
             </div>
-            <button onclick="toggleSidebar()" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <button onclick="closeAllDrawers()" class="text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- Nội dung menu cuộn dọc -->
-        <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
-            
-            <!-- Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh Thành) -->
-            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-                <h2 class="text-xs font-bold text-cyan-400 uppercase mb-1 flex items-center justify-between">
-                    <span><i class="fa-solid fa-earth-asia"></i> Hệ Chiếu VN-2000</span>
-                    <span class="text-[10px] text-slate-400" id="group-mode-lbl">Cơ chế 34 Tỉnh</span>
-                </h2>
-                <div class="flex gap-1 mb-2">
-                    <button onclick="setProvinceMode('34')" id="btn-mode-34" class="flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold">Cấp 34 Tỉnh</button>
-                    <button onclick="setProvinceMode('63')" id="btn-mode-63" class="bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold flex-1">63 Tỉnh</button>
+        <!-- Input file ẩn dùng chung cho các nút nạp dữ liệu -->
+        <input type="file" id="universalFileInput" accept=".kmz,.kml,.json,.geojson,.gpx" class="hidden" onchange="handleUniversalFile(event)">
+
+        <!-- Danh sách các lớp -->
+        <div class="flex-1 overflow-y-auto divide-y divide-slate-200 text-xs font-bold">
+            <div onclick="openCameraModal()" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-image text-purple-600 text-lg w-6"></i><span>HÌNH ẢNH KHẢO SÁT</span></div>
+                <span id="badgePhotoCount" class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div onclick="openModal('addPointModal')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-flag text-blue-600 text-lg w-6"></i><span>ĐIỂM MỐC TỌA ĐỘ</span></div>
+                <span id="badgePointCount" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div onclick="openModal('soDoModal')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-draw-polygon text-indigo-700 text-lg w-6"></i><span>DỮ LIỆU VÙNG / RANH GIỚI</span></div>
+            </div>
+            <div onclick="toggleTracklog()" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-person-walking text-blue-700 text-lg w-6"></i><span>TUYẾN TRACKLOG</span></div>
+                <span id="trackStatusText" class="text-slate-400">Tắt</span>
+            </div>
+            <div onclick="toggleContourLayer()" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-mountain text-amber-500 text-lg w-6"></i>
+                    <div><div>ĐƯỜNG BÌNH ĐỘ</div><div class="text-[10px] text-emerald-500 font-normal">● Online</div></div>
                 </div>
-                <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500">
-                    <!-- Được load động -->
-                </select>
+            </div>
+            <div onclick="triggerFileUpload()" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer bg-emerald-50/50">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-file-zipper text-emerald-600 text-lg w-6"></i><span>DỮ LIỆU KML / KMZ (Hỗ trợ nén)</span></div>
+                <span id="badgeKmlCount" class="bg-emerald-600 text-white px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div onclick="triggerFileUpload()" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-code text-green-600 text-lg w-6"></i><span>DỮ LIỆU GEOJSON / GPX</span></div>
+            </div>
+            <div onclick="alert('Vui lòng chuyển đổi file CAD (.DWG/.DXF) hoặc .SHP sang định dạng .KML / .KMZ hoặc .GeoJSON để hiển thị trực tiếp trên trình duyệt di động.')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-file-code text-slate-500 text-lg w-6"></i><span>DỮ LIỆU DXF / DWG / SHP / DGN</span></div>
+            </div>
+            <div onclick="setBaseMap('satellite')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-earth-asia text-teal-600 text-lg w-6"></i>
+                    <div><div>LỚP ẢNH VỆ TINH</div><div class="text-[10px] text-emerald-500 font-normal">● Online</div></div>
+                </div>
+            </div>
+            <div onclick="setBaseMap('streets')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-map-location-dot text-teal-600 text-lg w-6"></i>
+                    <div><div>LỚP BẢN ĐỒ GIAO THÔNG (WMS/TMS)</div><div class="text-[10px] text-emerald-500 font-normal">● Online</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Dịch vụ bản đồ nền -->
+        <div onclick="cycleBaseMap()" class="bg-teal-800 text-white p-3.5 flex items-center justify-between cursor-pointer">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-map text-xl"></i>
+                <div>
+                    <div class="font-bold text-xs">DỊCH VỤ BẢN ĐỒ NỀN</div>
+                    <div class="text-[10px] text-emerald-300">● Online (Chạm để đổi)</div>
+                </div>
+            </div>
+            <span id="baseMapBadge" class="bg-white text-teal-900 font-bold text-xs px-2.5 py-1 rounded-lg">Google Hybrid</span>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 3. NGĂN KÉO CÀI ĐẶT VÀ TÙY CHỌN (SETTINGS) -->
+    <!-- ========================================================= -->
+    <div id="settingsDrawer" class="drawer-right closed fixed top-0 right-0 h-full w-[86vw] max-w-sm bg-white text-slate-800 shadow-2xl flex flex-col">
+        <div class="bg-indigo-900 text-white px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-gear text-amber-400 text-lg"></i>
+                <span class="font-bold text-sm tracking-wide">CÀI ĐẶT VÀ TÙY CHỌN</span>
+            </div>
+            <button onclick="closeAllDrawers()" class="text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto divide-y divide-slate-200 text-xs font-semibold">
+            <div class="p-3 bg-slate-100 text-amber-700 font-bold flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i> CẤU HÌNH ỨNG DỤNG HIỆN TRƯỜNG
             </div>
 
-            <!-- Camera Khảo Sát & AR VN-2000 -->
-            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-                <h2 class="text-xs font-bold text-amber-400 uppercase mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-camera"></i> Camera Khảo Sát & AR VN-2000
-                </h2>
-                <button onclick="openCameraModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-video"></i> Bật Camera Quét Tọa Độ & Chụp Ảnh
-                </button>
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-compass text-indigo-600 text-base w-5"></i><span>La bàn số</span></div>
+                <input type="checkbox" checked onchange="document.getElementById('compassBox').classList.toggle('hidden', !this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-ruler text-indigo-600 text-base w-5"></i><span>Thước đo tỉ lệ</span></div>
+                <input type="checkbox" checked onchange="document.getElementById('scaleBox').classList.toggle('hidden', !this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-scale-balanced text-indigo-600 text-base w-5"></i><span>Cân bằng điện tử</span></div>
+                <input type="checkbox" onchange="toggleSpiritLevel(this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <div class="p-3.5 space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3"><i class="fa-solid fa-circle-half-stroke text-indigo-600 text-base w-5"></i><span>Độ hiển thị lớp phủ bản đồ</span></div>
+                    <span id="opacityVal" class="text-indigo-700 font-bold">85%</span>
+                </div>
+                <input type="range" min="20" max="100" value="85" oninput="updateLayerOpacity(this.value)" class="w-full accent-indigo-600">
             </div>
 
-            <!-- Nạp Tệp KML / GeoJSON -->
-            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-                <h2 class="text-xs font-bold text-blue-400 uppercase mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-folder-open"></i> Nạp Tệp Bản Đồ / Quy Hoạch (.KML, .GeoJSON)
-                </h2>
-                <input type="file" id="gisFileLoader" accept=".kml,.json,.geojson" class="block w-full text-[11px] text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"/>
-                <p class="text-[10px] text-slate-400 mt-1 italic">* Lưu ý: Với tệp KMZ, vui lòng giải nén lấy tệp .KML bên trong trước khi nạp.</p>
+            <div onclick="closeAllDrawers(); toggleMapOnly(true);" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer text-blue-700">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-expand text-base w-5"></i><span>Màn hình chỉ hiện bản đồ (Ẩn toàn bộ menu)</span></div>
+                <i class="fa-solid fa-chevron-right"></i>
             </div>
 
-            <!-- Quản lý Tuyến & Dự án -->
-            <div class="hud-interactive bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-xl shadow-xl">
-                <h2 class="text-xs font-bold text-emerald-400 uppercase mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-route"></i> Chọn Tuyến / Dự Án
-                </h2>
-                <select id="routeSelect" onchange="zoomToRoute(this.value)" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500 mb-2">
-                    <option value="">-- Chọn tuyến đường / khu vực --</option>
-                    <option value="tuyphong">KCN Tuy Phong (150 ha)</option>
-                    <option value="d1">KCN Tuy Phong - Tuyến D1 (1,759.73m)</option>
-                    <option value="d2">KCN Tuy Phong - Tuyến D2 (1,759.81m)</option>
-                    <option value="d3">KCN Tuy Phong - Tuyến D3 (1,778.28m)</option>
-                    <option value="n1">KCN Tuy Phong - Tuyến N1 (592.33m)</option>
-                    <option value="hamkiem">KCN Hàm Kiệm I & NOXH (13.5 ha)</option>
-                </select>
-                <button onclick="openLogModal()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-1.5 px-2 rounded-lg font-semibold flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-clipboard-list"></i> Ghi Nhật Ký Thi Công Nhanh
-                </button>
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-crosshairs text-indigo-600 text-base w-5"></i><span>Ký hiệu tâm bản đồ</span></div>
+                <input type="checkbox" checked onchange="document.getElementById('crosshair').classList.toggle('hidden', !this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-lock text-indigo-600 text-base w-5"></i><span>Khóa chế độ xoay bản đồ</span></div>
+                <input type="checkbox" checked class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-arrows-up-down-left-right text-indigo-600 text-base w-5"></i><span>Tự động di chuyển bản đồ theo GPS</span></div>
+                <input type="checkbox" id="chkAutoPan" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-lightbulb text-amber-500 text-base w-5"></i><span>Màn hình bản đồ luôn mở (Chống tắt)</span></div>
+                <input type="checkbox" id="chkWakeLock" onchange="toggleWakeLock(this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <label class="p-3.5 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-slate-500 text-base w-5"></i><span>Tạm ẩn vị trí GPS</span></div>
+                <input type="checkbox" onchange="toggleHideGPS(this.checked)" class="w-5 h-5 accent-indigo-600">
+            </label>
+
+            <div onclick="centerToGPS()" class="p-3.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer text-amber-700">
+                <i class="fa-solid fa-satellite-dish text-base w-5"></i><span>Kiểm tra và sửa lỗi định vị GPS</span>
             </div>
         </div>
     </div>
 
-    <!-- Bảng thông tin VN-2000 HUD phía dưới -->
-    <div class="hud-overlay bottom-2 left-2 right-2 md:right-auto md:w-96 hud-interactive bg-slate-950/90 backdrop-blur border border-red-500/60 p-3 rounded-xl shadow-2xl text-xs space-y-1.5 text-red-400">
-        <div class="flex justify-between items-center border-b border-red-500/30 pb-1 font-bold text-red-500">
-            <span id="vn-title"><i class="fa-solid fa-globe"></i> PD GIS Pro - VN-2000 [m]</span>
+    <!-- ========================================================= -->
+    <!-- CÁC HỘP THOẠI CHỨC NĂNG CHUYÊN NGÀNH (MODALS) -->
+    <!-- ========================================================= -->
+
+    <!-- Modal 1: Chọn Hệ Chiếu VN-2000 (34 & 63 Tỉnh) -->
+    <div id="crsModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-cyan-400"><i class="fa-solid fa-earth-asia mr-1"></i> Hệ Chiếu VN-2000</h3>
+                <button onclick="closeModal('crsModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="setProvinceMode('34')" id="btnMode34" class="flex-1 bg-blue-600 py-2 rounded-xl text-xs font-bold">Cơ chế 34 Tỉnh (Mới)</button>
+                <button onclick="setProvinceMode('63')" id="btnMode63" class="flex-1 bg-slate-800 py-2 rounded-xl text-xs font-bold text-slate-300">63 Tỉnh (Cũ)</button>
+            </div>
+            <select id="provinceSelect" onchange="changeProvince(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white"></select>
+            <button onclick="closeModal('crsModal')" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-xs font-bold">Áp dụng hệ chiếu</button>
         </div>
-        <div class="grid grid-cols-2 gap-1 font-mono text-[11px]">
-            <div>Tọa độ X(E): <span id="gps-x" class="text-white font-bold">---</span></div>
-            <div>Tọa độ Y(N): <span id="gps-y" class="text-white font-bold">---</span></div>
-        </div>
-        <div class="text-[10px] text-slate-300 flex justify-between">
-            <span>Cao độ (H): <span id="gps-alt" class="text-white">0.0 m</span></span>
-            <span>Sai số GPS: <span id="gps-acc" class="text-emerald-400">-- m</span></span>
-        </div>
-        <div class="border-t border-red-500/30 pt-1 mt-1 grid grid-cols-2 gap-1 font-mono text-[11px] text-amber-400">
-            <div>Tâm X(E): <span id="cross-x" class="text-white font-bold">---</span></div>
-            <div>Tâm Y(N): <span id="cross-y" class="text-white font-bold">---</span></div>
-        </div>
-        <div class="text-[10px] text-slate-400 italic">Zoom: <span id="lbl-zoom">Z15</span> | Di chuyển bản đồ để đo tâm ngắm.</div>
     </div>
 
-    <!-- Modal Camera AR & Chụp ảnh Watermark -->
-    <div id="cameraModal" class="fixed inset-0 z-50 bg-black/90 hidden flex flex-col items-center justify-between p-4">
-        <div class="w-full max-w-lg flex justify-between items-center text-white bg-slate-900/80 p-3 rounded-xl">
+    <!-- Modal 2: Chọn Tuyến / Dự án Ban QLDA -->
+    <div id="projectModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-route mr-1"></i> Dự Án & Tuyến Đường Ban QLDA</h3>
+                <button onclick="closeModal('projectModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-2 text-xs">
+                <button onclick="selectProjectRoute('tuyphong', 'KCN TUY PHONG (150 HA)')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-blue-900/60 border border-slate-700 font-bold">1. KCN Tuy Phong - Xã Vĩnh Hảo (150 ha)</button>
+                <button onclick="selectProjectRoute('d1', 'TUYẾN D1 - KCN TUY PHONG')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-blue-900/60 border border-slate-700">2. Tuyến đường trục D1 (1,759.73 m)</button>
+                <button onclick="selectProjectRoute('d2', 'TUYẾN D2 - KCN TUY PHONG')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-blue-900/60 border border-slate-700">3. Tuyến đường trục D2 (1,759.81 m)</button>
+                <button onclick="selectProjectRoute('hamkiem', 'KCN HÀM KIỆM I & NOXH 13.5 HA')" class="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-blue-900/60 border border-slate-700 font-bold">4. KCN Hàm Kiệm I & NOXH 13.5 ha - Xã Tuyên Quang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Tìm Tọa Độ Điểm -->
+    <div id="searchModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-blue-400"><i class="fa-solid fa-magnifying-glass mr-1"></i> Tìm & Bay Đến Tọa Độ VN-2000</h3>
+                <button onclick="closeModal('searchModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                    <label class="text-slate-400 block mb-1">Tọa độ X (Easting - mét):</label>
+                    <input type="number" step="0.001" id="searchX" placeholder="VD: 536368.429" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl font-mono text-white">
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1">Tọa độ Y (Northing - mét):</label>
+                    <input type="number" step="0.001" id="searchY" placeholder="VD: 1208271.754" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl font-mono text-white">
+                </div>
+            </div>
+            <button onclick="flyToVN2000()" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl text-xs font-bold">Định vị & Cắm mốc trên bản đồ</button>
+        </div>
+    </div>
+
+    <!-- Modal 4: Chuyển Đổi Tọa Độ Điểm -->
+    <div id="convertModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-right-left mr-1"></i> Chuyển Đổi Tọa Độ VN-2000 ↔ WGS84</h3>
+                <button onclick="closeModal('convertModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-2 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="text-slate-400">VN-2000 X(E):</label><input type="number" id="convX" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg font-mono"></div>
+                    <div><label class="text-slate-400">VN-2000 Y(N):</label><input type="number" id="convY" class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg font-mono"></div>
+                </div>
+                <button onclick="convertVNToWGS()" class="w-full bg-indigo-600 py-2 rounded-lg font-bold">Tính sang Vĩ độ / Kinh độ (WGS84)</button>
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-amber-400" id="convResult">Kết quả: ---</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Nhập Mốc Tọa Độ -->
+    <div id="addPointModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-map-pin mr-1"></i> Lưu Điểm Mốc Tọa Độ</h3>
+                <button onclick="closeModal('addPointModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-2 text-xs">
+                <input type="text" id="pointName" placeholder="Tên mốc (VD: Mốc M1 - Ranh giới Tuy Phong)" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="pointX" placeholder="Tọa độ X(E)" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl font-mono">
+                    <input type="number" id="pointY" placeholder="Tọa độ Y(N)" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl font-mono">
+                </div>
+                <button onclick="useCenterForPoint()" class="text-cyan-400 underline text-[11px]">Lấy tọa độ tâm ngắm hiện tại</button>
+                <button onclick="saveCustomPoint()" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl font-bold">Cắm mốc lên bản đồ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Quét Tọa Độ Sổ Đỏ / Vẽ Vùng Ranh Giới -->
+    <div id="soDoModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-sm font-bold text-red-400"><i class="fa-solid fa-expand mr-1"></i> Vẽ Ranh Giới Thửa Đất / Sổ Đỏ (VN-2000)</h3>
+                <button onclick="closeModal('soDoModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-300">Nhập danh sách tọa độ góc ranh VN-2000 (mỗi dòng 1 điểm theo định dạng: <b>X, Y</b>):</p>
+            <textarea id="soDoCoords" rows="5" placeholder="536350.12, 1208250.45&#10;536410.50, 1208260.10&#10;536400.00, 1208310.80&#10;536340.20, 1208300.15" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl font-mono text-xs text-emerald-300"></textarea>
+            <button onclick="drawSoDoPolygon()" class="w-full bg-red-600 hover:bg-red-500 py-2.5 rounded-xl text-xs font-bold">Vẽ ranh giới & Tính diện tích</button>
+        </div>
+    </div>
+
+    <!-- Modal 7: Camera AR & Chụp Ảnh Đóng Dấu Tọa Độ -->
+    <div id="cameraModal" class="fixed inset-0 z-[1400] bg-black hidden flex flex-col justify-between p-4">
+        <div class="flex justify-between items-center text-white bg-slate-900/90 p-3 rounded-xl">
             <div>
-                <div class="text-xs font-bold text-amber-400">PD GIS PRO - AR CAMERA HUD</div>
-                <div id="cam-zone-label" class="text-[10px] text-slate-300">Hệ chiếu: VN-2000</div>
+                <div class="text-xs font-bold text-amber-400">CAMERA AR HIỆN TRƯỜNG - VN-2000</div>
+                <div id="camZoneLabel" class="text-[10px] text-slate-300">Ban QLDA Phương Đông</div>
             </div>
-            <button onclick="closeCameraModal()" class="text-slate-400 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="closeCameraModal()" class="text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
         </div>
-
-        <div class="relative w-full max-w-lg h-[65vh] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex items-center justify-center">
+        <div class="relative flex-1 my-3 bg-slate-900 rounded-2xl overflow-hidden border border-slate-700">
             <video id="cameraStream" autoplay playsinline muted class="w-full h-full object-cover"></video>
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div class="w-16 h-16 border-2 border-dashed border-red-500 rounded-full flex items-center justify-center animate-pulse">
-                    <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-                </div>
-            </div>
-            <div class="absolute bottom-2 left-2 right-2 bg-slate-950/80 backdrop-blur border border-red-500/50 p-2.5 rounded-xl text-[11px] font-mono text-red-400 space-y-1">
-                <div class="flex justify-between font-bold border-b border-red-500/30 pb-0.5 text-white">
-                    <span>📍 QUÉT ĐIỂM THỰC ĐỊA (AR)</span>
-                    <span id="cam-gps-status" class="text-emerald-400 font-sans text-[10px]">Đang lấy GPS...</span>
-                </div>
-                <div>Tọa độ X(E): <span id="cam-x" class="text-white font-bold">---</span> m</div>
-                <div>Tọa độ Y(N): <span id="cam-y" class="text-white font-bold">---</span> m</div>
-                <div class="flex justify-between text-slate-300">
-                    <span>Cao độ quốc gia (H): <span id="cam-alt" class="text-amber-400 font-bold">---</span> m</span>
-                    <span>Hướng: <span id="cam-heading" class="text-blue-400 font-bold">---°</span></span>
-                </div>
-                <div class="text-[9px] text-slate-400 italic">PD GIS Pro</div>
+            <div class="absolute bottom-3 left-3 right-3 bg-black/80 backdrop-blur border border-red-500/60 p-3 rounded-xl font-mono text-xs space-y-1">
+                <div class="text-amber-400 font-bold">PD GIS PRO - BAN QLDA PHƯƠNG ĐÔNG</div>
+                <div class="text-white">X(E): <b id="camX">---</b> m | Y(N): <b id="camY">---</b> m</div>
+                <div class="text-slate-300 text-[11px]">Cao độ H: <b id="camAlt">0.0</b> m | <span id="camTime"></span></div>
             </div>
         </div>
-
-        <div class="w-full max-w-lg flex justify-around items-center bg-slate-900/80 p-3 rounded-xl">
-            <button onclick="switchCamera()" class="text-slate-300 hover:text-white text-xs flex flex-col items-center gap-1">
-                <i class="fa-solid fa-rotate-camera text-lg"></i> Đổi Cam
-            </button>
-            <button onclick="capturePhoto()" class="w-16 h-16 bg-white hover:bg-slate-200 rounded-full border-4 border-slate-700 shadow-lg flex items-center justify-center">
-                <div class="w-12 h-12 bg-red-600 rounded-full"></div>
-            </button>
-            <button onclick="closeCameraModal()" class="text-slate-300 hover:text-white text-xs flex flex-col items-center gap-1">
-                <i class="fa-solid fa-image text-lg"></i> Thoát
-            </button>
+        <div class="flex justify-around items-center bg-slate-900/90 p-3 rounded-xl">
+            <button onclick="switchCamera()" class="text-slate-300 text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-rotate text-lg"></i>Đổi Cam</button>
+            <button onclick="capturePhoto()" class="w-16 h-16 rounded-full bg-white border-4 border-slate-500 flex items-center justify-center active:scale-95"><div class="w-12 h-12 rounded-full bg-red-600"></div></button>
+            <button onclick="closeCameraModal()" class="text-slate-300 text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-xmark text-lg"></i>Đóng</button>
         </div>
     </div>
     <canvas id="snapshotCanvas" class="hidden"></canvas>
 
-    <!-- Modal Sổ Tay Nhật Ký Thi Công -->
-    <div id="logModal" class="fixed inset-0 z-50 bg-black/80 hidden flex items-center justify-center p-4">
+    <!-- Modal 8: Nhật Ký Thi Công & Nghiệm Thu -->
+    <div id="logModal" class="fixed inset-0 z-[1300] bg-black/80 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-4 text-white space-y-3 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-book"></i> Nhật Ký Thi Công Hiện Trường</h3>
-                <button onclick="closeLogModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-clipboard-check mr-1"></i> Nhật Ký Thi Công & Nghiệm Thu</h3>
+                <button onclick="closeModal('logModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="space-y-2 text-xs">
-                <div>
-                    <label class="block text-slate-300 mb-1">Dự án / Hạng mục:</label>
-                    <input type="text" id="logProject" value="KCN Tuy Phong - Tuyến D1" class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white"/>
+                <input type="text" id="logProject" value="KCN Tuy Phong - Tuyến D1" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white">
+                <div class="grid grid-cols-2 gap-2 font-mono">
+                    <input type="text" id="logX" readonly class="bg-slate-800 border border-slate-700 p-2 rounded-xl text-amber-400">
+                    <input type="text" id="logY" readonly class="bg-slate-800 border border-slate-700 p-2 rounded-xl text-amber-400">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-300 mb-1">Tọa độ X(E):</label>
-                        <input type="text" id="logX" readonly class="w-full bg-slate-800 border border-slate-700 p-2 rounded font-mono text-amber-400"/>
-                    </div>
-                    <div>
-                        <label class="block text-slate-300 mb-1">Tọa độ Y(N):</label>
-                        <input type="text" id="logY" readonly class="w-full bg-slate-800 border border-slate-700 p-2 rounded font-mono text-amber-400"/>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-slate-300 mb-1">Nội dung ghi nhận / Khối lượng:</label>
-                    <textarea id="logContent" rows="3" placeholder="Nhập tình hình thi công, nghiệm thu..." class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white"></textarea>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeLogModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs rounded font-semibold">Hủy</button>
-                <button onclick="saveLog()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-xs rounded font-semibold text-white">Lưu & Xuất Nhật Ký</button>
+                <textarea id="logContent" rows="3" placeholder="Nhập khối lượng, hạng mục nghiệm thu thực tế..." class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white"></textarea>
+                <button onclick="saveLog()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-bold">Lưu nhật ký thực địa</button>
             </div>
         </div>
     </div>
 
     <script>
-        var map = L.map('map', { zoomControl: false }).setView([11.235, 108.765], 15);
+        // 1. KHỞI TẠO BẢN ĐỒ & CÁC LỚP NỀN
+        const map = L.map('map', { zoomControl: false }).setView([11.235, 108.765], 16);
 
-        var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri', maxZoom: 19
+        const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: 'Google Hybrid'
         }).addTo(map);
 
-        var streetsLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: 'Google Streets'
         });
 
-        function toggleLayer(type) {
+        const contourLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            maxZoom: 17, opacity: 0.65, attribution: 'Đường bình độ OpenTopoMap'
+        });
+
+        let currentBase = 'hybrid';
+        function setBaseMap(type) {
+            map.removeLayer(googleHybrid);
+            map.removeLayer(googleStreets);
             if (type === 'satellite') {
-                if (map.hasLayer(streetsLayer)) map.removeLayer(streetsLayer);
-                satelliteLayer.addTo(map);
-            } else if (type === 'streets') {
-                if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
-                streetsLayer.addTo(map);
+                googleHybrid.addTo(map);
+                currentBase = 'hybrid';
+                document.getElementById('baseMapBadge').innerText = 'Google Hybrid';
+            } else {
+                googleStreets.addTo(map);
+                currentBase = 'streets';
+                document.getElementById('baseMapBadge').innerText = 'Bản đồ Giao thông';
             }
+            closeAllDrawers();
         }
 
-        // Hàm ẩn/hiện thanh menu trượt & lớp nền mờ
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            sidebar.classList.toggle('collapsed');
-            backdrop.classList.toggle('hidden');
+        function cycleBaseMap() {
+            setBaseMap(currentBase === 'hybrid' ? 'streets' : 'satellite');
         }
 
+        function toggleContourLayer() {
+            if (map.hasLayer(contourLayer)) {
+                map.removeLayer(contourLayer);
+                alert("Đã tắt lớp Đường bình độ.");
+            } else {
+                contourLayer.addTo(map);
+                alert("Đã bật lớp Đường bình độ địa hình.");
+            }
+            closeAllDrawers();
+        }
+
+        // Nhóm quản lý tất cả các đối tượng người dùng nạp/vẽ
+        const userLayersGroup = L.featureGroup().addTo(map);
+        let kmlCount = 0, pointCount = 0, photoCount = 0;
+
+        function updateLayerOpacity(val) {
+            document.getElementById('opacityVal').innerText = val + '%';
+            userLayersGroup.setStyle({ opacity: val / 100, fillOpacity: (val / 100) * 0.4 });
+        }
+
+        // 2. ĐIỀU KHIỂN DRAWER & MODAL
+        function openDrawer(id) {
+            closeAllDrawers();
+            document.getElementById(id).classList.remove('closed');
+            document.getElementById('drawerBackdrop').classList.remove('hidden');
+        }
+
+        function closeAllDrawers() {
+            document.querySelectorAll('.drawer-left, .drawer-right').forEach(el => el.classList.add('closed'));
+            document.getElementById('drawerBackdrop').classList.add('hidden');
+        }
+
+        function openModal(id) {
+            closeAllDrawers();
+            if (id === 'logModal') {
+                const c = map.getCenter();
+                const vn = latLngToVN2000(c.lat, c.lng, currentMeridian);
+                document.getElementById('logX').value = vn.x;
+                document.getElementById('logY').value = vn.y;
+            }
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleHudBody() {
+            const body = document.getElementById('hudCoordBody');
+            const icon = document.getElementById('hudChevron');
+            body.classList.toggle('hidden');
+            icon.className = body.classList.contains('hidden') ? 'fa-solid fa-angles-up text-xs' : 'fa-solid fa-angles-down text-xs';
+        }
+
+        function toggleMapOnly(hide) {
+            document.body.classList.toggle('map-only', hide);
+        }
+
+        // 3. HỆ QUY CHIẾU VN-2000 (34 TỈNH MỚI & 63 TỈNH CŨ) + TÍNH TOÁN THUẬN / NGHỊCH
         const provinces34 = [
             { name: "Lâm Đồng - Bình Thuận - Đắk Nông", meridian: 108.5 },
+            { name: "TP. Hồ Chí Minh - Bình Dương - Bà Rịa Vũng Tàu", meridian: 106.75 },
+            { name: "Đồng Nai - Bình Phước", meridian: 107.25 },
+            { name: "Khánh Hòa - Ninh Thuận", meridian: 109.0 },
             { name: "Hà Nội - Vĩnh Phúc - Bắc Ninh", meridian: 105.0 },
-            { name: "TP. Hồ Chí Minh - Bình Dương - Đồng Nai", meridian: 106.75 },
-            { name: "Đà Nẵng - Quảng Nam - Thừa Thiên Huế", meridian: 108.0 },
-            { name: "Cần Thơ - An Giang - Kiên Giang", meridian: 105.5 },
-            { name: "Hải Phòng - Hải Dương - Hưng Yên", meridian: 106.25 },
-            { name: "Quảng Ninh - Lạng Sơn - Cao Bằng", meridian: 106.5 },
-            { name: "Nghệ An - Hà Tĩnh - Quảng Bình", meridian: 105.75 },
-            { name: "Khánh Hòa - Ninh Thuận - Phú Yên", meridian: 109.0 }
+            { name: "Đà Nẵng - Quảng Nam", meridian: 108.0 },
+            { name: "Cần Thơ - Hậu Giang - Sóc Trăng", meridian: 105.5 }
         ];
 
         const provinces63 = [
-            { name: "Bình Thuận / Lâm Đồng", meridian: 108.5 },
-            { name: "Hà Nội", meridian: 105.0 },
-            { name: "TP. Hồ Chí Minh", meridian: 106.75 },
-            { name: "Đà Nẵng", meridian: 108.25 },
-            { name: "Cần Thơ", meridian: 105.75 },
-            { name: "Hải Phòng", meridian: 103.0 },
-            { name: "Quảng Ninh", meridian: 106.0 },
-            { name: "Thừa Thiên Huế", meridian: 107.0 },
-            { name: "Khánh Hòa", meridian: 109.0 },
-            { name: "Đồng Nai", meridian: 107.25 },
-            { name: "Bình Dương", meridian: 106.6 },
-            { name: "Long An", meridian: 106.2 }
+            { name: "Bình Thuận (KTT 108°30')", meridian: 108.5 },
+            { name: "Lâm Đồng (KTT 108°30')", meridian: 108.5 },
+            { name: "TP. Hồ Chí Minh (KTT 106°45')", meridian: 106.75 },
+            { name: "Đồng Nai (KTT 107°15')", meridian: 107.25 },
+            { name: "Bình Dương (KTT 106°36')", meridian: 106.6 },
+            { name: "Khánh Hòa (KTT 109°00')", meridian: 109.0 },
+            { name: "Ninh Thuận (KTT 109°00')", meridian: 109.0 },
+            { name: "Hà Nội (KTT 105°00')", meridian: 105.0 }
         ];
 
-        var currentMeridian = 108.5;
-        var currentMode = '34';
+        let currentMeridian = 108.5;
+        let currentMode = '34';
 
         function setProvinceMode(mode) {
             currentMode = mode;
-            document.getElementById('btn-mode-34').className = mode === '34' ? "flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold";
-            document.getElementById('btn-mode-63').className = mode === '63' ? "flex-1 bg-blue-600 text-white text-[10px] py-1 rounded font-semibold" : "flex-1 bg-slate-800 text-slate-300 text-[10px] py-1 rounded font-semibold";
-            document.getElementById('group-mode-lbl').innerText = mode === '34' ? "Cơ chế 34 Tỉnh" : "Cơ chế 63 Tỉnh";
-            populateProvinces();
-        }
-
-        function populateProvinces() {
-            var select = document.getElementById('provinceSelect');
-            select.innerHTML = '';
-            var list = currentMode === '34' ? provinces34 : provinces63;
+            document.getElementById('btnMode34').className = mode === '34' ? "flex-1 bg-blue-600 py-2 rounded-xl text-xs font-bold text-white" : "flex-1 bg-slate-800 py-2 rounded-xl text-xs font-bold text-slate-300";
+            document.getElementById('btnMode63').className = mode === '63' ? "flex-1 bg-blue-600 py-2 rounded-xl text-xs font-bold text-white" : "flex-1 bg-slate-800 py-2 rounded-xl text-xs font-bold text-slate-300";
+            const sel = document.getElementById('provinceSelect');
+            sel.innerHTML = '';
+            const list = mode === '34' ? provinces34 : provinces63;
             list.forEach(p => {
-                var opt = document.createElement('option');
+                const opt = document.createElement('option');
                 opt.value = p.meridian;
-                opt.text = `${p.name} (KTT: ${p.meridian}°)`;
-                select.appendChild(opt);
+                opt.text = `${p.name} (KTT ${p.meridian}°)`;
+                sel.appendChild(opt);
             });
             currentMeridian = list[0].meridian;
-            updateCrosshairCoord();
+            updateCenterCoords();
         }
 
         function changeProvince(val) {
             currentMeridian = parseFloat(val);
-            var selectElement = document.getElementById('provinceSelect');
-            var selectedText = selectElement.options[selectElement.selectedIndex].text;
-            document.getElementById('vn-title').innerHTML = `<i class="fa-solid fa-globe"></i> PD GIS Pro - ${selectedText.split('(')[0]} [m]`;
-            updateCrosshairCoord();
+            const sel = document.getElementById('provinceSelect');
+            const label = sel.options[sel.selectedIndex].text.split('(')[0].trim().toUpperCase();
+            document.getElementById('hudProvinceTitle').innerText = `VN-2000 / ${label} [m]`;
+            updateCenterCoords();
         }
 
+        // Chuyển WGS84 (Lat, Lon) -> VN-2000 (X Easting, Y Northing)
         function latLngToVN2000(lat, lon, meridian) {
-            var a = 6378137.0, f = 1 / 298.257223563, e2 = 2 * f - f * f, eprime2 = e2 / (1 - e2);
-            var latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180;
-            var lon0 = meridian * Math.PI / 180, k0 = 0.9999, FalseEasting = 500000.0, FalseNorthing = 0.0;
-            var dLon = lonRad - lon0, sinLat = Math.sin(latRad), cosLat = Math.cos(latRad), tanLat = Math.tan(latRad);
-            var N = a / Math.sqrt(1 - e2 * sinLat * sinLat), T = tanLat * tanLat, C = eprime2 * cosLat * cosLat, A = cosLat * dLon;
-            var M = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * latRad - (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * latRad) + (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * latRad) - (35 * e2 * e2 * e2 / 3072) * Math.sin(6 * latRad));
-            var xEasting = FalseEasting + k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6 + (5 - 18 * T + T * T + 72 * C - 58 * eprime2) * Math.pow(A, 5) / 120);
-            var yNorthing = FalseNorthing + k0 * (M + N * tanLat * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eprime2) * Math.pow(A, 6) / 720));
-            return { x: xEasting.toFixed(3), y: yNorthing.toFixed(3) };
+            const a = 6378137.0, f = 1 / 298.257223563, e2 = 2 * f - f * f, ep2 = e2 / (1 - e2);
+            const latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180, lon0 = meridian * Math.PI / 180;
+            const k0 = 0.9999, FE = 500000.0, FN = 0.0;
+            const dLon = lonRad - lon0, sinL = Math.sin(latRad), cosL = Math.cos(latRad), tanL = Math.tan(latRad);
+            const N = a / Math.sqrt(1 - e2 * sinL * sinL), T = tanL * tanL, C = ep2 * cosL * cosL, A = cosL * dLon;
+            const M = a * ((1 - e2/4 - 3*e2*e2/64 - 5*e2*e2*e2/256)*latRad - (3*e2/8 + 3*e2*e2/32 + 45*e2*e2*e2/1024)*Math.sin(2*latRad) + (15*e2*e2/256 + 45*e2*e2*e2/1024)*Math.sin(4*latRad) - (35*e2*e2*e2/3072)*Math.sin(6*latRad));
+            const x = FE + k0 * N * (A + (1 - T + C)*Math.pow(A,3)/6 + (5 - 18*T + T*T + 72*C - 58*ep2)*Math.pow(A,5)/120);
+            const y = FN + k0 * (M + N * tanL * (A*A/2 + (5 - T + 9*C + 4*C*C)*Math.pow(A,4)/24 + (61 - 58*T + T*T + 600*C - 330*ep2)*Math.pow(A,6)/720));
+            return { x: x.toFixed(3), y: y.toFixed(3) };
         }
 
-        function updateCrosshairCoord() {
-            var center = map.getCenter();
-            var vnCoord = latLngToVN2000(center.lat, center.lng, currentMeridian);
-            document.getElementById('cross-x').innerText = vnCoord.x;
-            document.getElementById('cross-y').innerText = vnCoord.y;
-            document.getElementById('lbl-zoom').innerText = 'Z' + map.getZoom().toFixed(1);
+        // Chuyển ngược VN-2000 (X Easting, Y Northing) -> WGS84 (Lat, Lon)
+        function vn2000ToLatLng(xEasting, yNorthing, meridian) {
+            const a = 6378137.0, f = 1 / 298.257223563, e2 = 2 * f - f * f, ep2 = e2 / (1 - e2);
+            const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+            const k0 = 0.9999, FE = 500000.0, FN = 0.0;
+            const x = xEasting - FE, y = yNorthing - FN;
+            const M = y / k0;
+            const mu = M / (a * (1 - e2/4 - 3*e2*e2/64 - 5*e2*e2*e2/256));
+            const phi1 = mu + (3*e1/2 - 27*Math.pow(e1,3)/32)*Math.sin(2*mu) + (21*e1*e1/16 - 55*Math.pow(e1,4)/32)*Math.sin(4*mu) + (151*Math.pow(e1,3)/96)*Math.sin(6*mu);
+            const sinP = Math.sin(phi1), cosP = Math.cos(phi1), tanP = Math.tan(phi1);
+            const N1 = a / Math.sqrt(1 - e2 * sinP * sinP);
+            const T1 = tanP * tanP, C1 = ep2 * cosP * cosP;
+            const R1 = a * (1 - e2) / Math.pow(1 - e2 * sinP * sinP, 1.5);
+            const D = x / (N1 * k0);
+            const latRad = phi1 - (N1 * tanP / R1) * (D*D/2 - (5 + 3*T1 + 10*C1 - 4*C1*C1 - 9*ep2)*Math.pow(D,4)/24 + (61 + 90*T1 + 298*C1 + 45*T1*T1 - 252*ep2 - 3*C1*C1)*Math.pow(D,6)/720);
+            const lonRad = (meridian * Math.PI / 180) + (D - (1 + 2*T1 + C1)*Math.pow(D,3)/6 + (5 - 2*C1 + 28*T1 - 3*C1*C1 + 8*ep2 + 24*T1*T1)*Math.pow(D,5)/120) / cosP;
+            return { lat: latRad * 180 / Math.PI, lng: lonRad * 180 / Math.PI };
         }
 
-        map.on('move', updateCrosshairCoord);
+        function updateCenterCoords() {
+            const c = map.getCenter();
+            const vn = latLngToVN2000(c.lat, c.lng, currentMeridian);
+            document.getElementById('centerX').innerText = vn.x;
+            document.getElementById('centerY').innerText = vn.y;
+            const z = map.getZoom();
+            document.getElementById('zoomLevel').innerText = z.toFixed(1);
 
-        function centerToCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var lat = position.coords.latitude, lng = position.coords.longitude;
-                    var alt = position.coords.altitude || 12.5, acc = position.coords.accuracy || 3.5;
-                    map.setView([lat, lng], 18);
-                    L.marker([lat, lng]).addTo(map).bindPopup("<b>Vị trí thiết bị</b>").openPopup();
-                    var vnDevice = latLngToVN2000(lat, lng, currentMeridian);
-                    document.getElementById('gps-x').innerText = vnDevice.x;
-                    document.getElementById('gps-y').innerText = vnDevice.y;
-                    document.getElementById('gps-alt').innerText = alt.toFixed(1) + ' m';
-                    document.getElementById('gps-acc').innerText = acc.toFixed(1) + ' m';
-                }, function(error) { alert("Vui lòng bật định vị GPS trên thiết bị."); });
-            } else { alert("Trình duyệt không hỗ trợ GPS."); }
+            // Cập nhật thước tỉ lệ động
+            const metersPerPixel = 156543.03392 * Math.cos(c.lat * Math.PI / 180) / Math.pow(2, z);
+            const scaleMeters = Math.round(metersPerPixel * 64);
+            document.getElementById('scaleText').innerText = scaleMeters >= 1000 ? (scaleMeters/1000).toFixed(1) + ' km' : scaleMeters + ' m';
+        }
+        map.on('move zoom', updateCenterCoords);
+
+        // 4. NẠP FILE KMZ (TỰ ĐỘNG GIẢI NÉN ZIP) / KML / GEOJSON / GPX
+        function triggerFileUpload() {
+            closeAllDrawers();
+            document.getElementById('universalFileInput').click();
         }
 
-        var projectRoutes = {
-            tuyphong: [[11.240, 108.760], [11.245, 108.775], [11.230, 108.780]],
-            d1: [[11.2340, 108.7600], [11.2345, 108.7780]],
-            d2: [[11.2360, 108.7600], [11.2365, 108.7780]],
-            d3: [[11.2380, 108.7600], [11.2385, 108.7780]],
-            n1: [[11.2340, 108.7620], [11.2380, 108.7625]],
-            hamkiem: [[10.950, 107.950], [10.955, 107.960], [10.945, 107.965]]
-        };
-        var activeRouteLayer = null;
-        function zoomToRoute(key) {
-            if (!key || !projectRoutes[key]) return;
-            if (activeRouteLayer) map.removeLayer(activeRouteLayer);
-            activeRouteLayer = L.polyline(projectRoutes[key], { color: '#3b82f6', weight: 5, opacity: 0.8 }).addTo(map);
-            map.fitBounds(activeRouteLayer.getBounds());
-            toggleSidebar();
-        }
-
-        // Xử lý nạp tệp GIS an toàn (.kml, .geojson)
-        document.getElementById('gisFileLoader').addEventListener('change', function(e) {
-            var file = e.target.files[0];
+        async function handleUniversalFile(event) {
+            const file = event.target.files[0];
             if (!file) return;
-            
-            // Kiểm tra nếu là file KMZ
-            if (file.name.toLowerCase().endsWith('.kmz')) {
-                alert("Tệp .KMZ là tệp nén nhị phân. Vui lòng giải nén tệp .KMZ trên máy tính để lấy tệp .KML bên trong rồi nạp vào đây!");
-                return;
-            }
+            const name = file.name.toLowerCase();
 
-            var reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    var content = event.target.result;
-                    var customLayer;
-
-                    if (file.name.toLowerCase().endsWith('.geojson') || file.name.toLowerCase().endsWith('.json')) {
-                        customLayer = L.geoJSON(JSON.parse(content));
-                        customLayer.addTo(map);
-                        try {
-                            if (customLayer.getBounds().isValid()) {
-                                map.fitBounds(customLayer.getBounds());
-                            }
-                        } catch(bErr) {}
-                        alert("Nạp tệp GeoJSON thành công!");
-                        toggleSidebar();
-                    } else {
-                        customLayer = omnivore.kml.parse(content);
-                        customLayer.on('ready', function() {
-                            try {
-                                var bounds = customLayer.getBounds();
-                                if (bounds && bounds.isValid()) {
-                                    map.fitBounds(bounds);
-                                }
-                            } catch (bErr) {}
-                            customLayer.addTo(map);
-                            alert("Nạp tệp KML thành công!");
-                            toggleSidebar();
-                        });
-                        customLayer.on('error', function(err) {
-                            alert("Lỗi cấu trúc tệp KML: Tệp không chứa tọa độ hợp lệ.");
-                        });
+            try {
+                if (name.endsWith('.kmz')) {
+                    // Giải nén file KMZ bằng JSZip để lấy file .kml bên trong
+                    const zip = await JSZip.loadAsync(file);
+                    let kmlText = null;
+                    for (const filename of Object.keys(zip.files)) {
+                        if (filename.toLowerCase().endsWith('.kml')) {
+                            kmlText = await zip.files[filename].async('string');
+                            break;
+                        }
                     }
-                } catch(err) { 
-                    alert("Lỗi đọc tệp GIS: " + err.message); 
+                    if (!kmlText) {
+                        alert("Không tìm thấy dữ liệu bản đồ .KML bên trong tệp nén .KMZ này!");
+                        return;
+                    }
+                    renderKmlContent(kmlText, file.name);
+                } else if (name.endsWith('.kml')) {
+                    const text = await file.text();
+                    renderKmlContent(text, file.name);
+                } else if (name.endsWith('.geojson') || name.endsWith('.json')) {
+                    const text = await file.text();
+                    const layer = L.geoJSON(JSON.parse(text), {
+                        style: { color: '#f59e0b', weight: 3, fillOpacity: 0.25 }
+                    });
+                    layer.addTo(userLayersGroup);
+                    fitSafeBounds(layer);
+                    kmlCount++;
+                    document.getElementById('badgeKmlCount').innerText = kmlCount;
+                    alert("Đã nạp thành công lớp GeoJSON: " + file.name);
+                } else if (name.endsWith('.gpx')) {
+                    const text = await file.text();
+                    const layer = omnivore.gpx.parse(text);
+                    layer.addTo(userLayersGroup);
+                    fitSafeBounds(layer);
+                    alert("Đã nạp thành công tuyến GPX: " + file.name);
                 }
-            };
-            reader.readAsText(file);
+            } catch (err) {
+                alert("Lỗi xử lý tệp bản đồ: " + err.message);
+            }
+            event.target.value = '';
+        }
+
+        function renderKmlContent(kmlString, fileName) {
+            const layer = omnivore.kml.parse(kmlString);
+            layer.eachLayer(l => {
+                if (l.setStyle) l.setStyle({ color: '#10b981', weight: 3, fillOpacity: 0.2 });
+            });
+            layer.addTo(userLayersGroup);
+            fitSafeBounds(layer);
+            kmlCount++;
+            document.getElementById('badgeKmlCount').innerText = kmlCount;
+            alert("Đã giải nén và hiển thị thành công bản đồ: " + fileName);
+        }
+
+        function fitSafeBounds(layer) {
+            try {
+                const b = layer.getBounds();
+                if (b && b.isValid()) map.fitBounds(b, { padding: [30, 30] });
+            } catch (e) { console.log("Giữ nguyên khung nhìn hiện tại."); }
+        }
+
+        // 5. CÁC CÔNG CỤ TRẮC ĐỊA (TÌM ĐIỂM, CHUYỂN TỌA ĐỘ, VẼ SỔ ĐỎ, CẮM MỐC)
+        function flyToVN2000() {
+            const x = parseFloat(document.getElementById('searchX').value);
+            const y = parseFloat(document.getElementById('searchY').value);
+            if (isNaN(x) || isNaN(y)) return alert("Vui lòng nhập đủ tọa độ X và Y!");
+            const ll = vn2000ToLatLng(x, y, currentMeridian);
+            map.setView([ll.lat, ll.lng], 19);
+            L.marker([ll.lat, ll.lng]).addTo(userLayersGroup)
+                .bindPopup(`<b>Điểm tìm kiếm VN-2000</b><br>X: ${x}<br>Y: ${y}`).openPopup();
+            closeModal('searchModal');
+        }
+
+        function convertVNToWGS() {
+            const x = parseFloat(document.getElementById('convX').value);
+            const y = parseFloat(document.getElementById('convY').value);
+            if (isNaN(x) || isNaN(y)) return;
+            const ll = vn2000ToLatLng(x, y, currentMeridian);
+            document.getElementById('convResult').innerHTML = `Vĩ độ (Lat): <b>${ll.lat.toFixed(7)}°</b><br>Kinh độ (Lon): <b>${ll.lng.toFixed(7)}°</b>`;
+        }
+
+        function useCenterForPoint() {
+            document.getElementById('pointX').value = document.getElementById('centerX').innerText;
+            document.getElementById('pointY').value = document.getElementById('centerY').innerText;
+        }
+
+        function saveCustomPoint() {
+            const name = document.getElementById('pointName').value || 'Mốc tọa độ';
+            const x = parseFloat(document.getElementById('pointX').value);
+            const y = parseFloat(document.getElementById('pointY').value);
+            if (isNaN(x) || isNaN(y)) return alert("Tọa độ không hợp lệ!");
+            const ll = vn2000ToLatLng(x, y, currentMeridian);
+            L.marker([ll.lat, ll.lng]).addTo(userLayersGroup)
+                .bindPopup(`<b>${name}</b><br>X(E): ${x}<br>Y(N): ${y}`).openPopup();
+            map.setView([ll.lat, ll.lng], 18);
+            pointCount++;
+            document.getElementById('badgePointCount').innerText = pointCount;
+            closeModal('addPointModal');
+        }
+
+        function drawSoDoPolygon() {
+            const raw = document.getElementById('soDoCoords').value.trim();
+            if (!raw) return alert("Vui lòng nhập danh sách tọa độ góc ranh!");
+            const lines = raw.split('\n');
+            const latlngs = [];
+            lines.forEach(line => {
+                const parts = line.split(/[,\s\t]+/).filter(Boolean);
+                if (parts.length >= 2) {
+                    const x = parseFloat(parts[0]), y = parseFloat(parts[1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        const ll = vn2000ToLatLng(x, y, currentMeridian);
+                        latlngs.push([ll.lat, ll.lng]);
+                    }
+                }
+            });
+            if (latlngs.length < 3) return alert("Cần ít nhất 3 điểm tọa độ để tạo vùng ranh giới!");
+            const poly = L.polygon(latlngs, { color: '#ef4444', weight: 3, fillColor: '#ef4444', fillOpacity: 0.25 }).addTo(userLayersGroup);
+            fitSafeBounds(poly);
+            closeModal('soDoModal');
+            alert(`Đã vẽ thành công ranh giới thửa đất gồm ${latlngs.length} điểm mốc!`);
+        }
+
+        // 6. GPS THỜI GIAN THỰC, TRACKLOG & LA BÀN
+        let gpsMarker = null, isTracking = false, trackLine = null, trackCoords = [], hideGPS = false;
+
+        function centerToGPS() {
+            if (!navigator.geolocation) return alert("Thiết bị không hỗ trợ GPS.");
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude: lat, longitude: lng, altitude, accuracy, speed } = pos.coords;
+                map.setView([lat, lng], 18);
+                updateGPSUI(lat, lng, altitude, accuracy, speed);
+            }, () => alert("Vui lòng bật quyền định vị GPS trên điện thoại."), { enableHighAccuracy: true });
+        }
+
+        function updateGPSUI(lat, lng, alt, acc, speed) {
+            const vn = latLngToVN2000(lat, lng, currentMeridian);
+            document.getElementById('gpsX').innerText = vn.x;
+            document.getElementById('gpsY').innerText = vn.y;
+            document.getElementById('gpsAlt').innerText = (alt || 8.5).toFixed(2) + ' m';
+            document.getElementById('gpsAcc').innerText = (acc || 3.2).toFixed(2) + ' m';
+            document.getElementById('speedVal').innerText = ((speed || 0) * 3.6).toFixed(1);
+
+            if (!hideGPS) {
+                if (!gpsMarker) {
+                    gpsMarker = L.circleMarker([lat, lng], { radius: 8, color: '#fff', weight: 2, fillColor: '#2563eb', fillOpacity: 1 }).addTo(map);
+                } else {
+                    gpsMarker.setLatLng([lat, lng]);
+                }
+            }
+            if (document.getElementById('chkAutoPan').checked) map.panTo([lat, lng]);
+
+            if (isTracking) {
+                trackCoords.push([lat, lng]);
+                if (!trackLine) {
+                    trackLine = L.polyline(trackCoords, { color: '#10b981', weight: 4 }).addTo(userLayersGroup);
+                } else {
+                    trackLine.setLatLngs(trackCoords);
+                }
+            }
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(pos => {
+                updateGPSUI(pos.coords.latitude, pos.coords.longitude, pos.coords.altitude, pos.coords.accuracy, pos.coords.speed);
+            }, () => {}, { enableHighAccuracy: true });
+        }
+
+        function toggleTracklog() {
+            isTracking = !isTracking;
+            const btn = document.getElementById('btnTracklog');
+            const txt = document.getElementById('trackStatusText');
+            if (isTracking) {
+                trackCoords = [];
+                btn.classList.add('bg-emerald-600', 'text-white');
+                txt.innerText = 'Đang ghi...';
+                txt.className = 'text-emerald-600 font-bold';
+                alert("Đã bắt đầu ghi tuyến đường đi thực tế (Tracklog).");
+            } else {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                txt.innerText = 'Tắt';
+                txt.className = 'text-slate-400';
+                alert(`Đã dừng ghi Tracklog (${trackCoords.length} điểm tọa độ).`);
+            }
+            closeAllDrawers();
+        }
+
+        function toggleHideGPS(hide) {
+            hideGPS = hide;
+            if (hide && gpsMarker) { map.removeLayer(gpsMarker); gpsMarker = null; }
+        }
+
+        // Cảm biến La bàn & Cân bằng điện tử
+        window.addEventListener('deviceorientation', e => {
+            if (e.alpha !== null) {
+                document.getElementById('compassNeedle').style.transform = `rotate(${-e.alpha - 45}deg)`;
+            }
+            if (e.beta !== null && e.gamma !== null) {
+                document.getElementById('tiltX').innerText = e.gamma.toFixed(1) + '°';
+                document.getElementById('tiltY').innerText = e.beta.toFixed(1) + '°';
+            }
         });
 
-        let mediaStream = null, useFrontCamera = false;
-        async function openCameraModal() {
-            toggleSidebar();
-            document.getElementById('cameraModal').classList.remove('hidden');
-            var selectElement = document.getElementById('provinceSelect');
-            document.getElementById('cam-zone-label').innerText = "Hệ chiếu: " + selectElement.options[selectElement.selectedIndex].text;
-            await startCamera();
+        function toggleSpiritLevel(show) {
+            document.getElementById('spiritLevel').classList.toggle('hidden', !show);
         }
 
-        async function startCamera() {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(t => t.stop());
-                mediaStream = null;
-            }
-            try {
-                const constraints = {
-                    video: {
-                        facingMode: useFrontCamera ? "user" : { ideal: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                };
-                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const videoElement = document.getElementById('cameraStream');
-                videoElement.srcObject = mediaStream;
-                await videoElement.play().catch(e => console.log("Auto-play prevented:", e));
-                updateCamCoordinates();
-            } catch (err) {
+        function resetNorth() {
+            document.getElementById('compassNeedle').style.transform = 'rotate(-45deg)';
+        }
+
+        // Giữ màn hình luôn sáng (WakeLock API)
+        let wakeLock = null;
+        async function toggleWakeLock(enable) {
+            if ('wakeLock' in navigator) {
                 try {
-                    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                    const videoElement = document.getElementById('cameraStream');
-                    videoElement.srcObject = mediaStream;
-                    await videoElement.play();
-                    updateCamCoordinates();
-                } catch (fallbackErr) {
-                    alert("Không thể truy cập Camera. Vui lòng kiểm tra quyền cấp phép trên trình duyệt (" + fallbackErr.message + ")");
-                    closeCameraModal();
-                }
+                    if (enable) wakeLock = await navigator.wakeLock.request('screen');
+                    else if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+                } catch (e) {}
+            }
+        }
+
+        // 7. CAMERA AR CHỤP ẢNH ĐÓNG DẤU TỌA ĐỘ
+        let mediaStream = null, useFrontCam = false;
+        async function openCameraModal() {
+            closeAllDrawers();
+            document.getElementById('cameraModal').classList.remove('hidden');
+            document.getElementById('camX').innerText = document.getElementById('centerX').innerText;
+            document.getElementById('camY').innerText = document.getElementById('centerY').innerText;
+            document.getElementById('camAlt').innerText = document.getElementById('gpsAlt').innerText;
+            document.getElementById('camTime').innerText = new Date().toLocaleString('vi-VN');
+            try {
+                if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: useFrontCam ? 'user' : 'environment' }, audio: false });
+                const v = document.getElementById('cameraStream');
+                v.srcObject = mediaStream;
+                await v.play();
+            } catch (e) {
+                alert("Không thể mở camera trực tiếp: " + e.message);
+                closeCameraModal();
             }
         }
 
         function closeCameraModal() {
-            if (mediaStream) { 
-                mediaStream.getTracks().forEach(t => t.stop()); 
-                mediaStream = null; 
-            }
-            const videoElement = document.getElementById('cameraStream');
-            if (videoElement) videoElement.srcObject = null;
+            if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
             document.getElementById('cameraModal').classList.add('hidden');
         }
 
-        function switchCamera() { 
-            useFrontCamera = !useFrontCamera; 
-            startCamera(); 
-        }
-
-        function updateCamCoordinates() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(pos => {
-                    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-                    const alt = pos.coords.altitude || 12.5, acc = pos.coords.accuracy || 2.0;
-                    const vnCoord = latLngToVN2000(lat, lng, currentMeridian);
-                    document.getElementById('cam-x').innerText = vnCoord.x;
-                    document.getElementById('cam-y').innerText = vnCoord.y;
-                    document.getElementById('cam-alt').innerText = alt.toFixed(2);
-                    document.getElementById('cam-gps-status').innerText = `RTK (±${acc.toFixed(1)}m)`;
-                }, () => {}, { enableHighAccuracy: true });
-            }
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', e => {
-                    document.getElementById('cam-heading').innerText = (e.alpha ? e.alpha.toFixed(1) : "0.0") + "°";
-                });
-            }
-        }
+        function switchCamera() { useFrontCam = !useFrontCam; openCameraModal(); }
 
         function capturePhoto() {
-            const video = document.getElementById('cameraStream');
-            const canvas = document.getElementById('snapshotCanvas');
-            canvas.width = video.videoWidth || 1280; 
-            canvas.height = video.videoHeight || 720;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const v = document.getElementById('cameraStream');
+            const c = document.getElementById('snapshotCanvas');
+            c.width = v.videoWidth || 1280; c.height = v.videoHeight || 720;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(v, 0, 0, c.width, c.height);
 
-            ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-            ctx.fillRect(20, canvas.height - 210, canvas.width - 40, 190);
-            ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 4;
-            ctx.strokeRect(20, canvas.height - 210, canvas.width - 40, 190);
+            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+            ctx.fillRect(20, c.height - 150, c.width - 40, 130);
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 22px monospace';
+            ctx.fillText('PD GIS PRO - BAN QLDA PHUONG DONG', 40, c.height - 110);
+            ctx.fillStyle = '#ffffff'; ctx.font = '18px monospace';
+            ctx.fillText(`VN-2000 X(E): ${document.getElementById('camX').innerText} m | Y(N): ${document.getElementById('camY').innerText} m`, 40, c.height - 75);
+            ctx.fillText(`Thoi gian: ${new Date().toLocaleString('vi-VN')}`, 40, c.height - 40);
 
-            ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px monospace";
-            ctx.fillText("PD GIS PRO", 40, canvas.height - 165);
-            ctx.font = "20px monospace"; ctx.fillStyle = "#f87171";
-            ctx.fillText("Tọa độ X(E): " + document.getElementById('cam-x').innerText + " m", 40, canvas.height - 130);
-            ctx.fillText("Tọa độ Y(N): " + document.getElementById('cam-y').innerText + " m", 40, canvas.height - 100);
-            ctx.fillStyle = "#fbbf24";
-            ctx.fillText("Cao độ quốc gia (H): " + document.getElementById('cam-alt').innerText + " m", 40, canvas.height - 70);
-            ctx.fillStyle = "#94a3b8"; ctx.font = "15px sans-serif";
-            var selectElement = document.getElementById('provinceSelect');
-            ctx.fillText("Khu vực: " + selectElement.options[selectElement.selectedIndex].text.split('(')[0], 40, canvas.height - 30);
-
-            var link = document.createElement('a');
-            link.download = `PD_GIS_Pro_${Date.now()}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg');
+            const link = document.createElement('a');
+            link.download = `PD_GIS_${Date.now()}.jpg`;
+            link.href = c.toDataURL('image/jpeg');
             link.click();
-            alert("Đã chụp và lưu ảnh hiện trường đóng dấu VN-2000 thành công!");
+            photoCount++;
+            document.getElementById('badgePhotoCount').innerText = photoCount;
+            alert("Đã chụp và lưu ảnh đính kèm tọa độ VN-2000!");
         }
 
-        function openLogModal() {
-            toggleSidebar();
-            var center = map.getCenter();
-            var vnCoord = latLngToVN2000(center.lat, center.lng, currentMeridian);
-            document.getElementById('logX').value = vnCoord.x;
-            document.getElementById('logY').value = vnCoord.y;
-            document.getElementById('logModal').classList.remove('hidden');
+        // 8. DỰ ÁN BAN QLDA, SAO LƯU, XUẤT DỮ LIỆU & NHẬT KÝ
+        const routesData = {
+            tuyphong: [[11.240, 108.760], [11.245, 108.775], [11.230, 108.780], [11.240, 108.760]],
+            d1: [[11.2340, 108.7600], [11.2345, 108.7780]],
+            d2: [[11.2360, 108.7600], [11.2365, 108.7780]],
+            hamkiem: [[10.950, 107.950], [10.955, 107.960], [10.945, 107.965], [10.950, 107.950]]
+        };
+
+        function selectProjectRoute(key, title) {
+            document.getElementById('activeProjectLabel').innerText = title;
+            document.getElementById('logProject').value = title;
+            if (routesData[key]) {
+                const line = L.polyline(routesData[key], { color: '#3b82f6', weight: 5 }).addTo(userLayersGroup);
+                fitSafeBounds(line);
+            }
+            closeModal('projectModal');
         }
-        function closeLogModal() {
-            document.getElementById('logModal').classList.add('hidden');
+
+        function copyCoordinates() {
+            const text = `VN-2000 X(E): ${document.getElementById('centerX').innerText}, Y(N): ${document.getElementById('centerY').innerText}`;
+            navigator.clipboard.writeText(text);
+            alert("Đã sao chép tọa độ tâm ngắm:\n" + text);
         }
+
         function saveLog() {
-            var proj = document.getElementById('logProject').value;
-            var x = document.getElementById('logX').value;
-            var y = document.getElementById('logY').value;
-            var content = document.getElementById('logContent').value;
-            alert(`Đã lưu nhật ký thi công cho dự án:\n- Hạng mục: ${proj}\n- Tọa độ: X=${x}, Y=${y}\n- Nội dung: ${content}`);
-            closeLogModal();
+            const p = document.getElementById('logProject').value;
+            const c = document.getElementById('logContent').value;
+            alert(`Đã lưu nhật ký nghiệm thu:\n- Dự án: ${p}\n- Tọa độ X=${document.getElementById('logX').value}, Y=${document.getElementById('logY').value}\n- Nội dung: ${c}`);
+            closeModal('logModal');
         }
 
+        function exportGeoJSON() {
+            const data = userLayersGroup.toGeoJSON();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `PD_GIS_Export_${Date.now()}.geojson`; a.click();
+            closeAllDrawers();
+        }
+
+        function backupData() {
+            localStorage.setItem('pd_gis_backup', JSON.stringify(userLayersGroup.toGeoJSON()));
+            alert("Đã sao lưu toàn bộ mốc tọa độ và lớp vẽ vào bộ nhớ thiết bị!");
+            closeAllDrawers();
+        }
+
+        function restoreData() {
+            const raw = localStorage.getItem('pd_gis_backup');
+            if (!raw) return alert("Chưa có bản sao lưu nào trên thiết bị này.");
+            L.geoJSON(JSON.parse(raw)).addTo(userLayersGroup);
+            alert("Đã khôi phục dữ liệu thành công!");
+            closeAllDrawers();
+        }
+
+        function clearAllLayers() {
+            if (confirm("Xóa toàn bộ các lớp dữ liệu tạm và mốc đã vẽ trên bản đồ?")) {
+                userLayersGroup.clearLayers();
+                kmlCount = 0; pointCount = 0;
+                document.getElementById('badgeKmlCount').innerText = '0';
+                document.getElementById('badgePointCount').innerText = '0';
+                closeAllDrawers();
+            }
+        }
+
+        // Khởi chạy mặc định cơ chế 34 tỉnh mới
         setProvinceMode('34');
     </script>
 </body>
