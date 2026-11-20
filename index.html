@@ -1279,13 +1279,23 @@ function getProj4Def(lon0) {
 }
 
 function wgs84ToVn2000(lat, lon, lon0 = state.activeCrs.lon0) {
-  const [x, y] = proj4("EPSG:4326", getProj4Def(lon0), [lon, lat]);
-  return { x, y };
+  try {
+    if (typeof proj4 === "function") {
+      const [x, y] = proj4("EPSG:4326", getProj4Def(lon0), [lon, lat]);
+      if (isFinite(x) && isFinite(y)) return { x, y };
+    }
+  } catch (e) {}
+  return { x: 500000, y: 1200000 };
 }
 
 function vn2000ToWgs84(x, y, lon0 = state.activeCrs.lon0) {
-  const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [x, y]);
-  return { lat, lon };
+  try {
+    if (typeof proj4 === "function") {
+      const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [x, y]);
+      if (isFinite(lat) && isFinite(lon)) return { lat, lon };
+    }
+  } catch (e) {}
+  return { lat: 10.9289, lon: 108.1021 };
 }
 
 /* ============================================================================
@@ -2082,7 +2092,9 @@ function startSmoothCompassLoop() {
     const mapArrow = document.getElementById("mapCompassArrow");
     if (mapArrow) mapArrow.style.transform = `rotate(${-smoothedHeading.toFixed(1)}deg)`;
 
-    updateCameraHudValues();
+    if (document.getElementById("cameraModal")?.classList.contains("open")) {
+      updateCameraHudValues();
+    }
     compassAnimFrame = requestAnimationFrame(tick);
   }
   if (!compassAnimFrame) compassAnimFrame = requestAnimationFrame(tick);
@@ -3108,19 +3120,25 @@ function resetMapNorth() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("hudCrsTitle").textContent = `${state.activeCrs.name} [m]`;
-  document.getElementById("layerOpacitySlider").value = state.layerOpacity ?? 100;
-  document.getElementById("layerOpacityText").textContent = `${state.layerOpacity ?? 100}%`;
-  document.getElementById("baseOpacitySlider").value = state.baseOpacity ?? 100;
-  document.getElementById("baseOpacityText").textContent = `${state.baseOpacity ?? 100}%`;
-  baseLayers[0].layer.setOpacity((state.baseOpacity ?? 100) / 100);
+  try {
+    document.getElementById("hudCrsTitle").textContent = `${state.activeCrs.name} [m]`;
+    document.getElementById("layerOpacitySlider").value = state.layerOpacity ?? 100;
+    document.getElementById("layerOpacityText").textContent = `${state.layerOpacity ?? 100}%`;
+    document.getElementById("baseOpacitySlider").value = state.baseOpacity ?? 100;
+    document.getElementById("baseOpacityText").textContent = `${state.baseOpacity ?? 100}%`;
+    baseLayers[0].layer.setOpacity((state.baseOpacity ?? 100) / 100);
 
-  renderProjectsUI();
-  renderAllVectorFeatures();
-  startSmoothCompassLoop();
+    renderProjectsUI();
+    renderAllVectorFeatures();
+    startSmoothCompassLoop();
 
-  locateUserNow(true);
-  startContinuousGpsWatch();
+    setTimeout(() => {
+      locateUserNow(true);
+      startContinuousGpsWatch();
+    }, 150);
+  } catch (err) {
+    console.error("Init error:", err);
+  }
 });
 </script>
 </body>
