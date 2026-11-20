@@ -473,16 +473,16 @@
   <!-- Thanh công cụ trên cùng (Vị trí 1, 2, 3, 4, 5) -->
   <div class="top-bar">
     <div class="top-left-group">
-      <button class="icon-btn" title="Mở menu chính" onclick="openDrawer()">☰</button>
+      <button class="icon-btn" title="1. Mở menu chính" onclick="openDrawer()">☰</button>
       <div class="glass-pill" style="padding:4px 9px;font-size:11.5px;font-weight:700;color:#38bdf8;">
         PD GIS Pro
       </div>
     </div>
     <div class="top-right-group glass-pill">
-      <button class="icon-btn" title="Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
-      <button class="icon-btn" title="Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
-      <button class="icon-btn" title="Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
-      <button class="icon-btn" title="Cài đặt cấu hình ứng dụng" onclick="openModal('settingsModal')">⚙️</button>
+      <button class="icon-btn" title="2. Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
+      <button class="icon-btn" title="3. Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
+      <button class="icon-btn" title="4. Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
+      <button class="icon-btn" title="5. Cài đặt & Chú thích chức năng" onclick="openModal('settingsModal')">⚙️</button>
     </div>
   </div>
 
@@ -505,27 +505,27 @@
       <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
       <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét Camera" onclick="openModal('parcelModal')">📐</button>
-      <button class="icon-btn" title="Làm mờ các lớp phủ và lớp nền" onclick="toggleOpacityPanel()">💧</button>
+      <button class="icon-btn" title="11. Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
 
   <!-- Cụm bên phải: La bàn (6), Vệ tinh (7), Zoom (8,9), Xoay màn hình, Định vị (10) -->
   <div class="right-stack">
-    <button class="compass-btn" title="La bàn số / Đưa hướng Bắc lên trên" onclick="resetMapNorth()">
+    <button class="compass-btn" title="6. La bàn số / Đưa hướng Bắc lên trên" onclick="resetMapNorth()">
       <span id="mapCompassArrow" style="display:inline-block;font-size:18px;color:#ef4444;">🧭</span>
     </button>
-    <div class="sat-pill" title="Trạng thái vệ tinh GPS">
+    <div class="sat-pill" title="7. Trạng thái vệ tinh GPS">
       <div id="satCount">29/30</div>
       <div>🛰️</div>
     </div>
-    <div class="zoom-pill" id="zoomBadge" title="Mức zoom bản đồ">Z16.0</div>
-    <div class="zoom-group" title="Phóng to / Thu nhỏ bản đồ">
+    <div class="zoom-pill" id="zoomBadge" title="9. Mức zoom bản đồ">Z16.0</div>
+    <div class="zoom-group" title="8. Phóng to / Thu nhỏ">
       <button onclick="map.zoomIn()">+</button>
       <button onclick="map.zoomOut()">−</button>
     </div>
     <button class="icon-btn" id="btnRotateScreen" title="Xoay màn hình / Đổi hướng hiển thị" onclick="toggleScreenOrientation()">🔄</button>
     <button class="icon-btn" title="Đổi lớp bản đồ nền" onclick="cycleBaseMap()">🗺️</button>
-    <button class="locate-fab" title="Định vị về vị trí hiện tại GPS" onclick="locateUserNow(true)">🎯</button>
+    <button class="locate-fab" title="10. Định vị về vị trí hiện tại GPS" onclick="locateUserNow(true)">🎯</button>
   </div>
 
   <!-- Bảng thanh trượt ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN (Vị trí 11) -->
@@ -1189,44 +1189,30 @@
   </div>
 </div>
 
-<!-- Modal: Cài đặt cấu hình & tùy chọn ứng dụng (góc phải bên trên) -->
+<!-- Modal: Cài đặt & Bảng chú thích 15 chức năng -->
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">⚙️ Cài Đặt Cấu Hình Ứng Dụng</span>
+      <span class="modal-title">⚙️ Cài Đặt & Bảng Chú Thích 15 Chức Năng</span>
       <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
     </div>
-
-    <div class="list-card">
-      <div style="font-size:12.5px;font-weight:800;color:#38bdf8;margin-bottom:8px;">📡 Định vị GPS & Hiển thị bản đồ</div>
-      <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px;">
-        <span>Tự động bám theo vị trí GPS khi di chuyển</span>
-        <input type="checkbox" id="cfgAutoFollowGps" onchange="saveAppPreferences()" />
-      </label>
-      <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px;">
-        <span>Hiển thị nhãn kích thước trên các đoạn line</span>
-        <input type="checkbox" id="cfgGlobalSegLabel" checked onchange="toggleGlobalSegmentLabels(this.checked)" />
-      </label>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-        <span>Đơn vị hiển thị chiều dài:</span>
-        <select id="cfgLengthUnit" class="form-select" style="width:140px;" onchange="saveAppPreferences()">
-          <option value="auto">Tự động (m / km)</option>
-          <option value="m">Luôn tính theo Mét (m)</option>
-        </select>
-      </div>
+    <div style="font-size:12px;line-height:1.55;color:#cbd5e1;">
+      <div><strong>1.</strong> Mở menu chính của ứng dụng</div>
+      <div><strong>2.</strong> Mở máy ảnh khảo sát AR và chụp nhanh ảnh hiện trường</div>
+      <div><strong>3.</strong> Tìm kiếm dữ liệu Điểm mốc, Điểm tọa độ, Đường, Vùng, Tracklog</div>
+      <div><strong>4.</strong> Quản lý các lớp dữ liệu được hỗ trợ & Cài đặt hiển thị</div>
+      <div><strong>5.</strong> Mở cài đặt cấu hình, tùy chọn thêm cho ứng dụng</div>
+      <div><strong>6.</strong> Mở la bàn số / Đưa bản đồ về hướng Bắc</div>
+      <div><strong>7.</strong> Thông số hiển thị các vệ tinh thu được</div>
+      <div><strong>8.</strong> Nút phóng to, thu nhỏ bản đồ</div>
+      <div><strong>9.</strong> Hiển thị mức zoom hiện tại từ Z0 đến Z24</div>
+      <div><strong>10.</strong> Nút định vị đưa người dùng về vị trí GPS hiện tại</div>
+      <div><strong>11.</strong> Mở thanh trượt làm mờ các lớp phủ và lớp nền</div>
+      <div><strong>12.</strong> Thanh thông số GPS & tọa độ tâm tính chuyển theo hệ chiếu</div>
+      <div><strong>13.</strong> Biểu tượng hiển thị vị trí hiện tại trên bản đồ</div>
+      <div><strong>14.</strong> Vị trí tâm của bản đồ</div>
+      <div><strong>15.</strong> Công cụ vẽ Điểm mốc, Đường line (xem kích thước), Vùng & Tracklog</div>
     </div>
-
-    <div class="list-card">
-      <div style="font-size:12.5px;font-weight:800;color:#fbbf24;margin-bottom:8px;">🛠️ Tiện ích thao tác nhanh</div>
-      <div class="grid-2">
-        <button class="btn-secondary" onclick="closeModal('settingsModal'); openDeltaHModal()">🎚️ Hiệu chỉnh bù ΔH</button>
-        <button class="btn-secondary" onclick="closeModal('settingsModal'); openModal('crsModal')">🌐 Đổi hệ chiếu VN-2000</button>
-        <button class="btn-secondary" onclick="unhideAllHiddenFeatures()">👁️ Hiện lại các đoạn tạm ẩn</button>
-        <button class="btn-secondary" onclick="closeModal('settingsModal'); openModal('backupModal')">💾 Sao lưu / Khôi phục</button>
-      </div>
-    </div>
-
-    <button class="btn-primary" onclick="closeModal('settingsModal')">Xong</button>
   </div>
 </div>
 
@@ -1454,7 +1440,7 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
     userAccuracyCircle.setLatLng([latitude, longitude]).setRadius(Math.max(latestGps.acc, 3));
   }
 
-  if (flyToPos || state.autoFollowGps) {
+  if (flyToPos) {
     map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
   }
 
@@ -1484,7 +1470,6 @@ function calcSegmentMetrics(p1, p2) {
 }
 
 function formatLength(m) {
-  if (state.lengthUnit === "m") return `${m.toFixed(2)} m`;
   return m >= 1000 ? `${(m / 1000).toFixed(3)} km (${m.toFixed(2)} m)` : `${m.toFixed(2)} m`;
 }
 
@@ -3043,33 +3028,6 @@ function renderSavedPointsList() {
 function openDrawer() { document.getElementById("mainDrawer").classList.add("open"); }
 function closeDrawer() { document.getElementById("mainDrawer").classList.remove("open"); }
 
-
-function saveAppPreferences() {
-  state.autoFollowGps = document.getElementById("cfgAutoFollowGps")?.checked || false;
-  state.lengthUnit = document.getElementById("cfgLengthUnit")?.value || "auto";
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast("Đã lưu cài đặt cấu hình ứng dụng.");
-}
-
-function toggleGlobalSegmentLabels(enabled) {
-  state.layers.forEach(l => { l.showSegLength = enabled; });
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(enabled ? "Đã bật hiển thị nhãn kích thước đoạn." : "Đã tắt hiển thị nhãn kích thước đoạn.");
-}
-
-function unhideAllHiddenFeatures() {
-  let count = 0;
-  state.features.forEach(f => {
-    if (f.hidden) { f.hidden = false; count++; }
-  });
-  saveAppState();
-  renderAllVectorFeatures();
-  closeModal("settingsModal");
-  showToast(count > 0 ? `Đã hiện lại ${count} đối tượng tạm ẩn.` : "Không có đối tượng nào đang tạm ẩn.");
-}
-
 function openModal(id) {
   document.getElementById(id).classList.add("open");
   if (id === "projectScopeModal") renderProjectsUI();
@@ -3079,12 +3037,6 @@ function openModal(id) {
   if (id === "fieldSchemaModal") renderSchemaFields();
   if (id === "searchModal") filterSearchFeatures();
   if (id === "savedPointsModal") renderSavedPointsList();
-  if (id === "settingsModal") {
-    const autoEl = document.getElementById("cfgAutoFollowGps");
-    const unitEl = document.getElementById("cfgLengthUnit");
-    if (autoEl) autoEl.checked = !!state.autoFollowGps;
-    if (unitEl) unitEl.value = state.lengthUnit || "auto";
-  }
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove("open");
