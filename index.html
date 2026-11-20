@@ -408,39 +408,6 @@
     }
     .warn-text { font-size: 11.5px; color: #fbbf24; line-height: 1.4; margin: 6px 0; }
 
-    
-    /* Action Sheet chi tiết đối tượng / đoạn đường (theo image_5adcd1.jpg) */
-    .sheet-backdrop {
-      position: fixed; inset: 0; z-index: 3500; background: rgba(2, 6, 23, 0.72);
-      display: none; align-items: flex-end; justify-content: center;
-    }
-    .sheet-backdrop.open { display: flex; }
-    .sheet-panel {
-      width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
-      background: #f8fafc; color: #0f172a; border-radius: 20px 20px 0 0;
-      padding: 14px 16px calc(env(safe-area-inset-bottom, 12px) + 14px);
-      box-shadow: 0 -12px 36px rgba(0,0,0,0.65);
-    }
-    .sheet-top {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; margin-bottom: 6px;
-    }
-    .sheet-type-title { font-size: 14.5px; font-weight: 900; color: #0f172a; letter-spacing: 0.3px; }
-    .sheet-gid { font-size: 12px; font-weight: 700; color: #475569; margin-top: 2px; }
-    .sheet-length-sub { font-size: 12.5px; font-weight: 800; color: #1e293b; margin-top: 4px; }
-    .sheet-action-btn {
-      width: 100%; background: transparent; border: 0; border-bottom: 1px solid #f1f5f9;
-      padding: 12px 6px; display: flex; align-items: center; gap: 14px;
-      font-size: 14px; font-weight: 700; color: #1e293b; cursor: pointer; text-align: left;
-    }
-    .sheet-action-btn:active { background: #e2e8f0; border-radius: 10px; }
-    .sheet-action-icon { width: 24px; text-align: center; font-size: 17px; flex-shrink: 0; }
-    .sheet-cancel-btn {
-      width: 100%; margin-top: 10px; background: #ffffff; border: 1px solid #cbd5e1;
-      color: #334155; font-size: 14px; font-weight: 800; padding: 12px;
-      border-radius: 12px; cursor: pointer;
-    }
-
     /* Toast thông báo nhanh */
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
@@ -547,60 +514,6 @@
         <span id="baseOpacityText">100%</span>
       </div>
       <input type="range" id="baseOpacitySlider" min="0" max="100" value="100" oninput="updateBaseOpacity(this.value)" />
-    </div>
-  </div>
-
-  
-  <!-- Action Sheet thao tác chi tiết Đường / Đoạn / Đối tượng (image_5adcd1.jpg) -->
-  <div class="sheet-backdrop" id="featureActionSheet" onclick="if(event.target===this) closeFeatureSheet()">
-    <div class="sheet-panel">
-      <div class="sheet-top">
-        <div>
-          <div class="sheet-type-title" id="sheetGeomType">DỮ LIỆU ĐƯỜNG</div>
-          <div class="sheet-gid" id="sheetGidLabel">GID: 1</div>
-        </div>
-        <div style="font-size:20px;color:#1d4ed8;font-weight:900;" id="sheetGeomBadge">∿</div>
-      </div>
-
-      <button class="sheet-action-btn" onclick="sheetActionViewLocation()">
-        <span class="sheet-action-icon" style="color:#0284c7;">⌖</span>
-        <span id="lblActLocation">Xem vị trí ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionViewAttributes()">
-        <span class="sheet-action-icon" style="color:#0f766e;">☰</span>
-        <span id="lblActAttrs">Xem thuộc tính ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionToggleHide()">
-        <span class="sheet-action-icon" style="color:#475569;">⊘</span>
-        <span id="lblActHide">Tạm ẩn ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionPhotos()">
-        <span class="sheet-action-icon" style="color:#9333ea;">🖼️</span>
-        <span id="lblActPhotos">Hình ảnh ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionTags()">
-        <span class="sheet-action-icon" style="color:#0d9488;">🏷️</span>
-        <span id="lblActTags">Nhãn thẻ ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionShare()">
-        <span class="sheet-action-icon" style="color:#2563eb;">↪</span>
-        <span id="lblActShare">Chia sẻ ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionReport()">
-        <span class="sheet-action-icon" style="color:#0369a1;">🖨️</span>
-        <span id="lblActReport">Tạo báo cáo ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionRename()">
-        <span class="sheet-action-icon" style="color:#334155;">✏️</span>
-        <span id="lblActRename">Đổi tên ĐƯỜNG</span>
-      </button>
-      <button class="sheet-action-btn" onclick="sheetActionDelete()">
-        <span class="sheet-action-icon" style="color:#dc2626;">🗑️</span>
-        <span style="color:#dc2626;" id="lblActDelete">Xóa ĐƯỜNG</span>
-      </button>
-
-      <div class="sheet-length-sub" id="sheetLengthSummary">Chiều dài: 0.00 m</div>
-      <button class="sheet-cancel-btn" onclick="closeFeatureSheet()">BỎ QUA</button>
     </div>
   </div>
 
@@ -952,25 +865,14 @@
         <input type="checkbox" id="stShowSegLength" checked />
       </div>
     </div>
-    <div class="list-card">
-      <div style="font-size:12.5px;font-weight:800;color:#38bdf8;margin-bottom:8px;">✏️ Nét vẽ của lớp (Nhỏ / Lớn • Đổi màu • Độ mờ nét)</div>
-      <div class="grid-2 form-group">
-        <div>
-          <label class="form-label">Đổi màu nét:</label>
-          <input type="color" id="stStrokeColor" class="form-input" style="height:40px;padding:3px;" value="#3b82f6" />
-        </div>
-        <div>
-          <label class="form-label">Cỡ nét (nhỏ ↔ lớn): <strong id="stStrokeWidthVal" style="color:#fbbf24;">3 dp</strong></label>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button type="button" class="mini-btn" onclick="stepStrokeWidth(-1)" title="Nét nhỏ hơn">−</button>
-            <input type="range" id="stStrokeWidth" min="1" max="16" step="0.5" value="3" oninput="document.getElementById('stStrokeWidthVal').textContent = this.value + ' dp'" />
-            <button type="button" class="mini-btn" onclick="stepStrokeWidth(1)" title="Nét lớn hơn">+</button>
-          </div>
-        </div>
+    <div class="grid-2 form-group">
+      <div>
+        <label class="form-label">Màu sắc đường / ranh giới:</label>
+        <input type="color" id="stStrokeColor" class="form-input" style="height:40px;padding:3px;" value="#3b82f6" />
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Độ mờ màu nét (0% – 100%): <strong id="stStrokeOpacityVal" style="color:#34d399;">100%</strong></label>
-        <input type="range" id="stStrokeOpacity" min="0" max="100" step="1" value="100" oninput="document.getElementById('stStrokeOpacityVal').textContent = this.value + '%'" />
+      <div>
+        <label class="form-label">Độ rộng đường (dp):</label>
+        <input type="number" id="stStrokeWidth" class="form-input" min="1" max="12" value="3" />
       </div>
     </div>
     <div class="grid-2 form-group">
@@ -1860,9 +1762,7 @@ function renderAllVectorFeatures() {
   const opacity = (state.layerOpacity ?? 100) / 100;
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
 
-  state.features.forEach((f, idx) => {
-    if (f.hidden) return;
-    if (!f.gid) f.gid = idx + 1;
+  state.features.forEach((f) => {
     const lyrCfg = layerMap.get(f.layerId);
     if (lyrCfg && lyrCfg.visible === false) return;
 
@@ -1884,20 +1784,34 @@ function renderAllVectorFeatures() {
       `);
     } else if (f.geomType === "segment") {
       const strokeColor = lyrCfg?.color || f.color || "#3b82f6";
-      const strokeWidth = Number(lyrCfg?.width ?? f.width ?? 3);
-      const strokeAlpha = ((lyrCfg?.strokeOpacity ?? 100) / 100) * opacity;
+      const strokeWidth = lyrCfg?.width || f.width || 3;
 
       const segLine = L.polyline([f.p1, f.p2], {
         color: strokeColor,
-        weight: strokeWidth,
-        opacity: strokeAlpha
+        weight: strokeWidth + 1,
+        opacity
       }).addTo(vectorLayerGroup);
 
       segLine.on("click", (e) => {
         L.DomEvent.stopPropagation(e);
         segLine.setStyle({ color: "#facc15", weight: strokeWidth + 3 });
         setTimeout(() => segLine.setStyle({ color: strokeColor, weight: strokeWidth + 1 }), 2500);
-        openFeatureActionSheet(f.id);
+
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(`
+            <div style="color:#0f172a;font-size:13px;min-width:225px;">
+              <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
+              <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
+                Kích thước đoạn: <strong style="font-size:14px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
+              </div>
+              <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
+              <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
+              <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
+              <div style="font-size:11px;color:#475569;margin-top:4px;">Dự án: ${f.project || ""}</div>
+            </div>
+          `)
+          .openOn(map);
       });
 
       if ((lyrCfg?.showSegLength !== false) && map.getZoom() >= 17 && f.lengthM >= 0.5) {
@@ -1912,13 +1826,12 @@ function renderAllVectorFeatures() {
         }).addTo(labelLayerGroup);
       }
     } else if (f.geomType === "polygon") {
-      const polyStrokeAlpha = ((lyrCfg?.strokeOpacity ?? 100) / 100) * opacity;
       const poly = L.polygon(f.coords, {
         color: lyrCfg?.color || "#10b981",
-        weight: Number(lyrCfg?.width || 3),
+        weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
         fillOpacity: 0.16 * opacity,
-        opacity: polyStrokeAlpha
+        opacity
       }).addTo(vectorLayerGroup);
 
       poly.bindPopup(`
@@ -2460,157 +2373,6 @@ function submitCoordInput(createPin) {
   map.setView([lat, lon], 19);
 }
 
-
-/* ============================================================================
-   8B. ACTION SHEET CHI TIẾT ĐỐI TƯỢNG / ĐƯỜNG (image_5adcd1.jpg)
-============================================================================ */
-let selectedFeatureId = null;
-
-function openFeatureActionSheet(featId) {
-  const f = state.features.find(x => x.id === featId);
-  if (!f) return;
-  selectedFeatureId = featId;
-  const idx = state.features.findIndex(x => x.id === featId);
-  const gid = f.gid || (idx + 1);
-  const isSeg = f.geomType === "segment";
-  const noun = isSeg ? "ĐƯỜNG" : (f.geomType === "polygon" ? "VÙNG" : "ĐIỂM");
-
-  document.getElementById("sheetGeomType").textContent = isSeg ? "DỮ LIỆU ĐƯỜNG" : (f.geomType === "polygon" ? "DỮ LIỆU VÙNG" : "DỮ LIỆU ĐIỂM");
-  document.getElementById("sheetGidLabel").textContent = `GID: ${gid} • ${f.name}`;
-  document.getElementById("sheetGeomBadge").textContent = isSeg ? "∿" : (f.geomType === "polygon" ? "⬠" : "📍");
-
-  document.getElementById("lblActLocation").textContent = `Xem vị trí ${noun}`;
-  document.getElementById("lblActAttrs").textContent = `Xem thuộc tính ${noun}`;
-  document.getElementById("lblActHide").textContent = `Tạm ẩn ${noun}`;
-  document.getElementById("lblActPhotos").textContent = `Hình ảnh ${noun}`;
-  document.getElementById("lblActTags").textContent = `Nhãn thẻ ${noun}`;
-  document.getElementById("lblActShare").textContent = `Chia sẻ ${noun}`;
-  document.getElementById("lblActReport").textContent = `Tạo báo cáo ${noun}`;
-  document.getElementById("lblActRename").textContent = `Đổi tên ${noun}`;
-  document.getElementById("lblActDelete").textContent = `Xóa ${noun}`;
-
-  const lenEl = document.getElementById("sheetLengthSummary");
-  if (isSeg) {
-    lenEl.style.display = "block";
-    lenEl.textContent = `Chiều dài: ${Number(f.lengthM || 0).toFixed(2)} m`;
-  } else if (f.geomType === "polygon") {
-    lenEl.style.display = "block";
-    lenEl.textContent = `Diện tích: ${Number(f.areaM2 || 0).toFixed(2)} m²`;
-  } else {
-    lenEl.style.display = "none";
-  }
-
-  document.getElementById("featureActionSheet").classList.add("open");
-}
-
-function closeFeatureSheet() {
-  document.getElementById("featureActionSheet").classList.remove("open");
-}
-
-function getSelectedFeature() {
-  return state.features.find(x => x.id === selectedFeatureId) || null;
-}
-
-function sheetActionViewLocation() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  jumpToFeature(f.id);
-}
-
-function sheetActionViewAttributes() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  const info = f.geomType === "segment"
-    ? `Tên: ${f.name}\nChiều dài: ${formatLength(f.lengthM)}\nGóc phương vị: ${Number(f.azimuth || 0).toFixed(2)}°\nĐầu đoạn VN-2000: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}\nCuối đoạn VN-2000: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}\nDự án: ${f.project || ""}`
-    : `Tên: ${f.name}\nDự án: ${f.project || ""}\nGhi chú: ${f.note || "(trống)"}`;
-  alert(info);
-}
-
-function sheetActionToggleHide() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  f.hidden = true;
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(`Đã tạm ẩn "${f.name}".`);
-}
-
-function sheetActionPhotos() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  openSurveyCamera();
-  showToast(`Mở camera chụp & gắn ảnh cho "${f.name}".`);
-}
-
-function sheetActionTags() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  const tagChoice = prompt("Nhập tên nhãn thẻ gắn cho đối tượng (VD: Mốc ranh giới, Tim tuyến):", f.tag || (state.tags[0]?.name || ""));
-  if (tagChoice !== null) {
-    f.tag = tagChoice.trim();
-    saveAppState();
-    showToast(`Đã gắn nhãn thẻ "${f.tag}" cho "${f.name}".`);
-  }
-}
-
-function sheetActionShare() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  const txt = f.geomType === "segment"
-    ? `${f.name} | Chiều dài: ${f.lengthM.toFixed(2)} m | Đầu: (${f.vn1.x.toFixed(3)}, ${f.vn1.y.toFixed(3)}) -> Cuối: (${f.vn2.x.toFixed(3)}, ${f.vn2.y.toFixed(3)})`
-    : `${f.name} | Dự án: ${f.project || ""}`;
-  navigator.clipboard?.writeText(txt);
-  showToast(`Đã sao chép thông tin chia sẻ của "${f.name}".`);
-}
-
-function sheetActionReport() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  const reportHtml = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><title>Báo cáo ${f.name}</title>
-  <style>body{font-family:Arial,sans-serif;padding:24px;color:#0f172a;}table{border-collapse:collapse;width:100%;margin-top:12px;}td,th{border:1px solid #cbd5e1;padding:8px;text-align:left;}</style></head>
-  <body><h2>BÁO CÁO ĐỐI TƯỢNG KHẢO SÁT - PD GIS PRO</h2>
-  <table><tr><th>Hạng mục</th><th>Giá trị</th></tr>
-  <tr><td>Tên đối tượng</td><td>${f.name}</td></tr>
-  <tr><td>Loại hình học</td><td>${f.geomType}</td></tr>
-  <tr><td>Kích thước / Chiều dài</td><td>${f.lengthM ? formatLength(f.lengthM) : (f.areaM2 ? f.areaM2.toFixed(2) + " m²" : "-")}</td></tr>
-  <tr><td>Dự án</td><td>${f.project || ""}</td></tr>
-  <tr><td>Thời gian</td><td>${f.createdAt || ""}</td></tr></table>
-  <script>window.print();</script></body></html>`;
-  const w = window.open("", "_blank");
-  if (w) { w.document.write(reportHtml); w.document.close(); }
-}
-
-function sheetActionRename() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  const newName = prompt("Nhập tên mới:", f.name);
-  if (newName && newName.trim()) {
-    f.name = newName.trim();
-    saveAppState();
-    renderAllVectorFeatures();
-    showToast(`Đã đổi tên thành "${f.name}".`);
-  }
-}
-
-function sheetActionDelete() {
-  const f = getSelectedFeature();
-  closeFeatureSheet();
-  if (!f) return;
-  if (!confirm(`Xóa "${f.name}" khỏi dữ liệu?`)) return;
-  state.features = state.features.filter(x => x.id !== f.id);
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(`Đã xóa "${f.name}".`);
-}
-
 /* ============================================================================
    9. QUẢN LÝ DỰ ÁN ĐỘNG, BÙ CAO ĐỘ ΔH, CÀI ĐẶT LỚP, XUẤT FILE & SAO LƯU
 ============================================================================ */
@@ -2773,26 +2535,13 @@ function deleteLayer(id) {
   renderAllVectorFeatures();
 }
 
-function stepStrokeWidth(delta) {
-  const inp = document.getElementById("stStrokeWidth");
-  const cur = parseFloat(inp.value) || 3;
-  const next = Math.min(16, Math.max(1, Number((cur + delta).toFixed(1))));
-  inp.value = next;
-  document.getElementById("stStrokeWidthVal").textContent = `${next} dp`;
-}
-
 function openLayerStyleEditor(id) {
   editingLayerId = id;
   const l = state.layers.find(x => x.id === id);
   if (!l) return;
-  const w = Number(l.width ?? 3);
-  const op = Number(l.strokeOpacity ?? 100);
   document.getElementById("layerStyleTitle").textContent = `⚙️ Cài đặt hiển thị: ${l.name}`;
   document.getElementById("stStrokeColor").value = l.color || "#3b82f6";
-  document.getElementById("stStrokeWidth").value = w;
-  document.getElementById("stStrokeWidthVal").textContent = `${w} dp`;
-  document.getElementById("stStrokeOpacity").value = op;
-  document.getElementById("stStrokeOpacityVal").textContent = `${op}%`;
+  document.getElementById("stStrokeWidth").value = l.width || 3;
   document.getElementById("stFillColor").value = l.fillColor || "#10b981";
   document.getElementById("stShowSegLength").checked = l.showSegLength !== false;
   openModal("layerStyleModal");
@@ -2802,21 +2551,19 @@ function saveLayerStyleConfig() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
   l.color = document.getElementById("stStrokeColor").value;
-  l.width = parseFloat(document.getElementById("stStrokeWidth").value) || 3;
-  l.strokeOpacity = parseFloat(document.getElementById("stStrokeOpacity").value);
-  if (isNaN(l.strokeOpacity)) l.strokeOpacity = 100;
+  l.width = Number(document.getElementById("stStrokeWidth").value) || 3;
   l.fillColor = document.getElementById("stFillColor").value;
   l.showSegLength = document.getElementById("stShowSegLength").checked;
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
-  showToast("Đã cập nhật nét vẽ, màu nét & độ mờ nét của lớp.");
+  showToast("Đã cập nhật hiển thị lớp.");
 }
 
 function resetLayerStyleDefault() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
-  l.color = "#3b82f6"; l.width = 3; l.strokeOpacity = 100; l.fillColor = "#10b981"; l.showSegLength = true;
+  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.showSegLength = true;
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
