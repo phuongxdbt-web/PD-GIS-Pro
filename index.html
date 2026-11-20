@@ -28,7 +28,7 @@
         .br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
         .crosshair-plus { color: #ef4444; font-size: 18px; font-weight: bold; text-shadow: 0 0 3px #000; }
 
-        /* Tâm ngắm vuông 4 góc + dấu cộng ở giữa Camera AR (giống mẫu) */
+        /* Tâm ngắm vuông 4 góc + dấu cộng ở giữa Camera AR */
         .cam-center-reticle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25; pointer-events: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
         .cam-ret-corner { position: absolute; width: 11px; height: 11px; border-color: #ffffff; border-style: solid; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85)); }
         .cam-ret-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-top-left-radius: 5px; }
@@ -525,9 +525,8 @@
         </div>
     </div>
 
-    <!-- MODAL CAMERA AR VỚI TÂM NGẮM VUÔNG + VÒNG LA BÀN CHIA ĐỘ GIỐNG HÌNH MẪU -->
+    <!-- MODAL CAMERA AR VỚI TÂM NGẮM VUÔNG + VÒNG LA BÀN CHIA ĐỘ -->
     <div id="cameraModal" class="fixed inset-0 z-[1400] bg-black hidden flex flex-col justify-between">
-        <!-- Thanh công cụ trên cùng trong Camera (giống mẫu) -->
         <div class="absolute top-3 left-3 right-3 z-30 flex items-center justify-between">
             <button onclick="closeCameraModal()" class="w-9 h-9 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-lg active:scale-95">
                 <i class="fa-solid fa-xmark text-base font-bold"></i>
@@ -543,7 +542,6 @@
             </button>
         </div>
 
-        <!-- Dòng địa chỉ / vị trí hiện trường phía trên -->
         <div class="absolute top-14 left-3 right-3 z-30 text-center pointer-events-none">
             <div class="inline-flex items-center gap-1.5 bg-black/45 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] font-semibold text-white drop-shadow">
                 <i class="fa-solid fa-flag text-red-500"></i>
@@ -551,11 +549,9 @@
             </div>
         </div>
 
-        <!-- Khung hình Camera toàn màn hình -->
         <div class="relative flex-1 bg-slate-950 overflow-hidden">
             <video id="cameraStream" autoplay playsinline muted class="w-full h-full object-cover"></video>
 
-            <!-- Lưới căn chỉnh tùy chọn -->
             <div id="camGridLines" class="hidden absolute inset-0 z-10 pointer-events-none grid grid-cols-3 grid-rows-3">
                 <div class="border-r border-b border-white/25"></div>
                 <div class="border-r border-b border-white/25"></div>
@@ -568,11 +564,9 @@
                 <div></div>
             </div>
 
-            <!-- VÒNG LA BÀN CHIA ĐỘ XOAY THEO HƯỚNG MÁY (GIỐNG ẢNH MẪU) -->
+            <!-- VÒNG LA BÀN CHIA ĐỘ XOAY THEO HƯỚNG MÁY -->
             <svg id="camCompassSvg" class="cam-compass-overlay" viewBox="0 0 320 320">
-                <!-- Các tia hướng mỗi 30 độ -->
                 <g stroke="rgba(125, 211, 252, 0.45)" stroke-width="1">
-                    <!-- Tia hướng Bắc màu đỏ nổi bật -->
                     <line x1="160" y1="160" x2="160" y2="8" stroke="#ef4444" stroke-width="1.6"/>
                     <line x1="160" y1="160" x2="236" y2="28"/>
                     <line x1="160" y1="160" x2="292" y2="84"/>
@@ -586,11 +580,8 @@
                     <line x1="160" y1="160" x2="28" y2="84"/>
                     <line x1="160" y1="160" x2="84" y2="28"/>
                 </g>
-                <!-- Vòng tròn la bàn chia độ -->
                 <circle cx="160" cy="160" r="108" fill="none" stroke="rgba(125, 211, 252, 0.55)" stroke-width="1.2"/>
                 <circle cx="160" cy="160" r="145" fill="none" stroke="rgba(125, 211, 252, 0.28)" stroke-width="1"/>
-
-                <!-- Nhãn hướng chính BẮC - ĐÔNG - NAM - TÂY và các góc độ -->
                 <g font-family="Segoe UI, sans-serif" font-weight="bold" text-anchor="middle">
                     <text x="160" y="45" fill="#ef4444" stroke="#ffffff" stroke-width="0.6" font-size="16">BẮC</text>
                     <text x="216" y="62" fill="#ffffff" stroke="#000000" stroke-width="0.5" font-size="12">30°</text>
@@ -616,7 +607,7 @@
                 <span class="cam-ret-plus">+</span>
             </div>
 
-            <!-- Khung tọa độ VN-2000 & Cao độ phía dưới vùng ngắm -->
+            <!-- Khung tọa độ VN-2000 & Cao độ -->
             <div class="absolute bottom-3 left-3 right-3 z-30 bg-black/75 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl font-mono text-[11px] space-y-1">
                 <div class="flex justify-between items-center text-amber-400 font-bold text-xs">
                     <span>PD GIS PRO • GÓC PHƯƠNG VỊ: <b id="camAzimuth" class="text-white">0°</b></span>
@@ -1105,7 +1096,6 @@
             if (hide && gpsMarker) { map.removeLayer(gpsMarker); gpsMarker = null; }
         }
 
-        // Cảm biến La bàn số (xoay cả kim bản đồ và vòng chia độ trong Camera AR)
         function handleOrientation(e) {
             let heading = null;
             if (typeof e.webkitCompassHeading === 'number') {
@@ -1215,7 +1205,6 @@
             const ctx = c.getContext('2d');
             ctx.drawImage(v, 0, 0, c.width, c.height);
 
-            // Vẽ tâm ngắm vuông 4 góc + dấu cộng ở giữa ảnh chụp
             const cx = c.width / 2, cy = c.height / 2, s = 26, len = 10;
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
             ctx.beginPath();
@@ -1227,7 +1216,6 @@
             ctx.moveTo(cx, cy - 10); ctx.lineTo(cx, cy + 10);
             ctx.stroke();
 
-            // Khung watermark tọa độ bên dưới
             ctx.fillStyle = 'rgba(0,0,0,0.78)';
             ctx.fillRect(20, c.height - 155, c.width - 40, 135);
             ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 20px monospace';
