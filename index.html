@@ -22,7 +22,7 @@
   <style>
     :root {
       --bg-dark: #0b1120;
-      --panel-dark: rgba(15, 23, 42, 0.92);
+      --panel-dark: rgba(15, 23, 42, 0.45);
       --panel-card: #1e293b;
       --border-subtle: rgba(148, 163, 184, 0.25);
       --accent-blue: #3b82f6;
@@ -85,7 +85,7 @@
 
     /* Thanh công cụ trên cùng */
     .top-bar {
-      position: absolute; top: env(safe-area-inset-top, 10px); left: 10px; right: 10px;
+      position: absolute; top: env(safe-area-inset-top, 6px); left: 6px; right: 6px;
       z-index: 900; display: flex; align-items: center; justify-content: space-between;
       gap: 8px; pointer-events: none;
     }
@@ -108,7 +108,7 @@
 
     /* Cụm thông tin bên trái: Tốc độ + Phạm vi dự án + Công cụ vẽ nhanh */
     .left-stack {
-      position: absolute; top: calc(env(safe-area-inset-top, 8px) + 46px); left: 8px;
+      position: absolute; top: calc(env(safe-area-inset-top, 6px) + 46px); left: 6px;
       z-index: 850; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
     }
     .left-stack > * { pointer-events: auto; }
@@ -121,7 +121,7 @@
     .speed-unit { font-size: 8.5px; color: var(--text-muted); font-weight: 700; }
 
     .project-badge {
-      max-width: 175px; background: rgba(30, 41, 59, 0.94);
+      max-width: 175px; background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(4px);
       border: 1px solid rgba(59, 130, 246, 0.55); border-radius: 10px;
       padding: 5px 8px; font-size: 11px; font-weight: 700; color: #e2e8f0;
       cursor: pointer; display: flex; align-items: center; gap: 5px;
@@ -138,7 +138,7 @@
 
     /* Cụm nút bên phải: La bàn, Vệ tinh, Zoom, Xoay màn hình, Định vị */
     .right-stack {
-      position: absolute; top: calc(env(safe-area-inset-top, 10px) + 52px); right: 10px;
+      position: absolute; top: calc(env(safe-area-inset-top, 6px) + 46px); right: 6px;
       z-index: 850; display: flex; flex-direction: column; align-items: center; gap: 7px;
     }
     .compass-btn {
@@ -173,11 +173,11 @@
 
     /* Thanh HUD Tọa độ dưới cùng (Vị trí 12) */
     .bottom-hud {
-      position: absolute; bottom: env(safe-area-inset-bottom, 8px); left: 8px; right: 8px;
-      z-index: 880; background: var(--panel-dark); backdrop-filter: blur(10px);
+      position: absolute; bottom: env(safe-area-inset-bottom, 6px); left: 6px; right: 6px;
+      z-index: 880; background: var(--panel-dark); backdrop-filter: blur(5px);
       border: 1px solid var(--border-subtle); border-radius: 13px;
-      padding: 7px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      max-width: 540px;
+      padding: 7px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      max-width: none;
     }
     .hud-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -194,7 +194,7 @@
     }
     .hud-actions { display: flex; align-items: center; gap: 5px; }
     .mini-btn {
-      background: #1e293b; border: 1px solid var(--border-subtle); color: #e2e8f0;
+      background: rgba(30, 41, 59, 0.55); border: 1px solid var(--border-subtle); color: #e2e8f0;
       border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;
     }
     .hud-grid {
@@ -211,7 +211,7 @@
     #opacityPanel {
       position: absolute; bottom: calc(env(safe-area-inset-bottom, 10px) + 145px);
       left: 10px; right: 10px; max-width: 440px; z-index: 950;
-      background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(56, 189, 248, 0.5);
+      background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); border: 1px solid rgba(56, 189, 248, 0.5);
       border-radius: 16px; padding: 12px 14px; display: none;
       box-shadow: 0 12px 32px rgba(0,0,0,0.65);
     }
@@ -339,7 +339,7 @@
     .modal-backdrop.open { display: flex; }
     .modal-card {
       width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
-      background: #111827; border: 1px solid var(--border-subtle);
+      background: rgba(17, 24, 39, 0.72); backdrop-filter: blur(8px); border: 1px solid var(--border-subtle);
       border-radius: 18px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
     }
     .modal-head {
@@ -359,7 +359,7 @@
     }
     .drawer-backdrop.open { display: block; }
     .drawer-panel {
-      width: 86%; max-width: 360px; height: 100%; background: #0f172a;
+      width: 86%; max-width: 360px; height: 100%; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px);
       border-right: 1px solid var(--border-subtle); padding: 14px;
       overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
     }
@@ -368,7 +368,7 @@
       text-transform: uppercase; letter-spacing: 0.6px; margin-top: 6px;
     }
     .menu-item {
-      background: #1e293b; border: 1px solid var(--border-subtle);
+      background: rgba(30, 41, 59, 0.55); border: 1px solid var(--border-subtle);
       border-radius: 12px; padding: 10px 12px; display: flex; align-items: center;
       justify-content: space-between; cursor: pointer; font-size: 13px; font-weight: 600;
     }
@@ -378,7 +378,7 @@
     .form-group { margin-bottom: 10px; }
     .form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
     .form-input, .form-select, .form-textarea {
-      width: 100%; background: #1e293b; border: 1px solid var(--border-subtle);
+      width: 100%; background: rgba(30, 41, 59, 0.55); border: 1px solid var(--border-subtle);
       color: #f8fafc; border-radius: 10px; padding: 9px 11px; font-size: 13px;
       font-family: inherit;
     }
@@ -404,7 +404,7 @@
     .chip.active { background: var(--accent-blue); color: #fff; border-color: #60a5fa; }
 
     .list-card {
-      background: #1e293b; border: 1px solid var(--border-subtle);
+      background: rgba(30, 41, 59, 0.55); border: 1px solid var(--border-subtle);
       border-radius: 12px; padding: 10px; margin-bottom: 8px;
     }
     .warn-text { font-size: 11.5px; color: #fbbf24; line-height: 1.4; margin: 6px 0; }
@@ -412,7 +412,7 @@
     /* Toast thông báo nhanh */
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-      z-index: 5000; background: rgba(15, 23, 42, 0.96); color: #f8fafc;
+      z-index: 5000; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); color: #f8fafc;
       border: 1px solid #38bdf8; border-radius: 999px; padding: 8px 16px;
       font-size: 12.5px; font-weight: 600; display: none;
       box-shadow: 0 10px 25px rgba(0,0,0,0.6); max-width: 90vw; text-align: center;
@@ -456,13 +456,10 @@
 
   <!-- Cụm bên trái: Tốc độ, Chọn phạm vi dự án động, Công cụ vẽ & nổ KMZ -->
   <div class="left-stack">
-    <div style="display:flex;gap:8px;align-items:center;">
+    <div style="display:flex;gap:6px;align-items:center;">
       <div class="speed-box">
         <div class="speed-val" id="speedVal">0.0</div>
         <div class="speed-unit">KM/H</div>
-      </div>
-      <div class="project-badge" onclick="openModal('projectScopeModal')" title="Chọn hoặc quản lý phạm vi dự án">
-        🏗️ <span id="activeProjectLabel">0. Chế độ chung cho tất cả dự án</span>
       </div>
     </div>
 
@@ -786,8 +783,23 @@
       <button class="close-x" onclick="closeModal('camNoteModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Dự án / Hạng mục áp dụng:</label>
-      <select id="noteProjectSelect" class="form-select"></select>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+        <label class="form-label" style="margin-bottom:0;">Dự án / Hạng mục áp dụng:</label>
+        <button type="button" class="mini-btn" style="color:#38bdf8;border-color:rgba(56,189,248,0.45);" onclick="toggleCustomProjectBox()">Tùy biến ⇒ Thêm dự án mới/ghi chú</button>
+      </div>
+      <div id="currentProjStatusText" style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:5px;">Hiện nay: 0. Chế độ chung cho tất cả dự án</div>
+      <select id="noteProjectSelect" class="form-select" onchange="onNoteProjectSelectChange()"></select>
+      <div id="customProjectInlineBox" style="display:none;margin-top:8px;padding:9px;border-radius:10px;background:rgba(15,23,42,0.55);border:1px dashed rgba(56,189,248,0.45);">
+        <div class="form-group" style="margin-bottom:7px;">
+          <label class="form-label">Tên dự án đã đặt tên / mới:</label>
+          <input type="text" id="inlineProjectNameInput" class="form-input" placeholder="Nhập tên dự án đã đặt tên..." />
+        </div>
+        <div class="form-group" style="margin-bottom:7px;">
+          <label class="form-label">Ghi chú dự án / hạng mục:</label>
+          <input type="text" id="inlineProjectNoteInput" class="form-input" placeholder="Nhập ghi chú dự án..." />
+        </div>
+        <button type="button" class="btn-primary" style="padding:8px;font-size:12px;" onclick="applyInlineCustomProject()">Lưu & Lấy tên dự án đã đặt tên</button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Tên công việc / Mốc khảo sát:</label>
@@ -1096,8 +1108,15 @@
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">⚙️ Cài Đặt & Bảng Chú Thích 15 Chức Năng</span>
+      <span class="modal-title">⚙️ Cài Đặt & Phạm Vi Dự Án</span>
       <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
+    </div>
+    <div class="list-card" style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:6px;">🏗️ CHẾ ĐỘ & PHẠM VI DỰ ÁN</div>
+      <div class="project-badge" style="max-width:100%;width:100%;justify-content:space-between;" onclick="closeModal('settingsModal'); openModal('projectScopeModal')" title="Chọn hoặc quản lý phạm vi dự án">
+        <span>🏗️ <span id="activeProjectLabel">0. Chế độ chung cho tất cả dự án</span></span>
+        <span>›</span>
+      </div>
     </div>
     <div style="font-size:12px;line-height:1.55;color:#cbd5e1;">
       <div><strong>1.</strong> Mở menu chính của ứng dụng</div>
@@ -2398,10 +2417,18 @@ function renderProjectsUI() {
     `).join("");
   }
 
+  const statusEl = document.getElementById("currentProjStatusText");
+  if (statusEl) {
+    statusEl.textContent = `Hiện nay: ${active.name}`;
+  }
   const sel = document.getElementById("noteProjectSelect");
   if (sel) {
     sel.innerHTML = state.projects.map(p => `<option value="${p.id}" ${p.id === active.id ? "selected" : ""}>${p.name}</option>`).join("");
   }
+  const nameInp = document.getElementById("inlineProjectNameInput");
+  const noteInp = document.getElementById("inlineProjectNoteInput");
+  if (nameInp && active.id !== "proj_0") nameInp.value = active.name;
+  if (noteInp && active.id !== "proj_0") noteInp.value = active.note || "";
 }
 
 function selectProjectScope(id) {
@@ -2431,6 +2458,68 @@ function deleteProjectScope(id) {
   if (state.activeProjectId === id) state.activeProjectId = "proj_0";
   saveAppState();
   renderProjectsUI();
+}
+
+
+function toggleCustomProjectBox() {
+  const box = document.getElementById("customProjectInlineBox");
+  if (!box) return;
+  const isOpen = box.style.display === "block";
+  box.style.display = isOpen ? "none" : "block";
+  if (!isOpen) {
+    const active = getActiveProject();
+    const nameInp = document.getElementById("inlineProjectNameInput");
+    const noteInp = document.getElementById("inlineProjectNoteInput");
+    if (nameInp) {
+      nameInp.value = active.id !== "proj_0" ? active.name : "";
+      nameInp.focus();
+    }
+    if (noteInp) noteInp.value = active.note || "";
+  }
+}
+
+function onNoteProjectSelectChange() {
+  const sel = document.getElementById("noteProjectSelect");
+  if (!sel) return;
+  const chosen = state.projects.find(p => p.id === sel.value) || state.projects[0];
+  state.activeProjectId = chosen.id;
+  const statusEl = document.getElementById("currentProjStatusText");
+  if (statusEl) statusEl.textContent = `Hiện nay: ${chosen.name}`;
+  const nameInp = document.getElementById("inlineProjectNameInput");
+  const noteInp = document.getElementById("inlineProjectNoteInput");
+  if (nameInp) nameInp.value = chosen.id !== "proj_0" ? chosen.name : "";
+  if (noteInp) noteInp.value = chosen.note || "";
+  saveAppState();
+  renderProjectsUI();
+  updateCameraHudValues();
+}
+
+function applyInlineCustomProject() {
+  const nameInp = document.getElementById("inlineProjectNameInput");
+  const noteInp = document.getElementById("inlineProjectNoteInput");
+  const pName = (nameInp?.value || "").trim();
+  const pNote = (noteInp?.value || "").trim();
+  if (!pName) {
+    showToast("Vui lòng nhập tên dự án đã đặt tên.");
+    return;
+  }
+  let existing = state.projects.find(p => p.name.toLowerCase() === pName.toLowerCase());
+  if (!existing) {
+    existing = { id: "proj_" + Date.now(), name: pName, note: pNote };
+    state.projects.push(existing);
+  } else if (pNote) {
+    existing.note = pNote;
+  }
+  state.activeProjectId = existing.id;
+  if (pNote) {
+    state.surveyNote.content = pNote;
+    const wNote = document.getElementById("workNoteInput");
+    if (wNote && !wNote.value.trim()) wNote.value = pNote;
+  }
+  saveAppState();
+  renderProjectsUI();
+  updateCameraHudValues();
+  showToast(`Đã áp dụng dự án: ${existing.name}`);
 }
 
 function saveSurveyNote() {
