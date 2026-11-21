@@ -171,6 +171,7 @@
       font-size: 20px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55); cursor: pointer;
     }
 
+
     /* Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ */
     #quickSelectedLayerBar {
       position: absolute;
@@ -193,7 +194,7 @@
       display: flex;
     }
     #quickLayerSelect {
-      max-width: 155px;
+      max-width: 145px;
       background: #1e293b;
       border: 1px solid var(--border-subtle);
       color: #f8fafc;
@@ -201,6 +202,20 @@
       padding: 4px 6px;
       font-size: 11.5px;
       font-weight: 700;
+    }
+    #quickLayerEyeBtn {
+      background: #1e293b;
+      border: 1px solid var(--border-subtle);
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 4px 7px;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    #quickLayerEyeBtn.hidden-layer {
+      opacity: 0.55;
+      border-color: #f87171;
     }
 
     /* Thanh HUD Tọa độ dưới cùng (Vị trí 12) */
@@ -501,12 +516,10 @@
     <!-- Thanh công cụ vẽ trực tiếp & đo kích thước -->
     <div class="draw-toolbar" style="width:fit-content;">
       <button class="icon-btn" title="Thêm Điểm mốc tại tâm" onclick="addPointAtCenter()">📍</button>
-      <button class="icon-btn" style="color:#fca5a5;" title="Xóa điểm mốc gần tâm bản đồ" onclick="deletePointAtCenter()">🎯</button>
       <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line (Click đường để xem kích thước)" onclick="startDrawing('line')">📏</button>
       <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
       <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét Camera" onclick="openModal('parcelModal')">📐</button>
-      <button class="icon-btn" style="color:#f87171;" title="Xóa nhanh lớp/thửa vừa tạo (Thùng rác)" onclick="deleteLastLayerOrParcel()">🗑️</button>
       <button class="icon-btn" title="11. Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
@@ -555,6 +568,7 @@
   <!-- Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ -->
   <div id="quickSelectedLayerBar">
     <select id="quickLayerSelect" title="Chọn lớp cần chỉnh độ mờ" onchange="onQuickLayerSelectChange(this.value)"></select>
+    <button id="quickLayerEyeBtn" type="button" title="Ẩn / Hiện nhanh lớp đang chọn" onclick="toggleQuickSelectedLayerVisibility()">👁️</button>
     <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;" oninput="onQuickLayerOpacityInput(this.value)" />
     <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:38px;text-align:right;">100%</span>
   </div>
@@ -1259,61 +1273,8 @@ function loadAppState() {
     return structuredClone(defaultState);
   }
 }
-const IDB_NAME = "PD_GIS_PRO_DB";
-const IDB_STORE = "app_state_store";
-
-function openIdb() {
-  return new Promise((resolve, reject) => {
-    if (!("indexedDB" in window)) return reject(new Error("No IndexedDB"));
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function saveAppStateAsync() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  try {
-    const db = await openIdb();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, "readwrite");
-      tx.objectStore(IDB_STORE).put(structuredClone(state), STORAGE_KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (e) {}
-}
-
 function saveAppState() {
-  saveAppStateAsync();
-}
-
-async function hydrateStateFromIdb() {
-  try {
-    const db = await openIdb();
-    const saved = await new Promise((resolve) => {
-      const tx = db.transaction(IDB_STORE, "readonly");
-      const req = tx.objectStore(IDB_STORE).get(STORAGE_KEY);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
-    });
-    if (saved && (Array.isArray(saved.features) || Array.isArray(saved.layers))) {
-      const curLen = (state.features || []).length + (state.layers || []).length;
-      const savLen = (saved.features || []).length + (saved.layers || []).length;
-      if (savLen >= curLen) {
-        state = Object.assign(structuredClone(defaultState), saved);
-        renderProjectsUI();
-        renderAllVectorFeatures();
-        updateCenterHud();
-      }
-    }
-  } catch (e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
 }
 
 function showToast(msg) {
@@ -1637,56 +1598,6 @@ function addPointAtCenter() {
   showToast(`Đã lưu ${name} tại tâm: X=${vn.x.toFixed(3)}, Y=${vn.y.toFixed(3)}`);
 }
 
-function deletePointAtCenter() {
-  const c = map.getCenter();
-  let bestIdx = -1;
-  let bestDist = Infinity;
-
-  state.features.forEach((f, idx) => {
-    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
-      const d = map.distance([c.lat, c.lng], [f.lat, f.lon]);
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = idx;
-      }
-    }
-  });
-
-  if (bestIdx === -1 || bestDist > 60) {
-    showToast("Không có điểm mốc nào gần tâm bản đồ (trong 60m) để xóa.");
-    return;
-  }
-
-  const removed = state.features[bestIdx];
-  state.features.splice(bestIdx, 1);
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(`Đã xóa điểm mốc "${removed.name || 'Mốc'}".`);
-}
-
-function deleteLastLayerOrParcel() {
-  if (state.layers.length > 0) {
-    const lastLayer = state.layers.pop();
-    state.features = state.features.filter(f => f.layerId !== lastLayer.id);
-    saveAppState();
-    renderAllVectorFeatures();
-    if (document.getElementById("layersModal")?.classList.contains("open")) {
-      renderLayersModal();
-    }
-    showToast(`Đã xóa lớp: ${lastLayer.name}`);
-    return;
-  }
-  const lastPtIdx = [...state.features].map((f, i) => ({ f, i })).reverse().find(x => x.f.geomType === "point");
-  if (lastPtIdx) {
-    state.features.splice(lastPtIdx.i, 1);
-    saveAppState();
-    renderAllVectorFeatures();
-    showToast("Đã xóa điểm mốc vừa tạo.");
-    return;
-  }
-  showToast("Không có lớp hoặc dữ liệu nào để xóa.");
-}
-
 function toggleTracklog() {
   isTrackingGps = !isTrackingGps;
   const btn = document.getElementById("btnTracklog");
@@ -1907,6 +1818,7 @@ let selectedQuickLayerId = null;
 function syncQuickSelectedLayerBar() {
   const bar = document.getElementById("quickSelectedLayerBar");
   const sel = document.getElementById("quickLayerSelect");
+  const eyeBtn = document.getElementById("quickLayerEyeBtn");
   const slider = document.getElementById("quickLayerOpacitySlider");
   const valEl = document.getElementById("quickLayerOpacityVal");
   if (!bar || !sel || !slider || !valEl) return;
@@ -1926,6 +1838,13 @@ function syncQuickSelectedLayerBar() {
   ).join("");
 
   const activeLayer = state.layers.find(l => l.id === selectedQuickLayerId) || state.layers[0];
+  const isVis = activeLayer.visible !== false;
+  if (eyeBtn) {
+    eyeBtn.textContent = isVis ? "👁️" : "🚫";
+    eyeBtn.classList.toggle("hidden-layer", !isVis);
+    eyeBtn.title = isVis ? "Đang hiện — Bấm để ẩn nhanh lớp" : "Đang ẩn — Bấm để hiện nhanh lớp";
+  }
+
   const op = typeof activeLayer.opacity === "number" ? activeLayer.opacity : 100;
   slider.value = op;
   valEl.textContent = `${op}%`;
@@ -1935,6 +1854,20 @@ function syncQuickSelectedLayerBar() {
 function onQuickLayerSelectChange(layerId) {
   selectedQuickLayerId = layerId;
   syncQuickSelectedLayerBar();
+}
+
+function toggleQuickSelectedLayerVisibility() {
+  if (!selectedQuickLayerId) return;
+  const l = state.layers.find(x => x.id === selectedQuickLayerId);
+  if (!l) return;
+  l.visible = !(l.visible !== false);
+  saveAppState();
+  renderAllVectorFeatures();
+  syncQuickSelectedLayerBar();
+  if (document.getElementById("layersModal")?.classList.contains("open")) {
+    renderLayersModal();
+  }
+  showToast(l.visible ? `Đã hiện lớp: ${l.name}` : `Đã ẩn lớp: ${l.name}`);
 }
 
 function onQuickLayerOpacityInput(val) {
@@ -1954,11 +1887,7 @@ function onQuickLayerOpacityInput(val) {
 function renderAllVectorFeatures() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
-  const globalOpacity = (state.layerOpacity ?? 100) / 100;
-  const getEffOpacity = (lyrCfg) => {
-    const individual = (lyrCfg && typeof lyrCfg.opacity === "number") ? (lyrCfg.opacity / 100) : 1;
-    return globalOpacity * individual;
-  };
+  const opacity = (state.layerOpacity ?? 100) / 100;
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
 
   state.features.forEach((f) => {
@@ -1967,7 +1896,7 @@ function renderAllVectorFeatures() {
 
     if (f.geomType === "point") {
       const marker = L.circleMarker([f.lat, f.lon], {
-        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: getEffOpacity(lyrCfg), opacity: getEffOpacity(lyrCfg)
+        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: opacity, opacity
       }).addTo(vectorLayerGroup);
 
       marker.bindPopup(`
@@ -1988,7 +1917,7 @@ function renderAllVectorFeatures() {
       const segLine = L.polyline([f.p1, f.p2], {
         color: strokeColor,
         weight: strokeWidth + 1,
-        opacity: getEffOpacity(lyrCfg)
+        opacity
       }).addTo(vectorLayerGroup);
 
       segLine.on("click", (e) => {
@@ -2029,8 +1958,8 @@ function renderAllVectorFeatures() {
         color: lyrCfg?.color || "#10b981",
         weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
-        fillOpacity: 0.16 * getEffOpacity(lyrCfg),
-        opacity: getEffOpacity(lyrCfg)
+        fillOpacity: 0.16 * opacity,
+        opacity
       }).addTo(vectorLayerGroup);
 
       poly.bindPopup(`
@@ -2712,38 +2641,17 @@ function renderLayersModal() {
     container.innerHTML = `<div class="list-card" style="color:#94a3b8;font-size:12.5px;">Chưa có lớp tệp ngoài. Hãy bấm nút phía trên để nạp file KMZ (tự nổ đoạn), KML, GeoJSON hoặc vẽ trực tiếp trên bản đồ.</div>`;
     return;
   }
-  container.innerHTML = state.layers.map(l => {
-    const op = typeof l.opacity === "number" ? l.opacity : 100;
-    return `
-    <div class="list-card" style="display:flex;flex-direction:column;gap:7px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;">${l.name}</div>
-          <div style="font-size:11px;color:#94a3b8;">${l.type} • Độ mờ lớp: <strong style="color:#38bdf8;">${op}%</strong></div>
-        </div>
-        <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
-        <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
-        <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
+  container.innerHTML = state.layers.map(l => `
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;">${l.name}</div>
+        <div style="font-size:11px;color:#94a3b8;">${l.type}</div>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#cbd5e1;margin-bottom:2px;">
-          <span>Độ mờ riêng lớp này (soi xung đột hạ tầng):</span>
-          <span>${op}%</span>
-        </div>
-        <input type="range" min="0" max="100" value="${op}" oninput="updateSingleLayerOpacity('${l.id}', this.value)" />
-      </div>
+      <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
+      <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
+      <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
     </div>
-  `;
-  }).join("");
-}
-
-function updateSingleLayerOpacity(layerId, val) {
-  const l = state.layers.find(x => x.id === layerId);
-  if (!l) return;
-  l.opacity = Number(val);
-  saveAppState();
-  renderAllVectorFeatures();
-  renderLayersModal();
+  `).join("");
 }
 
 function toggleLayerVisibility(id) {
@@ -3044,7 +2952,6 @@ window.addEventListener("DOMContentLoaded", () => {
   renderProjectsUI();
   renderAllVectorFeatures();
   syncQuickSelectedLayerBar();
-  hydrateStateFromIdb();
   startSmoothCompassLoop();
 
   locateUserNow(true);
