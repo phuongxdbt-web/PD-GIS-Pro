@@ -171,6 +171,38 @@
       font-size: 20px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55); cursor: pointer;
     }
 
+    /* Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ */
+    #quickSelectedLayerBar {
+      position: absolute;
+      bottom: calc(env(safe-area-inset-bottom, 8px) + 152px);
+      left: 8px;
+      right: 8px;
+      max-width: 540px;
+      z-index: 890;
+      background: var(--panel-dark);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 12px;
+      padding: 6px 10px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+    #quickSelectedLayerBar.open {
+      display: flex;
+    }
+    #quickLayerSelect {
+      max-width: 155px;
+      background: #1e293b;
+      border: 1px solid var(--border-subtle);
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
     /* Thanh HUD Tọa độ dưới cùng (Vị trí 12) */
     .bottom-hud {
       position: absolute; bottom: env(safe-area-inset-bottom, 8px); left: 8px; right: 8px;
@@ -518,6 +550,13 @@
       </div>
       <input type="range" id="baseOpacitySlider" min="0" max="100" value="100" oninput="updateBaseOpacity(this.value)" />
     </div>
+  </div>
+
+  <!-- Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ -->
+  <div id="quickSelectedLayerBar">
+    <select id="quickLayerSelect" title="Chọn lớp cần chỉnh độ mờ" onchange="onQuickLayerSelectChange(this.value)"></select>
+    <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;" oninput="onQuickLayerOpacityInput(this.value)" />
+    <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:38px;text-align:right;">100%</span>
   </div>
 
   <!-- Thanh HUD Tọa độ phía dưới (Vị trí 12) -->
@@ -1862,6 +1901,56 @@ function parseAndExplodeGpx(gpxText, fileName) {
   map.fitBounds(L.latLngBounds(lls), { padding: [30, 30] });
 }
 
+
+let selectedQuickLayerId = null;
+
+function syncQuickSelectedLayerBar() {
+  const bar = document.getElementById("quickSelectedLayerBar");
+  const sel = document.getElementById("quickLayerSelect");
+  const slider = document.getElementById("quickLayerOpacitySlider");
+  const valEl = document.getElementById("quickLayerOpacityVal");
+  if (!bar || !sel || !slider || !valEl) return;
+
+  if (!Array.isArray(state.layers) || state.layers.length === 0) {
+    bar.classList.remove("open");
+    selectedQuickLayerId = null;
+    return;
+  }
+
+  if (!selectedQuickLayerId || !state.layers.some(l => l.id === selectedQuickLayerId)) {
+    selectedQuickLayerId = state.layers[state.layers.length - 1].id;
+  }
+
+  sel.innerHTML = state.layers.map(l =>
+    `<option value="${l.id}" ${l.id === selectedQuickLayerId ? "selected" : ""}>${l.name}</option>`
+  ).join("");
+
+  const activeLayer = state.layers.find(l => l.id === selectedQuickLayerId) || state.layers[0];
+  const op = typeof activeLayer.opacity === "number" ? activeLayer.opacity : 100;
+  slider.value = op;
+  valEl.textContent = `${op}%`;
+  bar.classList.add("open");
+}
+
+function onQuickLayerSelectChange(layerId) {
+  selectedQuickLayerId = layerId;
+  syncQuickSelectedLayerBar();
+}
+
+function onQuickLayerOpacityInput(val) {
+  if (!selectedQuickLayerId) return;
+  const l = state.layers.find(x => x.id === selectedQuickLayerId);
+  if (!l) return;
+  l.opacity = Number(val);
+  const valEl = document.getElementById("quickLayerOpacityVal");
+  if (valEl) valEl.textContent = `${l.opacity}%`;
+  saveAppState();
+  renderAllVectorFeatures();
+  if (document.getElementById("layersModal")?.classList.contains("open")) {
+    renderLayersModal();
+  }
+}
+
 function renderAllVectorFeatures() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
@@ -1954,7 +2043,14 @@ function renderAllVectorFeatures() {
     }
   });
 }
-map.on("zoomend", renderAllVectorFeatures);
+map.on("zoomend", () => {
+  renderAllVectorFeatures();
+});
+const _origRenderAllVectorFeatures = renderAllVectorFeatures;
+renderAllVectorFeatures = function() {
+  _origRenderAllVectorFeatures();
+  syncQuickSelectedLayerBar();
+};
 
 /* ============================================================================
    5. THANH TRƯỢT ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN + XOAY MÀN HÌNH
@@ -2947,6 +3043,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   renderProjectsUI();
   renderAllVectorFeatures();
+  syncQuickSelectedLayerBar();
   hydrateStateFromIdb();
   startSmoothCompassLoop();
 
