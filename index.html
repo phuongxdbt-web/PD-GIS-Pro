@@ -85,6 +85,24 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
 
+    /* Nhãn số thứ tự đỉnh 1, 2, 3... theo trình tự khép vòng */
+    .pt-seq-badge {
+      background: #ef4444;
+      color: #ffffff;
+      border: 1.5px solid #ffffff;
+      border-radius: 999px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      font-size: 10px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.65);
+      transform: translate(-50%, -50%);
+    }
+
     /* Thanh công cụ trên cùng */
     .top-bar {
       position: absolute; top: env(safe-area-inset-top, 10px); left: 10px; right: 10px;
@@ -1240,16 +1258,26 @@ function getProj4Def(lon0) {
 }
 
 // Hiệu chỉnh số tọa độ VN-2000 nếu OCR đọc thiếu dấu chấm thập phân (VD: 4560542.00 -> 456054.20)
-function repairVn2000Number(val) {
+function repairVn2000Number(val, expectedAxis) {
   let n = Math.abs(Number(val));
   if (!isFinite(n) || n <= 0) return NaN;
-  while (n >= 10000000) {
+
+  // Nếu mất dấu chấm thập phân thành 8-9 chữ số (VD: 121257092 -> 1212570.92, 45605032 -> 456050.32)
+  if (n >= 10000000) {
+    n = n / 100;
+    while (n > 2650000) n = n / 10;
+  }
+
+  if (expectedAxis === "north") {
+    if (n >= 2650000) n = n / 10;
+    if (n > 0 && n < 900000) n = n * 10;
+  } else if (expectedAxis === "east") {
+    if (n >= 2650000) n = n / 10;
+    if (n > 0 && n < 200000) n = n * 10;
+  } else if (n >= 2650000 && n < 10000000) {
     n = n / 10;
   }
-  // Tọa độ Bắc VN-2000 tại Việt Nam nằm trong [900,000 .. 2,650,000]. Số 7 chữ số >= 2,650,000 là tọa độ Đông 6 chữ số bị mất dấu chấm
-  if (n >= 2650000 && n < 10000000) {
-    n = n / 10;
-  }
+
   return Number(n.toFixed(3));
 }
 
@@ -1938,6 +1966,18 @@ function renderAllVectorFeatures() {
         opacity
       }).addTo(vectorLayerGroup);
 
+      if (Array.isArray(f.coords) && f.coords.length >= 3) {
+        f.coords.forEach((pt, pIdx) => {
+          L.marker(pt, {
+            interactive: false,
+            icon: L.divIcon({
+              className: "",
+              html: `<div class="pt-seq-badge">${pIdx + 1}</div>`
+            })
+          }).addTo(labelLayerGroup);
+        });
+      }
+
       poly.bindPopup(`
         <div style="color:#0f172a;font-size:12.5px;">
           <strong>⬠ ${f.name}</strong><br/>
@@ -2384,60 +2424,40 @@ function preprocessImageForOcr(sourceCanvas) {
 
 function extractVn2000PairsFromOcrText(rawText) {
   const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const pairs = [];
-  const seenKeys = new Set();
+  const orderedPairs = [];
 
   for (const line of lines) {
-    const normalizedLine = line.replace(/(\d{6,9}),(\d{1,3})\b/g, "$1.$2");
-    const rawTokens = normalizedLine.match(/\d{6,9}(?:\.\d{1,3})?/g) || [];
-    const nums = rawTokens
-      .map(t => repairVn2000Number(parseFloat(t)))
-      .filter(n => isFinite(n) && ((n >= 900000 && n <= 2650000) || (n >= 200000 && n <= 850000)));
+    const normalizedLine = line.replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
+    const rawTokens = normalizedLine.match(/\d{5,9}(?:\.\d{1,3})?/g) || [];
+    const candidateNums = rawTokens
+      .map(t => parseFloat(t))
+      .filter(n => isFinite(n) && n >= 20000);
 
-    if (nums.length >= 2) {
-      for (let i = 0; i + 1 < nums.length; i += 2) {
-        const a = nums[i];
-        const b = nums[i + 1];
-        const isANorth = a >= 900000 && a <= 2650000;
-        const isAEast = a >= 200000 && a <= 850000;
-        const isBNorth = b >= 900000 && b <= 2650000;
-        const isBEast = b >= 200000 && b <= 850000;
-
-        if ((isANorth && isBEast) || (isAEast && isBNorth)) {
-          const xNorth = isANorth ? a : b;
-          const yEast = isAEast ? a : b;
-          const key = `${xNorth.toFixed(2)}_${yEast.toFixed(2)}`;
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            pairs.push(`${xNorth.toFixed(2)}, ${yEast.toFixed(2)}`);
-          }
+    if (candidateNums.length >= 2) {
+      for (let i = 0; i + 1 < candidateNums.length; i += 2) {
+        const { easting, northing } = normalizeVn2000Pair(candidateNums[i], candidateNums[i + 1]);
+        if (isFinite(easting) && isFinite(northing) && easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
+          orderedPairs.push(`${northing.toFixed(2)}, ${easting.toFixed(2)}`);
         }
       }
     }
   }
 
-  if (pairs.length < 3) {
-    const fullNormalized = rawText.replace(/(\d{6,9}),(\d{1,3})\b/g, "$1.$2");
-    const allNums = (fullNormalized.match(/\d{6,9}(?:\.\d{1,3})?/g) || [])
-      .map(t => repairVn2000Number(parseFloat(t)))
-      .filter(n => isFinite(n));
-    const northList = allNums.filter(n => n >= 900000 && n <= 2650000);
-    const eastList = allNums.filter(n => n >= 200000 && n <= 850000);
-    if (northList.length >= 3 && eastList.length >= 3) {
-      const count = Math.min(northList.length, eastList.length);
-      pairs.length = 0;
-      seenKeys.clear();
+  if (orderedPairs.length < 3) {
+    const fullNormalized = rawText.replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
+    const allNums = (fullNormalized.match(/\d{5,9}(?:\.\d{1,3})?/g) || []).map(Number).filter(n => isFinite(n) && n >= 20000);
+    const northList = allNums.map(n => repairVn2000Number(n, "north")).filter(n => isFinite(n) && n >= 900000 && n <= 2650000);
+    const eastList = allNums.map(n => repairVn2000Number(n, "east")).filter(n => isFinite(n) && n >= 200000 && n <= 850000);
+    const count = Math.min(northList.length, eastList.length);
+    if (count >= 3) {
+      orderedPairs.length = 0;
       for (let i = 0; i < count; i++) {
-        const key = `${northList[i].toFixed(2)}_${eastList[i].toFixed(2)}`;
-        if (!seenKeys.has(key)) {
-          seenKeys.add(key);
-          pairs.push(`${northList[i].toFixed(2)}, ${eastList[i].toFixed(2)}`);
-        }
+        orderedPairs.push(`${northList[i].toFixed(2)}, ${eastList[i].toFixed(2)}`);
       }
     }
   }
 
-  return pairs;
+  return orderedPairs;
 }
 
 async function runOcrOnSource(sourceCanvas) {
@@ -2463,81 +2483,69 @@ async function runOcrOnSource(sourceCanvas) {
   }
 }
 
+// Vẽ nghiêm ngặt theo trình tự 1 -> 2 -> 3 -> ... -> n -> khép về điểm 1
 function drawParcelFromVn2000() {
   const raw = document.getElementById("parcelCoordsInput").value.trim();
   if (!raw) { showToast("Vui lòng nhập hoặc quét danh sách tọa độ X, Y."); return; }
 
   const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-  const rawPairs = [];
+  const orderedLatLngs = [];
+
   lines.forEach((line) => {
     const parts = line.split(/[,;\s\t]+/).map(Number).filter(n => !isNaN(n));
     if (parts.length >= 2) {
       const { easting, northing } = normalizeVn2000Pair(parts[0], parts[1]);
-      if (easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
-        rawPairs.push({ easting, northing });
+      if (isFinite(easting) && isFinite(northing)) {
+        const wgs = vn2000ToWgs84(easting, northing);
+        if (isFinite(wgs.lat) && isFinite(wgs.lon)) {
+          orderedLatLngs.push([wgs.lat, wgs.lon]);
+        }
       }
     }
   });
 
-  if (rawPairs.length < 3) {
-    showToast("Cần ít nhất 3 cặp tọa độ VN-2000 hợp lệ (6 số & 7 số).");
+  if (orderedLatLngs.length < 3) {
+    showToast("Cần ít nhất 3 cặp tọa độ góc ranh hợp lệ.");
     return;
   }
 
-  // Lọc bỏ điểm ngoại lai nếu có số bị gõ/quét sai lệch quá 50km so với trung vị thửa đất
-  const sortedE = [...rawPairs].map(p => p.easting).sort((a, b) => a - b);
-  const sortedN = [...rawPairs].map(p => p.northing).sort((a, b) => a - b);
-  const medE = sortedE[Math.floor(sortedE.length / 2)];
-  const medN = sortedN[Math.floor(sortedN.length / 2)];
-
-  const latlngs = [];
-  rawPairs.forEach(({ easting, northing }) => {
-    if (Math.abs(easting - medE) <= 50000 && Math.abs(northing - medN) <= 50000) {
-      const wgs = vn2000ToWgs84(easting, northing);
-      if (isFinite(wgs.lat) && isFinite(wgs.lon)) {
-        latlngs.push([wgs.lat, wgs.lon]);
-      }
-    }
-  });
-
-  if (latlngs.length < 3) {
-    showToast("Các điểm tọa độ không nằm cùng khu vực, vui lòng kiểm tra lại số liệu.");
-    return;
-  }
-
-  const uniqueRing = [...latlngs];
-  if (uniqueRing.length > 3) {
-    const first = uniqueRing[0];
-    const last = uniqueRing[uniqueRing.length - 1];
+  // Nếu dòng cuối trùng điểm đầu (khép vòng về điểm 1) thì bỏ dòng trùng ở cuối để nối khép kín 1 -> 2 -> ... -> n -> 1
+  const sequenceRing = [...orderedLatLngs];
+  if (sequenceRing.length > 3) {
+    const first = sequenceRing[0];
+    const last = sequenceRing[sequenceRing.length - 1];
     if (Math.hypot(first[0] - last[0], first[1] - last[1]) < 1e-7) {
-      uniqueRing.pop();
+      sequenceRing.pop();
     }
   }
 
-  const areaM2 = calcPolygonAreaM2(uniqueRing);
+  const areaM2 = calcPolygonAreaM2(sequenceRing);
   const layerId = "parcel_" + Date.now();
-  const closed = [...uniqueRing, uniqueRing[0]];
-  explodePolylineToSegments(closed, {
+  const closedSequence = [...sequenceRing, sequenceRing[0]];
+
+  explodePolylineToSegments(closedSequence, {
     layerId,
     baseName: "Cạnh ranh thửa đất",
     project: getActiveProject().name,
     color: "#ef4444",
     width: 3
   });
+
   state.features.push({
     id: "poly_" + Date.now(),
     layerId,
     geomType: "polygon",
     name: `Ranh giới thửa đất (${areaM2.toFixed(2)} m²)`,
-    coords: uniqueRing,
+    coords: sequenceRing,
     areaM2,
     project: getActiveProject().name,
     note: state.surveyNote.content || "",
     createdAt: new Date().toLocaleString("vi-VN")
   });
+
   state.layers.push({
     id: layerId,
-    name: `Ranh thửa đất (${areaM2.toFixed(1)} m² - ${uniqueRing.length} cạnh)`,
+    name: `Ranh thửa đất (${areaM2.toFixed(1)} m² • 1→${sequenceRing.length}→1)`,
     type: "Dữ liệu vùng",
     visible: true,
     color: "#ef4444",
@@ -2550,8 +2558,8 @@ function drawParcelFromVn2000() {
   saveAppState();
   renderAllVectorFeatures();
   closeModal("parcelModal");
-  map.fitBounds(L.latLngBounds(uniqueRing), { padding: [40, 40] });
-  showToast(`Đã vẽ đúng vị trí ranh thửa đất: ${areaM2.toFixed(2)} m² (${uniqueRing.length} cạnh)!`);
+  map.fitBounds(L.latLngBounds(sequenceRing), { padding: [45, 45] });
+  showToast(`Đã vẽ theo trình tự 1→${sequenceRing.length}→1 • Diện tích: ${areaM2.toFixed(2)} m²`);
 }
 
 /* ============================================================================
