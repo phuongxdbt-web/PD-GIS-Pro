@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro </title>
+  <title>PD GIS Pro 1.1 - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -51,11 +51,12 @@
       background: #0f172a;
     }
 
-    /* Tâm ngắm bản đồ (Vị trí 14) */
+    /* Tâm ngắm bản đồ */
     #mapCrosshair {
       position: absolute; top: 50%; left: 50%;
       width: 44px; height: 44px; margin: -22px 0 0 -22px;
       z-index: 500; pointer-events: none;
+      transition: transform 0.16s ease-out;
     }
     #mapCrosshair::before, #mapCrosshair::after {
       content: ""; position: absolute; background: rgba(239, 68, 68, 0.95);
@@ -77,10 +78,10 @@
       border: 1px solid rgba(250, 204, 21, 0.7);
       padding: 1px 5px;
       border-radius: 4px;
-      font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      transform: translate(-50%, -50%);
     }
 
     /* Thanh công cụ trên cùng */
@@ -106,7 +107,7 @@
     .icon-btn:active { transform: scale(0.94); }
     .icon-btn.active { background: var(--accent-blue); border-color: #60a5fa; color: #fff; }
 
-    /* Cụm thông tin bên trái: Tốc độ + Phạm vi dự án + Công cụ vẽ nhanh */
+    /* Cụm thông tin bên trái */
     .left-stack {
       position: absolute; top: calc(env(safe-area-inset-top, 8px) + 46px); left: 8px;
       z-index: 850; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
@@ -121,7 +122,7 @@
     .speed-unit { font-size: 8.5px; color: var(--text-muted); font-weight: 700; }
 
     .project-badge {
-      max-width: 175px; background: rgba(30, 41, 59, 0.94);
+      max-width: 185px; background: rgba(30, 41, 59, 0.94);
       border: 1px solid rgba(59, 130, 246, 0.55); border-radius: 10px;
       padding: 5px 8px; font-size: 11px; font-weight: 700; color: #e2e8f0;
       cursor: pointer; display: flex; align-items: center; gap: 5px;
@@ -129,14 +130,13 @@
     }
     #activeProjectLabel { overflow: hidden; text-overflow: ellipsis; }
 
-    /* Thanh công cụ vẽ trực tiếp trên bản đồ */
     .draw-toolbar {
       display: flex; flex-direction: column; gap: 4px;
       background: var(--panel-dark); border: 1px solid var(--border-subtle);
       border-radius: 11px; padding: 3px;
     }
 
-    /* Cụm nút bên phải: La bàn, Vệ tinh, Zoom, Xoay màn hình, Định vị */
+    /* Cụm nút bên phải */
     .right-stack {
       position: absolute; top: calc(env(safe-area-inset-top, 10px) + 52px); right: 10px;
       z-index: 850; display: flex; flex-direction: column; align-items: center; gap: 7px;
@@ -171,7 +171,7 @@
       font-size: 20px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55); cursor: pointer;
     }
 
-    /* Thanh HUD Tọa độ dưới cùng (Vị trí 12) */
+    /* Thanh HUD Tọa độ dưới cùng */
     .bottom-hud {
       position: absolute; bottom: env(safe-area-inset-bottom, 8px); left: 8px; right: 8px;
       z-index: 880; background: var(--panel-dark); backdrop-filter: blur(10px);
@@ -207,9 +207,9 @@
     .hud-val.center-c { color: #38bdf8; }
     .hud-collapsed .hud-grid { display: none; }
 
-    /* Bảng điều khiển Độ mờ các lớp & Độ mờ lớp nền (Vị trí 11) */
+    /* Bảng điều khiển Độ mờ các lớp & Độ mờ lớp nền */
     #opacityPanel {
-      position: absolute; bottom: calc(env(safe-area-inset-bottom, 10px) + 145px);
+      position: absolute; bottom: calc(env(safe-area-inset-bottom, 10px) + 195px);
       left: 10px; right: 10px; max-width: 440px; z-index: 950;
       background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(56, 189, 248, 0.5);
       border-radius: 16px; padding: 12px 14px; display: none;
@@ -224,19 +224,47 @@
     }
     input[type="range"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
 
-    /* Thanh thông báo chế độ đang vẽ */
-    #drawBanner {
-      position: absolute; top: calc(env(safe-area-inset-top, 10px) + 52px);
-      left: 50%; transform: translateX(-50%); z-index: 960;
-      background: rgba(30, 58, 138, 0.95); border: 1px solid #60a5fa;
-      color: #fff; border-radius: 999px; padding: 6px 14px;
-      font-size: 12px; font-weight: 700; display: none; align-items: center; gap: 8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5); white-space: nowrap;
+    /* Thanh đo trực tiếp khi đang vẽ vùng / đường */
+    #drawMeasureBar {
+      position: absolute; top: calc(env(safe-area-inset-top, 10px) + 50px);
+      left: 50%; transform: translateX(-50%); z-index: 965;
+      background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(250, 204, 21, 0.65);
+      color: #f8fafc; border-radius: 14px; padding: 7px 11px;
+      display: none; flex-direction: column; gap: 6px; min-width: 280px; max-width: 92vw;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.65);
     }
-    #drawBanner.open { display: flex; }
+    #drawMeasureBar.open { display: flex; }
+    .draw-stats-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 800; color: #fde047; font-variant-numeric: tabular-nums;
+    }
+    .draw-btn-strip {
+      display: flex; align-items: center; justify-content: space-between; gap: 5px; flex-wrap: wrap;
+    }
+
+    /* Nút khôi phục khi bật chế độ "Màn hình chỉ hiện bản đồ" */
+    #cleanMapRestoreBtn {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 12px); right: 12px;
+      z-index: 1200; display: none; background: rgba(15, 23, 42, 0.92);
+      color: #38bdf8; border: 1px solid #38bdf8; border-radius: 999px;
+      padding: 8px 14px; font-size: 12px; font-weight: 800; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.6);
+    }
+    body.clean-map-mode .top-bar,
+    body.clean-map-mode .left-stack,
+    body.clean-map-mode .right-stack,
+    body.clean-map-mode .bottom-hud,
+    body.clean-map-mode #quickSelectedLayerBar,
+    body.clean-map-mode #reopenQuickSliderPill,
+    body.clean-map-mode #opacityPanel {
+      display: none !important;
+    }
+    body.clean-map-mode #cleanMapRestoreBtn {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
 
     /* ===================================================================== */
-    /* MÀN HÌNH CAMERA AR TRẮC ĐỊA (Vị trí 2)                                */
+    /* MÀN HÌNH CAMERA AR TRẮC ĐỊA                                           */
     /* ===================================================================== */
     #cameraModal {
       position: fixed; inset: 0; z-index: 2000; background: #000;
@@ -265,15 +293,12 @@
       padding: 5px 14px; font-size: 12px; font-weight: 700; color: #f8fafc;
     }
 
-    /* Tâm ngắm vuông + Vòng la bàn chia độ xoay mượt */
     .cam-reticle-wrap {
       position: absolute; top: 44%; left: 50%; width: 260px; height: 260px;
       margin: -130px 0 0 -130px; z-index: 4; pointer-events: none;
       display: flex; align-items: center; justify-content: center;
     }
-    #compassDialSvg {
-      width: 260px; height: 260px; will-change: transform;
-    }
+    #compassDialSvg { width: 260px; height: 260px; will-change: transform; }
     .fixed-square-reticle {
       position: absolute; width: 52px; height: 52px;
       top: 50%; left: 50%; margin: -26px 0 0 -26px;
@@ -290,7 +315,6 @@
     .sq-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
     .sq-br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-    /* Cụm thông số & nút dưới Camera */
     .cam-bottom {
       position: relative; z-index: 5; padding: 10px 12px calc(env(safe-area-inset-bottom, 12px) + 10px);
       background: linear-gradient(to top, rgba(2, 6, 23, 0.96) 75%, transparent);
@@ -338,7 +362,7 @@
     }
     .modal-backdrop.open { display: flex; }
     .modal-card {
-      width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
+      width: 100%; max-width: 540px; max-height: 88vh; overflow-y: auto;
       background: #111827; border: 1px solid var(--border-subtle);
       border-radius: 18px; padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
     }
@@ -359,7 +383,7 @@
     }
     .drawer-backdrop.open { display: block; }
     .drawer-panel {
-      width: 86%; max-width: 360px; height: 100%; background: #0f172a;
+      width: 86%; max-width: 365px; height: 100%; background: #0f172a;
       border-right: 1px solid var(--border-subtle); padding: 14px;
       overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
     }
@@ -409,8 +433,6 @@
     }
     .warn-text { font-size: 11.5px; color: #fbbf24; line-height: 1.4; margin: 6px 0; }
 
-
-    /* Nhãn số thứ tự đỉnh 1, 2, 3... theo trình tự khép vòng */
     .pt-seq-badge {
       background: #ef4444;
       color: #ffffff;
@@ -428,43 +450,39 @@
       transform: translate(-50%, -50%);
     }
 
-    /* Nhãn diện tích thửa đất trực tiếp trên bản đồ */
     .area-label {
       background: rgba(15, 23, 42, 0.9);
       color: #34d399;
       border: 1px solid rgba(52, 211, 153, 0.75);
       padding: 2px 7px;
       border-radius: 6px;
-      font-size: 11px;
       font-weight: 800;
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.55);
       transform: translate(-50%, -50%);
     }
 
-    /* Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ */
+    /* Thanh lớp đang chọn + nút ẩn thanh trượt (Hình 1 & Hình 3) */
     #quickSelectedLayerBar {
       position: absolute;
       bottom: calc(env(safe-area-inset-bottom, 8px) + 152px);
       left: 8px;
       right: 8px;
-      max-width: 540px;
+      max-width: 560px;
       z-index: 890;
       background: var(--panel-dark);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(56, 189, 248, 0.45);
       border-radius: 12px;
-      padding: 6px 10px;
+      padding: 6px 9px;
       display: none;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.45);
     }
-    #quickSelectedLayerBar.open {
-      display: flex;
-    }
+    #quickSelectedLayerBar.open { display: flex; }
     #quickLayerSelect {
-      max-width: 145px;
+      max-width: 135px;
       background: #1e293b;
       border: 1px solid var(--border-subtle);
       color: #f8fafc;
@@ -473,44 +491,25 @@
       font-size: 11.5px;
       font-weight: 700;
     }
-    #quickLayerEyeBtn {
-      background: #1e293b;
-      border: 1px solid var(--border-subtle);
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 4px 7px;
-      font-size: 13px;
-      line-height: 1;
-      cursor: pointer;
-    }
-    #quickLayerEyeBtn.hidden-layer {
-      opacity: 0.55;
-      border-color: #f87171;
-    }
 
-    /* Khung quét sổ đỏ & bảng quy ước */
-    .ocr-guide-frame {
+    #reopenQuickSliderPill {
       position: absolute;
-      top: 10%; left: 5%; right: 5%; bottom: 16%;
-      border: 2px solid #38bdf8;
-      border-radius: 8px;
-      box-shadow: 0 0 0 9999px rgba(2, 6, 23, 0.35);
-      pointer-events: none;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 6px;
-      z-index: 2;
-    }
-    .ocr-guide-badge {
-      background: rgba(15, 23, 42, 0.85);
-      color: #fde047;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
+      bottom: calc(env(safe-area-inset-bottom, 8px) + 154px);
+      left: 8px;
+      z-index: 889;
+      display: none;
+      background: rgba(15, 23, 42, 0.92);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.5);
       border-radius: 999px;
-      border: 1px solid rgba(250, 204, 21, 0.5);
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     }
+    #reopenQuickSliderPill.open { display: inline-flex; align-items: center; gap: 5px; }
+
     .ocr-scan-rule-box {
       background: rgba(15, 23, 42, 0.82);
       border: 1px solid rgba(56, 189, 248, 0.35);
@@ -522,7 +521,24 @@
       color: #cbd5e1;
     }
 
-    /* Toast thông báo nhanh */
+    .parsed-coord-table {
+      background: #0f172a;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
+    }
+    .parsed-coord-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 4px;
+      border-bottom: 1px dashed rgba(148,163,184,0.18);
+    }
+
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
       z-index: 5000; background: rgba(15, 23, 42, 0.96); color: #f8fafc;
@@ -536,7 +552,7 @@
 <div id="appShell">
   <div id="map"></div>
 
-  <!-- Vị trí 14: Tâm bản đồ -->
+  <!-- Tâm bản đồ -->
   <div id="mapCrosshair" title="Vị trí tâm bản đồ">
     <span class="crosshair-corner cc-tl"></span>
     <span class="crosshair-corner cc-tr"></span>
@@ -544,31 +560,40 @@
     <span class="crosshair-corner cc-br"></span>
   </div>
 
-  <!-- Banner hướng dẫn khi đang vẽ trên bản đồ -->
-  <div id="drawBanner">
-    <span id="drawBannerText">Đang vẽ đường line... Chạm bản đồ để thêm đỉnh</span>
-    <button class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="snapCurrentPointToStart()">🧲 Bắt điểm đầu</button>
-    <button class="mini-btn" style="background:#10b981;color:#fff;border:0;" onclick="finishDrawing()">Hoàn thành</button>
-    <button class="mini-btn" style="background:#ef4444;color:#fff;border:0;" onclick="cancelDrawing()">Hủy</button>
+  <!-- Thanh đo trực tiếp khi đang vẽ vùng / đường -->
+  <div id="drawMeasureBar">
+    <div class="draw-stats-row">
+      <span id="livePerimeterText">Chu vi: 0.00 m</span>
+      <span id="liveAreaText" style="color:#34d399;">Diện tích: 0.00 m²</span>
+    </div>
+    <div style="font-size:11px;color:#cbd5e1;" id="drawBannerText">
+      Chạm bản đồ thêm đỉnh • Kéo/bắt đỉnh đầu để khép vòng
+    </div>
+    <div class="draw-btn-strip">
+      <button class="mini-btn" style="background:#334155;" onclick="undoLastDrawPoint()">↩ Hoàn tác</button>
+      <button class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="snapCurrentPointToStart()">🧲 Bắt đầu</button>
+      <button class="mini-btn" style="background:#10b981;color:#fff;border:0;" onclick="promptSaveDrawnGeometry()">✓ Lưu đo vẽ</button>
+      <button class="mini-btn" style="background:#ef4444;color:#fff;border:0;" onclick="cancelDrawing()">✕ Hủy</button>
+    </div>
   </div>
 
-  <!-- Thanh công cụ trên cùng (Vị trí 1, 2, 3, 4, 5) -->
+  <!-- Thanh công cụ trên cùng -->
   <div class="top-bar">
     <div class="top-left-group">
-      <button class="icon-btn" title="1. Mở menu chính" onclick="openDrawer()">☰</button>
-      <div class="glass-pill" style="padding:4px 9px;font-size:11.5px;font-weight:700;color:#38bdf8;">
-        PD GIS Pro
+      <button class="icon-btn" title="Mở menu chính" onclick="openDrawer()">☰</button>
+      <div class="glass-pill" style="padding:4px 9px;font-size:11.5px;font-weight:800;color:#38bdf8;">
+        PD GIS Pro 1.1
       </div>
     </div>
     <div class="top-right-group glass-pill">
-      <button class="icon-btn" title="2. Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
-      <button class="icon-btn" title="3. Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
-      <button class="icon-btn" title="4. Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
-      <button class="icon-btn" title="5. Cài đặt & Chú thích chức năng" onclick="openModal('settingsModal')">⚙️</button>
+      <button class="icon-btn" title="Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
+      <button class="icon-btn" title="Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
+      <button class="icon-btn" title="Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
+      <button class="icon-btn" title="Cài đặt & Tùy chọn" onclick="openModal('settingsModal')">⚙️</button>
     </div>
   </div>
 
-  <!-- Cụm bên trái: Tốc độ, Chọn phạm vi dự án động, Công cụ vẽ & nổ KMZ -->
+  <!-- Cụm bên trái -->
   <div class="left-stack">
     <div style="display:flex;gap:8px;align-items:center;">
       <div class="speed-box">
@@ -580,40 +605,42 @@
       </div>
     </div>
 
-    <!-- Thanh công cụ vẽ trực tiếp & đo kích thước -->
     <div class="draw-toolbar" style="width:fit-content;">
       <button class="icon-btn" title="Thêm Điểm mốc tại tâm" onclick="addPointAtCenter()">📍</button>
-      <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line (Click đường để xem kích thước)" onclick="startDrawing('line')">📏</button>
-      <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
+      <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line" onclick="startDrawing('line')">📏</button>
+      <button class="icon-btn" id="btnDrawPoly" title="Tạo Vùng / Ranh giới thửa" onclick="openCreatePolygonGuide()">⬠</button>
       <button class="icon-btn active" id="btnSnapStart" title="Bật / Tắt bắt điểm cuối trùng điểm đầu" onclick="toggleSnapToStart()">🧲</button>
       <button class="icon-btn active" id="btnQuickSegLabels" title="Bật / Tắt nhanh nhãn kích thước (m) ngoài bản đồ" onclick="toggleQuickSegLabels()">m</button>
       <button class="icon-btn" title="Bảng kê các lớp — Chọn xóa lớp / thửa" onclick="openQuickDeleteLayerModal()">🗑️</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
-      <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét Camera" onclick="openModal('parcelModal')">📐</button>
-      <button class="icon-btn" title="11. Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
+      <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét sổ đỏ từ ảnh" onclick="openModal('parcelModal')">📐</button>
+      <button class="icon-btn" title="Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
 
-  <!-- Cụm bên phải: La bàn (6), Vệ tinh (7), Zoom (8,9), Xoay màn hình, Định vị (10) -->
+  <!-- Cụm bên phải -->
   <div class="right-stack">
-    <button class="compass-btn" title="6. La bàn số / Đưa hướng Bắc lên trên" onclick="resetMapNorth()">
+    <button class="compass-btn" title="La bàn số / Đưa hướng Bắc lên trên" onclick="resetMapNorth()">
       <span id="mapCompassArrow" style="display:inline-block;font-size:18px;color:#ef4444;">🧭</span>
     </button>
-    <div class="sat-pill" title="7. Trạng thái vệ tinh GPS">
+    <div class="sat-pill" title="Trạng thái vệ tinh GPS">
       <div id="satCount">29/30</div>
       <div>🛰️</div>
     </div>
-    <div class="zoom-pill" id="zoomBadge" title="9. Mức zoom bản đồ">Z16.0</div>
-    <div class="zoom-group" title="8. Phóng to / Thu nhỏ">
+    <div class="zoom-pill" id="zoomBadge" title="Mức zoom bản đồ">Z16.0</div>
+    <div class="zoom-group" title="Phóng to / Thu nhỏ">
       <button onclick="map.zoomIn()">+</button>
       <button onclick="map.zoomOut()">−</button>
     </div>
     <button class="icon-btn" id="btnRotateScreen" title="Xoay màn hình / Đổi hướng hiển thị" onclick="toggleScreenOrientation()">🔄</button>
     <button class="icon-btn" title="Đổi lớp bản đồ nền" onclick="cycleBaseMap()">🗺️</button>
-    <button class="locate-fab" title="10. Định vị về vị trí hiện tại GPS" onclick="locateUserNow(true)">🎯</button>
+    <button class="icon-btn" title="Màn hình chỉ hiện bản đồ" onclick="toggleCleanMapMode(true)">⛶</button>
+    <button class="locate-fab" title="Định vị về vị trí hiện tại GPS" onclick="locateUserNow(true)">🎯</button>
   </div>
 
-  <!-- Bảng thanh trượt ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN (Vị trí 11) -->
+  <button id="cleanMapRestoreBtn" onclick="toggleCleanMapMode(false)">⛶ Hiện đầy đủ bảng điều khiển</button>
+
+  <!-- Bảng thanh trượt ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN -->
   <div id="opacityPanel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <span style="font-size:12.5px;font-weight:800;color:#38bdf8;">💧 ĐIỀU CHỈNH ĐỘ MỜ HIỂN THỊ</span>
@@ -635,15 +662,22 @@
     </div>
   </div>
 
-  <!-- Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ -->
+  <!-- Thanh chỉnh độ mờ & cài đặt nhanh theo lớp đang chọn (Hình 1 & Hình 3) -->
   <div id="quickSelectedLayerBar">
-    <select id="quickLayerSelect" title="Chọn lớp cần chỉnh độ mờ" onchange="onQuickLayerSelectChange(this.value)"></select>
-    <button id="quickLayerEyeBtn" type="button" title="Ẩn / Hiện nhanh lớp đang chọn" onclick="toggleQuickSelectedLayerVisibility()">👁️</button>
+    <select id="quickLayerSelect" title="Chọn lớp cần chỉnh" onchange="onQuickLayerSelectChange(this.value)"></select>
+    <button class="mini-btn" style="padding:4px 6px;" title="Bay tới lớp đang chọn" onclick="flyToSelectedQuickLayer()">🔍</button>
+    <button id="quickLayerEyeBtn" class="mini-btn" style="padding:4px 6px;" type="button" title="Ẩn / Hiện nhanh lớp đang chọn" onclick="toggleQuickSelectedLayerVisibility()">👁️</button>
+    <button class="mini-btn" style="padding:4px 6px;" type="button" title="Cài đặt màu, độ rộng nét, cỡ chữ theo lớp đang chọn" onclick="openSelectedQuickLayerStyle()">⚙️</button>
     <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;" oninput="onQuickLayerOpacityInput(this.value)" />
-    <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:38px;text-align:right;">100%</span>
+    <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:34px;text-align:right;">100%</span>
+    <button class="mini-btn" style="padding:4px 7px;color:#fbbf24;" type="button" title="Ẩn thanh trượt lớp" onclick="setQuickLayerSliderHidden(true)">—</button>
   </div>
 
-  <!-- Thanh HUD Tọa độ phía dưới (Vị trí 12) -->
+  <button id="reopenQuickSliderPill" type="button" onclick="setQuickLayerSliderHidden(false)" title="Hiện lại thanh trượt độ mờ lớp">
+    🎚️ Hiện thanh trượt lớp
+  </button>
+
+  <!-- Thanh HUD Tọa độ phía dưới -->
   <div class="bottom-hud" id="bottomHud">
     <div class="hud-header">
       <div class="crs-tag" onclick="openModal('crsModal')" title="Chọn hệ chiếu VN-2000 (63 tỉnh cũ / 34 tỉnh mới)">
@@ -667,7 +701,7 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- MÀN HÌNH CAMERA AR TRẮC ĐỊA (Tâm vuông + Vòng la bàn mượt + Ghi chú) -->
+<!-- MÀN HÌNH CAMERA AR TRẮC ĐỊA                                           -->
 <!-- ===================================================================== -->
 <div id="cameraModal">
   <video id="cameraVideo" autoplay playsinline muted></video>
@@ -683,7 +717,6 @@
     <div class="cam-crs-pill" id="camCrsLabel">🚩 Lâm Đồng - Bình Thuận - Đắk Nông (VN-2000)</div>
   </div>
 
-  <!-- Tâm ngắm vuông cố định + Vòng la bàn chia độ xoay chống giật -->
   <div class="cam-reticle-wrap">
     <svg id="compassDialSvg" viewBox="0 0 260 260">
       <circle cx="130" cy="130" r="106" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3" />
@@ -703,7 +736,7 @@
   <div class="cam-bottom">
     <div class="cam-hud-box">
       <div class="cam-hud-line1">
-        <span>PD GIS PRO • GÓC PHƯƠNG VỊ: <span id="camAzimuthText">0°</span></span>
+        <span>PD GIS PRO 1.1 • GÓC PHƯƠNG VỊ: <span id="camAzimuthText">0°</span></span>
         <span>ΔH: <span id="camDeltaHText">+0.00 m</span></span>
       </div>
       <div class="cam-hud-line2">
@@ -733,13 +766,13 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- DRAWER MENU CHÍNH (Vị trí 1)                                          -->
+<!-- DRAWER MENU CHÍNH                                                     -->
 <!-- ===================================================================== -->
 <div class="drawer-backdrop" id="mainDrawer" onclick="if(event.target===this) closeDrawer()">
   <div class="drawer-panel">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:16px;font-weight:800;color:#38bdf8;">PD GIS PRO</div>
+        <div style="font-size:16px;font-weight:800;color:#38bdf8;">PD GIS PRO 1.1</div>
         <div style="font-size:11px;color:#94a3b8;">Ban QLDA Phương Đông • Trắc địa & GIS</div>
       </div>
       <button class="close-x" onclick="closeDrawer()">✕</button>
@@ -751,11 +784,13 @@
     <div class="menu-item" onclick="closeDrawer(); openModal('convertModal')"><span>⇄ Chuyển đổi tọa độ hai chiều VN2000 ↔ 84</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('coordInputModal')"><span>📍 Nhập & Tìm điểm tọa độ đa hệ</span><span>›</span></div>
 
-    <div class="menu-section-title">2. Dữ liệu bản đồ & Giải nén KMZ</div>
+    <div class="menu-section-title">2. Dữ liệu bản đồ, Vẽ & Thùng rác</div>
+    <div class="menu-item" onclick="closeDrawer(); openCreatePolygonGuide()"><span>⬠ Tạo dữ liệu Vùng (GPS / Vẽ tay / Danh sách)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); triggerImportFile()"><span>📂 Nạp file KMZ (tự nổ đoạn), KML, GeoJSON, GPX</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); openModal('layersModal')"><span>📚 Quản lý các lớp & Cài đặt hiển thị</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); openModal('parcelModal')"><span>📷 Quét tọa độ bằng Camera / Vẽ Sổ Đỏ</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); openModal('fieldSchemaModal')"><span>📝 Cấu hình trường thuộc tính đối tượng</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); openModal('layersModal')"><span>📚 Quản lý các lớp & Tệp KML/KMZ</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); openModal('trashModal')"><span id="drawerTrashLabel">🗑️ Thùng rác dữ liệu đã xóa (0)</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); openModal('parcelModal')"><span>📐 Quét tọa độ sổ đỏ từ ảnh & Vẽ ranh giới</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); openModal('fieldSchemaModal')"><span>📝 Cấu trúc dữ liệu & Trường thuộc tính</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('tagsModal')"><span>🏷️ Quản lý nhãn thẻ</span><span>›</span></div>
 
     <div class="menu-section-title">3. Viễn thám, UAV & Xuất dữ liệu</div>
@@ -763,21 +798,84 @@
     <div class="menu-item" onclick="closeDrawer(); openModal('fireModal')"><span>🔥 Điểm cảnh báo cháy (MODIS / VIIRS)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('nfzModal')"><span>🚁 Khu vực cấm bay UAV</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('mbtilesModal')"><span>🧱 Chuyển đổi MBTiles</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); openModal('exportModal')"><span>📤 Xuất file dữ liệu (GeoJSON, KML, DXF, Excel...)</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); openModal('exportModal')"><span>📤 Xuất file dữ liệu (Chọn lớp & Đặt tên)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('backupModal')"><span>💾 Sao lưu & Khôi phục dữ liệu</span><span>›</span></div>
   </div>
 </div>
 
-<!-- Input ẩn nạp file GIS / KMZ / Khôi phục -->
+<!-- Input ẩn -->
 <input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
 <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="handleRestoreJson(event)" />
 <input type="file" id="ocrImageInput" accept="image/*" capture="environment" style="display:none" onchange="handleOcrImageFile(event)" />
 
 <!-- ===================================================================== -->
+<!-- HỘP THOẠI HỎI LƯU DỮ LIỆU ĐO VẼ & CẬP NHẬT THUỘC TÍNH                -->
+<!-- ===================================================================== -->
+<div class="modal-backdrop" id="saveGeometryChoiceModal">
+  <div class="modal-card" style="max-width:420px;text-align:center;">
+    <div class="modal-head">
+      <span class="modal-title">📌 Thông báo</span>
+      <button class="close-x" onclick="closeModal('saveGeometryChoiceModal')">✕</button>
+    </div>
+    <div style="font-size:13.5px;font-weight:700;color:#e2e8f0;margin-bottom:14px;">
+      Bạn muốn lưu lại dữ liệu đo vẽ ?
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn-primary" style="background:#2563eb;" onclick="openAttributeFormForChoice('line')">📏 LƯU LẠI THÀNH ĐỐI TƯỢNG ĐƯỜNG</button>
+      <button class="btn-primary" style="background:#10b981;" onclick="openAttributeFormForChoice('polygon')">⬠ LƯU LẠI THÀNH ĐỐI TƯỢNG VÙNG</button>
+      <button class="btn-primary" style="background:#d97706;" onclick="openAttributeFormForChoice('points')">📍 TẠO MỐC TỌA ĐỘ (CÁC ĐỈNH)</button>
+      <button class="btn-secondary" onclick="closeModal('saveGeometryChoiceModal')">HỦY BỎ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="geometryAttrModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span class="modal-title" id="attrModalTitle">✏️ CẬP NHẬT ĐỐI TƯỢNG</span>
+      <button class="close-x" onclick="closeModal('geometryAttrModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tên vùng / Tên đối tượng *</label>
+      <input type="text" id="attrObjectName" class="form-input" placeholder="VD: Thửa đất GPMB số 01 / Tuyến D1" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Thông tin đối tượng</label>
+      <input type="text" id="attrObjectInfo" class="form-input" placeholder="Thông tin ranh giới, chủ sử dụng, hạng mục..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Thời gian cập nhật</label>
+      <input type="text" id="attrUpdatedAt" class="form-input" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ghi chú</label>
+      <textarea id="attrNote" class="form-textarea" style="min-height:68px;" placeholder="Nhập ghi chú hiện trường..."></textarea>
+    </div>
+    <button class="btn-primary" style="background:#10b981;" onclick="confirmSaveGeometryWithAttributes()">✓ LƯU VÀO CƠ SỞ DỮ LIỆU</button>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL THÙNG RÁC DỮ LIỆU ĐÃ XÓA (KHÔI PHỤC / XÓA VĨNH VIỄN)          -->
+<!-- ===================================================================== -->
+<div class="modal-backdrop" id="trashModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span class="modal-title">🗑️ Thùng Rác Dữ Liệu Đã Xóa</span>
+      <button class="close-x" onclick="closeModal('trashModal')">✕</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:12px;color:#94a3b8;">Các lớp / thửa / mốc đã xóa được lưu tạm để khôi phục khi cần.</span>
+      <button class="btn-secondary" style="color:#f87171;white-space:nowrap;" onclick="emptyTrashBin()">Dọn thùng rác</button>
+    </div>
+    <div id="trashListContainer" style="max-height:56vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
 <!-- CÁC MODAL CHỨC NĂNG CHI TIẾT                                          -->
 <!-- ===================================================================== -->
 
-<!-- Modal: Chọn & Quản lý phạm vi dự án (Động 100%, không hardcode) -->
 <div class="modal-backdrop" id="projectScopeModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -788,7 +886,7 @@
     <hr style="border-color:var(--border-subtle);margin:12px 0;" />
     <div class="form-group">
       <label class="form-label">Thêm dự án / tuyến công trình mới</label>
-      <input type="text" id="newProjectName" class="form-input" placeholder="Ví dụ: KCN Tuy Phong - Tuyến D1 (1,759.73 m)" />
+      <input type="text" id="newProjectName" class="form-input" placeholder="Ví dụ: KCN Tuy Phong - Tuyến D1" />
     </div>
     <div class="form-group">
       <input type="text" id="newProjectNote" class="form-input" placeholder="Ghi chú hạng mục / địa điểm..." />
@@ -797,7 +895,6 @@
   </div>
 </div>
 
-<!-- Modal: Hệ chiếu VN-2000 (63 tỉnh cũ & 34 tỉnh mới 2025) -->
 <div class="modal-backdrop" id="crsModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -809,13 +906,12 @@
       <span class="chip" id="tabCrs63" onclick="switchCrsCatalog('old63')">Danh sách 63 tỉnh/TP cũ</span>
     </div>
     <div class="form-group">
-      <input type="text" id="crsSearchInput" class="form-input" placeholder="Tìm tên tỉnh/thành phố (VD: Lâm Đồng, Bình Thuận, TP.HCM...)" oninput="renderCrsList()" />
+      <input type="text" id="crsSearchInput" class="form-input" placeholder="Tìm tên tỉnh/thành phố..." oninput="renderCrsList()" />
     </div>
     <div id="crsListContainer" style="max-height:52vh;overflow-y:auto;"></div>
   </div>
 </div>
 
-<!-- Modal: Chuyển đổi tọa độ hai chiều VN-2000 <-> WGS84 -->
 <div class="modal-backdrop" id="convertModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -874,7 +970,7 @@
 <div class="modal-backdrop" id="parcelModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">📐 Vẽ Ranh Giới Thửa Đất / Sổ Đỏ (VN-2000)</span>
+      <span class="modal-title">📐 Quét Tọa Độ Sổ Đỏ & Vẽ Ranh Giới (VN-2000)</span>
       <button class="close-x" onclick="closeModal('parcelModal')">✕</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -893,18 +989,32 @@
     <div id="ocrStatusText" style="font-size:12px;color:#38bdf8;margin-bottom:6px;"></div>
 
     <div class="form-group">
-      <label class="form-label">Danh sách tọa độ góc ranh VN-2000 (mỗi dòng 1 điểm theo định dạng: X, Y):</label>
-      <textarea id="parcelCoordsInput" class="form-textarea" placeholder="536350.12, 1208250.45&#10;536410.50, 1208260.10&#10;536400.00, 1208310.80&#10;536340.20, 1208300.15"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap;">
+        <label class="form-label" style="margin:0;">Danh sách tọa độ góc ranh (mỗi dòng 1 cặp: X, Y):</label>
+        <div style="display:flex;gap:5px;">
+          <button type="button" class="mini-btn" onclick="normalizeDecimalCommaInParcel()">. Chuẩn hóa dấu phẩy</button>
+          <button type="button" class="mini-btn" onclick="swapParcelXyColumns()">⇅ Đảo cột X ↔ Y</button>
+        </div>
+      </div>
+      <textarea id="parcelCoordsInput" class="form-textarea" oninput="renderParsedCoordTable()" placeholder="536350.12, 1208250.45&#10;536410.50, 1208260.10&#10;536400.00, 1208310.80&#10;536340.20, 1208300.15"></textarea>
     </div>
-    <div class="warn-text">
-      ⚠️ Lưu ý: X(E) thường có 6 số nguyên, Y(N) thường có 7 số nguyên. Hệ thống tự nổ từng cạnh thửa đất để bấm vào xem kích thước từng đoạn.
+
+    <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:4px;">📋 Danh sách tọa độ nhận diện / kiểm tra:</div>
+    <div class="parsed-coord-table" id="parsedCoordListBox">
+      <div style="color:#94a3b8;">Chưa có cặp tọa độ nào.</div>
     </div>
+
+    <div style="font-size:11.5px;color:#cbd5e1;margin-bottom:8px;">
+      Hệ chiếu nguồn đang dùng: <strong style="color:#38bdf8;" id="parcelCrsNameDisplay">VN-2000 / LÂM ĐỒNG (2025)</strong>
+      <button type="button" class="mini-btn" style="margin-left:6px;" onclick="closeModal('parcelModal'); openModal('crsModal');">Đổi hệ chiếu</button>
+    </div>
+
     <div class="ocr-scan-rule-box">
-      <div style="font-weight:800;color:#38bdf8;margin-bottom:3px;">📋 Quy ước đóng khung quét chuẩn (Chế độ Scan):</div>
-      <div>• Đặt trọn bảng <b>TT | X(m) | Y(m)</b> nằm gọn trong khung viền xanh (từ dòng đầu đến dòng khép vòng cuối).</div>
-      <div>• Giữ mặt phẳng bảng song song màn hình, đủ sáng, tránh bóng loá cắt ngang hàng số.</div>
-      <div>• Hệ thống tự gom theo từng hàng ngang theo trình tự <b>1 → 2 → ... → khép về 1</b>.</div>
+      <div style="font-weight:800;color:#38bdf8;margin-bottom:3px;">📋 Quy ước đóng khung quét chuẩn:</div>
+      <div>• Đặt trọn bảng <b>TT | X(m) | Y(m)</b> nằm gọn trong khung ảnh, đủ sáng, giữ phẳng.</div>
+      <div>• Thứ tự tự nối <b>1 → 2 → ... → khép về 1</b>, tự nổ cạnh và tính diện tích.</div>
     </div>
+
     <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#e2e8f0;margin-bottom:8px;cursor:pointer;">
       <input type="checkbox" id="clearOldParcelsBeforeDraw" checked />
       <span>Xóa các thửa đất vẽ trước đó để tránh chồng chéo đường & số thứ tự</span>
@@ -916,7 +1026,6 @@
   </div>
 </div>
 
-<!-- Modal: Ghi chú dự án, công việc trên Camera / Bản đồ -->
 <div class="modal-backdrop" id="camNoteModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -939,11 +1048,10 @@
   </div>
 </div>
 
-<!-- Modal: Hiệu chỉnh bù cao độ ΔH -->
 <div class="modal-backdrop" id="deltaHModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">🎚️ Hiệu Chỉnh Cao Độ Quốc Gia (Đặt đế máy & Bù ΔH)</span>
+      <span class="modal-title">🎚️ Hiệu Chỉnh Cao Độ Quốc Gia (Bù ΔH)</span>
       <button class="close-x" onclick="closeModal('deltaHModal')">✕</button>
     </div>
     <div class="list-card" style="font-size:12.5px;">
@@ -965,11 +1073,10 @@
   </div>
 </div>
 
-<!-- Modal: Quản lý các lớp & Cài đặt hiển thị từng lớp -->
 <div class="modal-backdrop" id="layersModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">📚 Quản Lý Các Lớp Dữ Liệu</span>
+      <span class="modal-title">📚 Quản Lý Các Lớp & Tệp KML/KMZ</span>
       <button class="close-x" onclick="closeModal('layersModal')">✕</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -979,7 +1086,6 @@
   </div>
 </div>
 
-<!-- Modal: Cài đặt hiển thị chi tiết của 1 lớp -->
 <div class="modal-backdrop" id="layerStyleModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -987,21 +1093,13 @@
       <button class="close-x" onclick="closeModal('layerStyleModal')">✕</button>
     </div>
     <div class="list-card">
-      <label style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;">
-        <span>Chế độ xử lý đa luồng</span>
-        <input type="checkbox" id="stMultiThread" checked />
-      </label>
-      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;">
-        <span>Bảng mã hóa font:</span>
-        <select id="stFontEncoding" class="form-select" style="width:130px;">
-          <option value="UNICODE">UNICODE</option>
-          <option value="TCVN3">TCVN3</option>
-          <option value="VNI">VNI</option>
-        </select>
-      </div>
-      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;">
         <span>Hiển thị nhãn kích thước từng đoạn:</span>
         <input type="checkbox" id="stShowSegLength" checked />
+      </div>
+      <div style="margin-top:8px;">
+        <div class="slider-title"><span>Độ mờ lớp này:</span><span id="stLayerOpLabel">100%</span></div>
+        <input type="range" min="0" max="100" id="stLayerOpacity" value="100" oninput="document.getElementById('stLayerOpLabel').textContent = this.value + '%'" />
       </div>
     </div>
     <div class="grid-2 form-group">
@@ -1010,7 +1108,7 @@
         <input type="color" id="stStrokeColor" class="form-input" style="height:40px;padding:3px;" value="#3b82f6" />
       </div>
       <div>
-        <label class="form-label">Độ rộng đường (dp):</label>
+        <label class="form-label">Độ rộng đường (px):</label>
         <input type="number" id="stStrokeWidth" class="form-input" min="1" max="12" value="3" />
       </div>
     </div>
@@ -1020,8 +1118,8 @@
         <input type="color" id="stFillColor" class="form-input" style="height:40px;padding:3px;" value="#10b981" />
       </div>
       <div>
-        <label class="form-label">Cỡ chữ nhãn (dp):</label>
-        <input type="number" id="stLabelSize" class="form-input" min="10" max="28" value="14" />
+        <label class="form-label">Cỡ chữ nhãn (px):</label>
+        <input type="number" id="stLabelSize" class="form-input" min="9" max="28" value="11" />
       </div>
     </div>
     <div class="grid-2">
@@ -1031,7 +1129,6 @@
   </div>
 </div>
 
-<!-- Modal: Nhập điểm tọa độ đa định dạng -->
 <div class="modal-backdrop" id="coordInputModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1043,9 +1140,6 @@
       <select id="inputFormatSelect" class="form-select" onchange="updateCoordInputPlaceholder()">
         <option value="vn2000">Hệ chiếu tọa độ VN-2000 (X, Y)</option>
         <option value="wgs84">Google Maps / WGS84 (Vĩ độ, Kinh độ)</option>
-        <option value="utm">Định dạng UTM (Zone 48N / 49N)</option>
-        <option value="mgrs">Định dạng MGRS</option>
-        <option value="pluscode">Plus Code</option>
       </select>
     </div>
     <div class="grid-2 form-group">
@@ -1058,7 +1152,6 @@
         <input type="text" id="inCoordVal2" class="form-input" placeholder="1208232.551" />
       </div>
     </div>
-    <div class="warn-text">Lưu ý với tọa độ X(E) và Y(N) bị đảo ngược: X(E) thường có 6 số nguyên, Y(N) thường có 7 số nguyên.</div>
     <div class="grid-2">
       <button class="btn-primary" onclick="submitCoordInput(false)">Bay tới điểm</button>
       <button class="btn-primary" style="background:#0f766e;" onclick="submitCoordInput(true)">Tạo mốc & Bay tới</button>
@@ -1066,18 +1159,16 @@
   </div>
 </div>
 
-<!-- Modal: Cấu hình trường dữ liệu thuộc tính -->
 <div class="modal-backdrop" id="fieldSchemaModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">📝 Cấu Hình Trường Dữ Liệu Đối Tượng</span>
+      <span class="modal-title">📝 Cấu Trúc Dữ Liệu Đối Tượng</span>
       <button class="close-x" onclick="closeModal('fieldSchemaModal')">✕</button>
     </div>
     <div id="schemaFieldsList"></div>
   </div>
 </div>
 
-<!-- Modal: Quản lý nhãn thẻ -->
 <div class="modal-backdrop" id="tagsModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1085,7 +1176,7 @@
       <button class="close-x" onclick="closeModal('tagsModal')">✕</button>
     </div>
     <div class="grid-2 form-group">
-      <input type="text" id="newTagName" class="form-input" maxlength="100" placeholder="Tên nhãn thẻ (1-100 ký tự)" />
+      <input type="text" id="newTagName" class="form-input" maxlength="100" placeholder="Tên nhãn thẻ" />
       <input type="text" id="newTagDesc" class="form-input" placeholder="Mô tả về nhãn thẻ" />
     </div>
     <div class="grid-2 form-group">
@@ -1094,14 +1185,13 @@
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <button class="btn-primary" onclick="addNewTag()">+ Thêm mới nhãn thẻ</button>
-      <button class="btn-secondary" onclick="sortTagsList()">⇅ Sắp xếp A→Z</button>
-      <button class="btn-secondary" style="color:#f87171;" onclick="clearAllTags()">Xóa tất cả</button>
+      <button class="btn-secondary" onclick="sortTagsList()">⇅ A→Z</button>
+      <button class="btn-secondary" style="color:#f87171;" onclick="clearAllTags()">Xóa hết</button>
     </div>
     <div id="tagsListContainer"></div>
   </div>
 </div>
 
-<!-- Modal: Tìm ảnh vệ tinh Sentinel-2 -->
 <div class="modal-backdrop" id="satelliteModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1110,86 +1200,80 @@
     </div>
     <div class="list-card">
       <strong>SENTINEL-2 (Chu kỳ 5 ngày • Độ phân giải 10m)</strong>
-      <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Phủ lớp ảnh vệ tinh theo ranh giới khung nhìn hiện tại.</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:4px;">Khoanh vùng khung nhìn hiện tại trên bản đồ.</div>
     </div>
     <div class="grid-2 form-group">
-      <div><label class="form-label">Từ ngày:</label><input type="date" id="satFromDate" class="form-input" value="2026-10-21" /></div>
-      <div><label class="form-label">Đến ngày:</label><input type="date" id="satToDate" class="form-input" value="2026-11-20" /></div>
+      <div><label class="form-label">Từ ngày:</label><input type="date" id="satFromDate" class="form-input" value="2026-10-22" /></div>
+      <div><label class="form-label">Đến ngày:</label><input type="date" id="satToDate" class="form-input" value="2026-11-21" /></div>
     </div>
-    <button class="btn-primary" onclick="applySatelliteOverlay()">Tải & Phủ lớp vệ tinh lên bản đồ</button>
+    <button class="btn-primary" onclick="applySatelliteOverlay()">Khoanh vùng ảnh vệ tinh</button>
   </div>
 </div>
 
-<!-- Modal: Điểm cảnh báo cháy -->
 <div class="modal-backdrop" id="fireModal">
   <div class="modal-card">
     <div class="modal-head">
       <span class="modal-title">🔥 Điểm Cảnh Báo Cháy (MODIS / VIIRS)</span>
       <button class="close-x" onclick="closeModal('fireModal')">✕</button>
     </div>
-    <div class="grid-2 form-group">
-      <div>
-        <label class="form-label">Khu vực quan tâm:</label>
-        <select class="form-select"><option>Đông Nam Á</option><option>Việt Nam - Nam Trung Bộ</option></select>
-      </div>
-      <div>
-        <label class="form-label">Loại ảnh vệ tinh:</label>
-        <select class="form-select"><option>VIIRS 375m/NOAA-21</option><option>VIIRS 375m/S-NPP</option><option>MODIS 1km</option></select>
-      </div>
-    </div>
-    <button class="btn-danger" onclick="loadFireHotspots()">Tìm & Hiển thị điểm cảnh báo cháy trên bản đồ</button>
+    <button class="btn-danger" onclick="loadFireHotspots()">Tìm & Hiển thị điểm cảnh báo cháy quanh tâm</button>
   </div>
 </div>
 
-<!-- Modal: Khu vực cấm bay UAV -->
 <div class="modal-backdrop" id="nfzModal">
   <div class="modal-card">
     <div class="modal-head">
       <span class="modal-title">🚁 Khu Vực Cấm Bay UAV</span>
       <button class="close-x" onclick="closeModal('nfzModal')">✕</button>
     </div>
-    <div class="grid-2 form-group">
-      <div><label class="form-label">Bán kính quét (km):</label><input type="number" id="nfzRadius" class="form-input" value="50" /></div>
-      <div><label class="form-label">Loại máy bay UAV:</label><input type="text" class="form-input" value="DJI Mavic 3E / T25P" /></div>
-    </div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;">
-      <input type="checkbox" id="nfzConfirmChk" checked /> Xác nhận chỉ dùng tham khảo an toàn bay theo quy định pháp luật
-    </label>
     <button class="btn-primary" onclick="renderNoFlyZones()">Hiển thị vùng hạn chế / cảnh báo bay quanh tâm</button>
   </div>
 </div>
 
-<!-- Modal: Chuyển đổi MBTiles -->
 <div class="modal-backdrop" id="mbtilesModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">🧱 Chuyển Đổi Dữ Liệu Sang MBTiles</span>
+      <span class="modal-title">🧱 Chuyển Đổi Dữ Liệu Sang MBTiles / Gói Vector</span>
       <button class="close-x" onclick="closeModal('mbtilesModal')">✕</button>
     </div>
     <div style="font-size:12.5px;color:#cbd5e1;line-height:1.6;">
-      Hỗ trợ đóng gói dữ liệu hiện trường (GeoJSON, KML/KMZ, GPX, DXF, SHP, GeoTIFF, PDF) thành gói bản đồ offline chuẩn MBTiles / GeoPackage để dùng ngoại tuyến không cần mạng.
+      Đóng gói dữ liệu khảo sát hiện trường thành gói dữ liệu chuẩn hóa để lưu trữ và chia sẻ ngoại tuyến.
     </div>
-    <button class="btn-primary" style="margin-top:10px;" onclick="exportDataFile('geojson')">Xuất gói dữ liệu vector chuẩn hóa</button>
+    <button class="btn-primary" style="margin-top:10px;" onclick="closeModal('mbtilesModal'); openModal('exportModal');">Mở bảng chọn lớp & Xuất file</button>
   </div>
 </div>
 
-<!-- Modal: Xuất file dữ liệu -->
 <div class="modal-backdrop" id="exportModal">
   <div class="modal-card">
     <div class="modal-head">
       <span class="modal-title">📤 Xuất File Dữ Liệu Khảo Sát</span>
       <button class="close-x" onclick="closeModal('exportModal')">✕</button>
     </div>
-    <div class="grid-2">
-      <button class="btn-primary" onclick="exportDataFile('geojson')">GeoJSON (WGS84)</button>
-      <button class="btn-primary" style="background:#0f766e;" onclick="exportDataFile('kml')">Google KML</button>
-      <button class="btn-primary" style="background:#b45309;" onclick="exportDataFile('csv')">Excel / CSV (VN-2000)</button>
-      <button class="btn-primary" style="background:#4338ca;" onclick="exportDataFile('dxf')">AutoCAD DXF (VN-2000)</button>
+
+    <div class="form-group">
+      <label class="form-label">1. Tên dữ liệu xuất:</label>
+      <input type="text" id="exportDatasetName" class="form-input" placeholder="VD: Export_KCN_Tuy_Phong_1_1" />
     </div>
+
+    <div class="form-group">
+      <label class="form-label">2. Định dạng xuất:</label>
+      <select id="exportFormatSelect" class="form-select">
+        <option value="geojson">GeoJSON (WGS 84 - EPSG:4326)</option>
+        <option value="kml">Google KML</option>
+        <option value="csv">Excel / CSV (VN-2000)</option>
+        <option value="dxf">AutoCAD DXF (VN-2000)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">3. Chọn lớp dữ liệu xuất:</label>
+      <div id="exportLayerFilterList"></div>
+    </div>
+
+    <button class="btn-primary" style="background:#10b981;" onclick="runSelectedExport()">⬇️ Bắt đầu xuất dữ liệu</button>
   </div>
 </div>
 
-<!-- Modal: Sao lưu & Khôi phục -->
 <div class="modal-backdrop" id="backupModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1198,7 +1282,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Đặt tên cho bản sao lưu:</label>
-      <input type="text" id="backupNameInput" class="form-input" value="PD_GIS_Backup_20261120" />
+      <input type="text" id="backupNameInput" class="form-input" value="PD_GIS_Pro_1_1_Backup" />
     </div>
     <div class="grid-2">
       <button class="btn-primary" onclick="downloadBackupJson()">Sao lưu toàn bộ (.JSON)</button>
@@ -1207,7 +1291,6 @@
   </div>
 </div>
 
-<!-- Modal: Tìm kiếm dữ liệu -->
 <div class="modal-backdrop" id="searchModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1219,7 +1302,6 @@
   </div>
 </div>
 
-<!-- Modal: Danh sách điểm & ảnh đã lưu -->
 <div class="modal-backdrop" id="savedPointsModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1230,14 +1312,12 @@
   </div>
 </div>
 
-<!-- Modal: Cài đặt và tùy chọn -->
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">⚙️ CÀI ĐẶT VÀ TÙY CHỌN</span>
+      <span class="modal-title">⚙️ CÀI ĐẶT VÀ TÙY CHỌN (1.1)</span>
       <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
     </div>
-    <div style="font-size:11.5px;font-weight:800;color:#d97706;margin-bottom:8px;">🎛️ CẤU HÌNH ỨNG DỤNG HIỆN TRƯỜNG</div>
 
     <div class="list-card" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.4);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -1248,7 +1328,14 @@
         <input type="number" step="any" id="cfgDeltaHInput" class="form-input" value="0" />
         <button class="btn-primary" style="width:auto;background:#d97706;padding:8px 14px;white-space:nowrap;" onclick="saveDeltaHFromSettings()">Lưu ΔH</button>
       </div>
-      <div style="font-size:11px;color:#cbd5e1;margin-top:4px;">Đặt đế máy tại mốc chuẩn, đọc cao độ mốc để nhập độ lệch bù trừ.</div>
+    </div>
+
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">🎚️ Thanh trượt độ mờ lớp trên bản đồ</div>
+        <div style="font-size:11px;color:#94a3b8;">Hiện hoặc ẩn thanh trượt điều khiển lớp</div>
+      </div>
+      <input type="checkbox" id="cfgQuickSliderChk" checked onchange="setQuickLayerSliderHidden(!this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
     </div>
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
@@ -1261,18 +1348,10 @@
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-weight:700;font-size:13px;">📏 Thước đo tỉ lệ & Nhãn kích thước</div>
-        <div style="font-size:11px;color:#94a3b8;">Hiển thị kích thước đoạn trên bản đồ</div>
+        <div style="font-weight:700;font-size:13px;">📏 Nhãn kích thước từng đoạn</div>
+        <div style="font-size:11px;color:#94a3b8;">Hiển thị chiều dài đoạn trên bản đồ</div>
       </div>
       <input type="checkbox" id="cfgSegLblChk" checked onchange="toggleSegLblFromSettings(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
-    </div>
-
-    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-weight:700;font-size:13px;">⚖️ Cân bằng điện tử</div>
-        <div style="font-size:11px;color:#94a3b8;">Hỗ trợ cân bằng thiết bị khi khảo sát</div>
-      </div>
-      <input type="checkbox" id="cfgBalanceChk" style="width:18px;height:18px;accent-color:#4f46e5;" />
     </div>
 
     <div class="list-card">
@@ -1283,53 +1362,45 @@
       <input type="range" min="0" max="100" id="cfgLayerOpacityRange" value="100" oninput="updateLayerOpacity(this.value); syncSettingsModal();" />
     </div>
 
-    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeModal('settingsModal'); toggleOpacityPanel();">
-      <span style="font-weight:700;font-size:13px;color:#60a5fa;">⛶ Màn hình chỉ hiện bản đồ / Bảng mờ lớp</span>
-      <span style="color:#60a5fa;font-weight:800;">›</span>
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeModal('settingsModal'); toggleCleanMapMode(true);">
+      <span style="font-weight:700;font-size:13px;color:#60a5fa;">⛶ Màn hình chỉ hiện bản đồ</span>
+      <span style="color:#60a5fa;font-weight:800;">Bật ›</span>
     </div>
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-weight:700;font-size:13px;">⊕ Ký hiệu tâm bản đồ</div>
-        <div style="font-size:11px;color:#94a3b8;">Hiển thị tâm ngắm ở giữa màn hình</div>
       </div>
       <input type="checkbox" id="cfgCrosshairChk" checked onchange="document.getElementById('mapCrosshair').style.display = this.checked ? 'block' : 'none';" style="width:18px;height:18px;accent-color:#4f46e5;" />
     </div>
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-weight:700;font-size:13px;">🔒 Khóa chế độ xoay bản đồ</div>
-        <div style="font-size:11px;color:#94a3b8;">Khóa hướng xoay hiện tại</div>
+        <div style="font-weight:700;font-size:13px;">🧭 Tự động xoay ký hiệu tâm bản đồ</div>
+        <div style="font-size:11px;color:#94a3b8;">Xoay tâm ngắm theo hướng la bàn thiết bị</div>
       </div>
-      <input type="checkbox" id="cfgLockRotChk" onchange="toggleScreenOrientation()" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      <input type="checkbox" id="cfgRotateCrosshairChk" onchange="toggleRotateCrosshair(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+    </div>
+
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">🔒 Khóa chế độ xoay bản đồ</div>
+      </div>
+      <input type="checkbox" id="cfgLockRotChk" onchange="toggleLockMapRotation(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
     </div>
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-weight:700;font-size:13px;">🛰️ Tự động di chuyển bản đồ theo GPS</div>
-        <div style="font-size:11px;color:#94a3b8;">Bám theo vị trí GPS hiện tại</div>
       </div>
-      <input type="checkbox" id="cfgAutoGpsChk" onchange="if(this.checked) locateUserNow(true);" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      <input type="checkbox" id="cfgAutoGpsChk" onchange="toggleAutoFollowGps(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
     </div>
 
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-weight:700;font-size:13px;">💡 Màn hình bản đồ luôn mở (Chống tắt)</div>
-        <div style="font-size:11px;color:#94a3b8;">Giữ màn hình sáng khi đi hiện trường</div>
       </div>
       <input type="checkbox" id="cfgWakeLockChk" onchange="toggleScreenWakeLock(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
-    </div>
-
-    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-weight:700;font-size:13px;">📍 Tạm ẩn vị trí GPS</div>
-        <div style="font-size:11px;color:#94a3b8;">Ẩn/hiện chấm định vị GPS</div>
-      </div>
-      <input type="checkbox" id="cfgHideGpsChk" onchange="if(userMarker){ userMarker.setStyle({opacity: this.checked ? 0 : 1, fillOpacity: this.checked ? 0 : 1}); }" style="width:18px;height:18px;accent-color:#4f46e5;" />
-    </div>
-
-    <div class="list-card" style="cursor:pointer;color:#d97706;font-weight:700;font-size:12.5px;" onclick="closeModal('settingsModal'); locateUserNow(true);">
-      📡 Kiểm tra và sửa lỗi định vị GPS
     </div>
   </div>
 </div>
@@ -1431,11 +1502,15 @@ function vn2000ToWgs84(x, y, lon0 = state.activeCrs.lon0) {
 }
 
 /* ============================================================================
-   2. TRẠNG THÁI ỨNG DỤNG & LƯU TRỮ ĐỘNG (KHÔNG HARDCODE DỰ ÁN)
+   2. TRẠNG THÁI ỨNG DỤNG & LƯU TRỮ BỀN VỮNG (TƯƠNG THÍCH DỮ LIỆU CŨ + THÙNG RÁC)
 ============================================================================ */
-const STORAGE_KEY = "PD_GIS_PRO_STATE_V20261120";
+const STORAGE_KEY_V11 = "PD_GIS_PRO_1_1_STATE";
+const LEGACY_STORAGE_KEY = "PD_GIS_PRO_STATE_V20261120";
+const IDB_NAME = "PD_GIS_PRO_DB";
+const IDB_STORE = "app_state_store";
 
 const defaultState = {
+  version: "1.1",
   activeCrs: { id: "LD_2025", name: "VN-2000 / LÂM ĐỒNG (2025)", desc: "Lâm Đồng - Bình Thuận - Đắk Nông", lon0: 108.5 },
   crsTab: "new34",
   projects: [
@@ -1447,10 +1522,17 @@ const defaultState = {
   showSegLabels: true,
   snapToStart: true,
   showCompassInCam: true,
+  rotateCrosshair: false,
+  autoFollowGps: false,
+  lockMapRotation: false,
+  quickLayerSliderHidden: false,
   baseOpacity: 100,
   screenRotated: false,
+  lastParcelCoordsText: "",
+  lastExportName: "PD_GIS_Pro_1_1_Export",
   surveyNote: { workTitle: "", content: "" },
   schemaFields: [
+    { key: "TenVung", label: "Tên vùng", mode: "manual", required: true },
     { key: "TenDoiTuong", label: "Tên đối tượng", mode: "manual", required: false },
     { key: "ThongTinDoiTuong", label: "Thông tin đối tượng", mode: "manual", required: false },
     { key: "ThoiGianCapNhat", label: "Thời gian cập nhật", mode: "auto_hms", required: true },
@@ -1461,21 +1543,37 @@ const defaultState = {
     { id: "tag_2", name: "Tim tuyến", desc: "Cọc tim đường giao thông", color: "#ffffff", bg: "#2563eb" }
   ],
   features: [],
-  layers: []
+  layers: [],
+  trash: []
 };
 
-let state = loadAppState();
-function loadAppState() {
+function loadInitialState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(defaultState);
-    return Object.assign(structuredClone(defaultState), JSON.parse(raw));
+    const raw11 = localStorage.getItem(STORAGE_KEY_V11);
+    const rawOld = localStorage.getItem(LEGACY_STORAGE_KEY);
+    const s11 = raw11 ? JSON.parse(raw11) : null;
+    const sOld = rawOld ? JSON.parse(rawOld) : null;
+
+    let base = structuredClone(defaultState);
+    if (sOld) base = Object.assign(base, sOld);
+    if (s11) {
+      const len11 = (s11.features?.length || 0) + (s11.layers?.length || 0);
+      const lenOld = (sOld?.features?.length || 0) + (sOld?.layers?.length || 0);
+      base = Object.assign(base, s11);
+      if (lenOld > len11) {
+        base.features = sOld.features || [];
+        base.layers = sOld.layers || [];
+      }
+    }
+    if (!Array.isArray(base.trash)) base.trash = [];
+    base.version = "1.1";
+    return base;
   } catch (e) {
     return structuredClone(defaultState);
   }
 }
-const IDB_NAME = "PD_GIS_PRO_DB";
-const IDB_STORE = "app_state_store";
+
+let state = loadInitialState();
 
 function openIdb() {
   return new Promise((resolve, reject) => {
@@ -1493,12 +1591,20 @@ function openIdb() {
 }
 
 async function saveAppStateAsync() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  state.version = "1.1";
+  const serialized = JSON.stringify(state);
+  try {
+    localStorage.setItem(STORAGE_KEY_V11, serialized);
+    localStorage.setItem(LEGACY_STORAGE_KEY, serialized);
+  } catch (e) {}
   try {
     const db = await openIdb();
     await new Promise((resolve, reject) => {
       const tx = db.transaction(IDB_STORE, "readwrite");
-      tx.objectStore(IDB_STORE).put(structuredClone(state), STORAGE_KEY);
+      const store = tx.objectStore(IDB_STORE);
+      const clone = structuredClone(state);
+      store.put(clone, STORAGE_KEY_V11);
+      store.put(clone, LEGACY_STORAGE_KEY);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -1506,26 +1612,33 @@ async function saveAppStateAsync() {
 }
 
 function saveAppState() {
+  updateTrashBadge();
   saveAppStateAsync();
 }
 
 async function hydrateStateFromIdb() {
   try {
     const db = await openIdb();
-    const saved = await new Promise((resolve) => {
+    const readKey = (k) => new Promise((resolve) => {
       const tx = db.transaction(IDB_STORE, "readonly");
-      const req = tx.objectStore(IDB_STORE).get(STORAGE_KEY);
+      const req = tx.objectStore(IDB_STORE).get(k);
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => resolve(null);
     });
-    if (saved && (Array.isArray(saved.features) || Array.isArray(saved.layers))) {
-      const curLen = (state.features || []).length + (state.layers || []).length;
-      const savLen = (saved.features || []).length + (saved.layers || []).length;
-      if (savLen >= curLen) {
-        state = Object.assign(structuredClone(defaultState), saved);
+    const saved11 = await readKey(STORAGE_KEY_V11);
+    const savedOld = await readKey(LEGACY_STORAGE_KEY);
+    const best = saved11 || savedOld;
+    if (best && (Array.isArray(best.features) || Array.isArray(best.layers))) {
+      const curCount = (state.features?.length || 0) + (state.layers?.length || 0);
+      const bestCount = (best.features?.length || 0) + (best.layers?.length || 0);
+      if (bestCount >= curCount) {
+        state = Object.assign(structuredClone(defaultState), best);
+        if (!Array.isArray(state.trash)) state.trash = [];
+        state.version = "1.1";
         renderProjectsUI();
         renderAllVectorFeatures();
         updateCenterHud();
+        updateTrashBadge();
       }
     }
   } catch (e) {}
@@ -1540,20 +1653,98 @@ function showToast(msg) {
 }
 
 /* ============================================================================
-   3. KHỞI TẠO BẢN ĐỒ & TỰ ĐỘNG ĐỊNH VỊ NGAY TỨC THỜI KHI MỞ APP
+   THÙNG RÁC DỮ LIỆU ĐÃ XÓA (KHÔI PHỤC / XÓA VĨNH VIỄN / DỌN RÁC)
+============================================================================ */
+function updateTrashBadge() {
+  const lbl = document.getElementById("drawerTrashLabel");
+  const count = Array.isArray(state.trash) ? state.trash.length : 0;
+  if (lbl) lbl.textContent = `🗑️ Thùng rác dữ liệu đã xóa (${count})`;
+}
+
+function pushToTrash(entry) {
+  if (!Array.isArray(state.trash)) state.trash = [];
+  state.trash.unshift({
+    trashId: "tr_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+    deletedAt: new Date().toLocaleString("vi-VN"),
+    ...entry
+  });
+  if (state.trash.length > 30) state.trash.length = 30;
+}
+
+function renderTrashModal() {
+  const box = document.getElementById("trashListContainer");
+  if (!box) return;
+  const list = state.trash || [];
+  if (list.length === 0) {
+    box.innerHTML = `<div class="list-card" style="color:#94a3b8;font-size:12.5px;">Thùng rác hiện đang trống.</div>`;
+    return;
+  }
+  box.innerHTML = list.map(item => `
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;color:#f8fafc;">${item.title || "Dữ liệu đã xóa"}</div>
+        <div style="font-size:11px;color:#94a3b8;">${item.meta || ""} • Xóa lúc ${item.deletedAt}</div>
+      </div>
+      <button class="mini-btn" style="background:#0f766e;color:#fff;border:0;" onclick="restoreFromTrash('${item.trashId}')">↩ Khôi phục</button>
+      <button class="mini-btn" style="color:#f87171;" onclick="deleteTrashItemPermanently('${item.trashId}')">✕</button>
+    </div>
+  `).join("");
+}
+
+function restoreFromTrash(trashId) {
+  const idx = (state.trash || []).findIndex(t => t.trashId === trashId);
+  if (idx === -1) return;
+  const item = state.trash[idx];
+  if (item.kind === "layer_bundle") {
+    if (item.layer && !state.layers.some(l => l.id === item.layer.id)) {
+      state.layers.push(item.layer);
+    }
+    if (Array.isArray(item.features)) {
+      const existingIds = new Set(state.features.map(f => f.id));
+      item.features.forEach(f => { if (!existingIds.has(f.id)) state.features.push(f); });
+    }
+  } else if (item.kind === "feature" && item.feature) {
+    if (!state.features.some(f => f.id === item.feature.id)) {
+      state.features.push(item.feature);
+    }
+  }
+  state.trash.splice(idx, 1);
+  saveAppState();
+  renderTrashModal();
+  renderAllVectorFeatures();
+  showToast(`Đã khôi phục "${item.title || "dữ liệu"}"!`);
+}
+
+function deleteTrashItemPermanently(trashId) {
+  state.trash = (state.trash || []).filter(t => t.trashId !== trashId);
+  saveAppState();
+  renderTrashModal();
+  showToast("Đã xóa vĩnh viễn mục khỏi thùng rác.");
+}
+
+function emptyTrashBin() {
+  if (!state.trash || state.trash.length === 0) { showToast("Thùng rác đã trống."); return; }
+  state.trash = [];
+  saveAppState();
+  renderTrashModal();
+  showToast("Đã dọn sạch thùng rác.");
+}
+
+/* ============================================================================
+   3. KHỞI TẠO BẢN ĐỒ & ĐỊNH VỊ MƯỢT (KHÔNG BẬT POPUP VỊ TRÍ DỒN DẬP KHI MỞ)
 ============================================================================ */
 const baseLayers = [
   {
     name: "Google Hybrid (Vệ tinh + Đường)",
-    layer: L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 22, attribution: "Google Hybrid" })
+    layer: L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 22, updateWhenIdle: true, keepBuffer: 2 })
   },
   {
     name: "Google Satellite (Vệ tinh thuần)",
-    layer: L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", { maxZoom: 22, attribution: "Google Satellite" })
+    layer: L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", { maxZoom: 22, updateWhenIdle: true, keepBuffer: 2 })
   },
   {
     name: "OpenStreetMap (Bản đồ đường phố)",
-    layer: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 21, attribution: "OSM" })
+    layer: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 21, updateWhenIdle: true, keepBuffer: 2 })
   }
 ];
 let currentBaseIdx = 0;
@@ -1579,15 +1770,21 @@ let latestGps = {
   smoothX: null, smoothY: null, hasFix: false
 };
 
-function updateCenterHud() {
-  const c = map.getCenter();
-  const vn = wgs84ToVn2000(c.lat, c.lng);
-  document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
-  document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
-  document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
+let _hudRafId = null;
+function scheduleCenterHudUpdate() {
+  if (_hudRafId) return;
+  _hudRafId = requestAnimationFrame(() => {
+    _hudRafId = null;
+    const c = map.getCenter();
+    const vn = wgs84ToVn2000(c.lat, c.lng);
+    document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
+    document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
+    document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
+  });
 }
-map.on("move zoom", updateCenterHud);
-updateCenterHud();
+function updateCenterHud() { scheduleCenterHudUpdate(); }
+map.on("move zoom", scheduleCenterHudUpdate);
+scheduleCenterHudUpdate();
 
 function locateUserNow(forceFly = false) {
   if (!navigator.geolocation) {
@@ -1596,8 +1793,8 @@ function locateUserNow(forceFly = false) {
   }
   navigator.geolocation.getCurrentPosition(
     (pos) => { onGpsPositionUpdate(pos, true); },
-    () => { if (forceFly) showToast("Vui lòng bật GPS trên điện thoại để định vị chính xác."); },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    () => { if (forceFly) showToast("Vui lòng cho phép quyền vị trí trên trình duyệt/thiết bị."); },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
   );
 }
 
@@ -1605,12 +1802,11 @@ function startContinuousGpsWatch() {
   if (!navigator.geolocation) return;
   navigator.geolocation.watchPosition(
     (pos) => {
-      const shouldFly = !hasInitialGpsJump;
-      if (shouldFly) hasInitialGpsJump = true;
+      const shouldFly = Boolean(state.autoFollowGps);
       onGpsPositionUpdate(pos, shouldFly);
     },
     () => {},
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
   );
 }
 
@@ -1652,7 +1848,10 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
     userAccuracyCircle.setLatLng([latitude, longitude]).setRadius(Math.max(latestGps.acc, 3));
   }
 
-  if (flyToPos) {
+  if (flyToPos && !hasInitialGpsJump) {
+    hasInitialGpsJump = true;
+    map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
+  } else if (flyToPos && state.autoFollowGps) {
     map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
   }
 
@@ -1662,13 +1861,16 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
 }
 
 /* ============================================================================
-   4. VẼ TRÊN BẢN ĐỒ, CLICK ĐƯỜNG LINE XEM KÍCH THƯỚC & NẠP KMZ TỰ NỔ ĐOẠN
+   4. VẼ TRỰC TIẾP (CHU VI, DIỆN TÍCH, SỐ ĐỈNH) & HỎI LƯU ĐỐI TƯỢNG
 ============================================================================ */
 let drawMode = null;
 let tempDrawPoints = [];
 let tempDrawLayer = null;
+let tempDrawMarkersLayer = L.layerGroup().addTo(map);
 let isTrackingGps = false;
 let trackPoints = [];
+let pendingGeometryData = null;
+let pendingSaveChoiceType = "polygon";
 
 function calcSegmentMetrics(p1, p2) {
   const vn1 = wgs84ToVn2000(p1[0], p1[1]);
@@ -1685,6 +1887,12 @@ function formatLength(m) {
   return m >= 1000 ? `${(m / 1000).toFixed(3)} km (${m.toFixed(2)} m)` : `${m.toFixed(2)} m`;
 }
 
+function formatArea(m2) {
+  return m2 >= 10000
+    ? `${m2.toFixed(2)} m² (${(m2 / 10000).toFixed(2)} ha)`
+    : `${m2.toFixed(2)} m²`;
+}
+
 function calcPolygonAreaM2(latlngs) {
   if (latlngs.length < 3) return 0;
   const pts = latlngs.map(ll => wgs84ToVn2000(ll[0], ll[1]));
@@ -1696,22 +1904,95 @@ function calcPolygonAreaM2(latlngs) {
   return Math.abs(area) / 2;
 }
 
+function calcPolylinePerimeterM(latlngs, closed = false) {
+  if (latlngs.length < 2) return 0;
+  let perim = 0;
+  for (let i = 0; i < latlngs.length - 1; i++) {
+    perim += calcSegmentMetrics(latlngs[i], latlngs[i + 1]).distM;
+  }
+  if (closed && latlngs.length >= 3) {
+    perim += calcSegmentMetrics(latlngs[latlngs.length - 1], latlngs[0]).distM;
+  }
+  return perim;
+}
+
+function openCreatePolygonGuide() {
+  showToast("Bắt đầu tạo VÙNG: Chạm bản đồ để thêm đỉnh, bấm ✓ Lưu đo vẽ khi xong.");
+  startDrawing("polygon");
+}
+
 function startDrawing(mode) {
   drawMode = mode;
   tempDrawPoints = [];
+  clearTempDrawPreview();
+  document.getElementById("drawMeasureBar").classList.add("open");
+  updateLiveDrawingStats();
+}
+
+function clearTempDrawPreview() {
   if (tempDrawLayer) { map.removeLayer(tempDrawLayer); tempDrawLayer = null; }
-  document.getElementById("drawBanner").classList.add("open");
-  document.getElementById("drawBannerText").textContent =
-    mode === "line"
-      ? "Đang vẽ đường Line: Chạm bản đồ thêm đỉnh (tự tách từng đoạn để bấm xem kích thước)"
-      : "Đang vẽ Vùng / Thửa đất: Chạm bản đồ thêm đỉnh góc ranh";
+  tempDrawMarkersLayer.clearLayers();
 }
 
 function cancelDrawing() {
   drawMode = null;
   tempDrawPoints = [];
-  if (tempDrawLayer) { map.removeLayer(tempDrawLayer); tempDrawLayer = null; }
-  document.getElementById("drawBanner").classList.remove("open");
+  clearTempDrawPreview();
+  document.getElementById("drawMeasureBar").classList.remove("open");
+}
+
+function updateLiveDrawingStats() {
+  const isPoly = drawMode === "polygon";
+  const perim = calcPolylinePerimeterM(tempDrawPoints, isPoly && tempDrawPoints.length >= 3);
+  const area = isPoly && tempDrawPoints.length >= 3 ? calcPolygonAreaM2(tempDrawPoints) : 0;
+  document.getElementById("livePerimeterText").textContent = `Chu vi: ${perim.toFixed(2)} m`;
+  document.getElementById("liveAreaText").textContent = `Diện tích: ${formatArea(area)}`;
+  document.getElementById("drawBannerText").textContent =
+    isPoly
+      ? `Tạo VÙNG (${tempDrawPoints.length} đỉnh) • Chạm bản đồ thêm đỉnh`
+      : `Vẽ ĐƯỜNG (${tempDrawPoints.length} điểm) • Chạm bản đồ thêm đỉnh`;
+}
+
+function redrawTempPreview() {
+  clearTempDrawPreview();
+  if (tempDrawPoints.length === 0) return;
+
+  if (tempDrawPoints.length >= 2) {
+    tempDrawLayer = drawMode === "polygon" && tempDrawPoints.length >= 3
+      ? L.polygon(tempDrawPoints, { color: "#facc15", weight: 3, fillColor: "#10b981", fillOpacity: 0.22 }).addTo(map)
+      : L.polyline(tempDrawPoints, { color: "#facc15", weight: 3.5 }).addTo(map);
+  }
+
+  tempDrawPoints.forEach((pt, idx) => {
+    L.marker(pt, {
+      interactive: false,
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="pt-seq-badge">${idx + 1}</div>`
+      })
+    }).addTo(tempDrawMarkersLayer);
+
+    if (idx > 0) {
+      const m = calcSegmentMetrics(tempDrawPoints[idx - 1], pt).distM;
+      const midLat = (tempDrawPoints[idx - 1][0] + pt[0]) / 2;
+      const midLon = (tempDrawPoints[idx - 1][1] + pt[1]) / 2;
+      L.marker([midLat, midLon], {
+        interactive: false,
+        icon: L.divIcon({
+          className: "",
+          html: `<div class="seg-label" style="font-size:11px;">${m.toFixed(2)} m</div>`
+        })
+      }).addTo(tempDrawMarkersLayer);
+    }
+  });
+
+  updateLiveDrawingStats();
+}
+
+function undoLastDrawPoint() {
+  if (!drawMode || tempDrawPoints.length === 0) return;
+  tempDrawPoints.pop();
+  redrawTempPreview();
 }
 
 function toggleSnapToStart() {
@@ -1739,11 +2020,11 @@ function snapCurrentPointToStart() {
     return;
   }
   const firstPt = tempDrawPoints[0];
-  tempDrawPoints.push([firstPt[0], firstPt[1]]);
-  if (tempDrawLayer) map.removeLayer(tempDrawLayer);
-  tempDrawLayer = drawMode === "line"
-    ? L.polyline(tempDrawPoints, { color: "#facc15", weight: 4 }).addTo(map)
-    : L.polygon(tempDrawPoints, { color: "#10b981", weight: 3, fillOpacity: 0.2 }).addTo(map);
+  const lastPt = tempDrawPoints[tempDrawPoints.length - 1];
+  if (Math.hypot(firstPt[0] - lastPt[0], firstPt[1] - lastPt[1]) > 1e-8) {
+    tempDrawPoints.push([firstPt[0], firstPt[1]]);
+  }
+  redrawTempPreview();
   showToast("Đã khép điểm cuối trùng khít điểm bắt đầu.");
 }
 
@@ -1753,94 +2034,154 @@ function toggleQuickSegLabels() {
   if (btn) btn.classList.toggle("active", state.showSegLabels);
   saveAppState();
   renderAllVectorFeatures();
-  showToast(state.showSegLabels ? "Đã bật nhãn kích thước (m) trên bản đồ." : "Đã tắt nhãn kích thước (m) để chạy mượt hơn.");
 }
 
 map.on("click", (e) => {
   if (!drawMode) return;
   const pt = snapPointToStartIfClose(e.latlng);
   tempDrawPoints.push(pt);
-  if (tempDrawLayer) map.removeLayer(tempDrawLayer);
-
-  if (drawMode === "line") {
-    tempDrawLayer = L.polyline(tempDrawPoints, { color: "#facc15", weight: 4 }).addTo(map);
-  } else {
-    tempDrawLayer = L.polygon(tempDrawPoints, { color: "#10b981", weight: 3, fillOpacity: 0.2 }).addTo(map);
-  }
+  redrawTempPreview();
 });
 
-function finishDrawing() {
+function promptSaveDrawnGeometry() {
   if (!drawMode) return;
   if (drawMode === "line" && tempDrawPoints.length < 2) {
-    showToast("Cần ít nhất 2 điểm để tạo đường line.");
+    showToast("Cần ít nhất 2 điểm để lưu đường.");
     return;
   }
   if (drawMode === "polygon" && tempDrawPoints.length < 3) {
-    showToast("Cần ít nhất 3 đỉnh để tạo vùng.");
+    showToast("Cần ít nhất 3 đỉnh để lưu vùng.");
     return;
   }
+  pendingGeometryData = {
+    points: [...tempDrawPoints],
+    clearOldParcels: false,
+    layerPrefix: drawMode === "polygon" ? "poly_" : "line_"
+  };
+  openModal("saveGeometryChoiceModal");
+}
 
-  const layerId = "lyr_" + Date.now();
+function openAttributeFormForChoice(choiceType) {
+  pendingSaveChoiceType = choiceType;
+  closeModal("saveGeometryChoiceModal");
+  const titleMap = {
+    polygon: "⬠ CẬP NHẬT ĐỐI TƯỢNG VÙNG",
+    line: "📏 CẬP NHẬT ĐỐI TƯỢNG ĐƯỜNG",
+    points: "📍 TẠO CÁC MỐC TỌA ĐỘ"
+  };
+  document.getElementById("attrModalTitle").textContent = titleMap[choiceType] || "CẬP NHẬT ĐỐI TƯỢNG";
+  document.getElementById("attrObjectName").value = "";
+  document.getElementById("attrObjectInfo").value = "";
+  document.getElementById("attrUpdatedAt").value = new Date().toLocaleString("vi-VN");
+  document.getElementById("attrNote").value = state.surveyNote?.content || "";
+  openModal("geometryAttrModal");
+}
+
+function confirmSaveGeometryWithAttributes() {
+  if (!pendingGeometryData) return;
+  const pts = [...pendingGeometryData.points];
+  if (pts.length > 3 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) < 1e-7) {
+    pts.pop();
+  }
+
+  const customName = document.getElementById("attrObjectName").value.trim();
+  const customInfo = document.getElementById("attrObjectInfo").value.trim();
+  const updatedAt = document.getElementById("attrUpdatedAt").value.trim() || new Date().toLocaleString("vi-VN");
+  const noteVal = [customInfo, document.getElementById("attrNote").value.trim()].filter(Boolean).join(" • ");
   const projName = getActiveProject().name;
 
-  if (drawMode === "line") {
-    const totalLen = explodePolylineToSegments(tempDrawPoints, {
+  if (pendingGeometryData.clearOldParcels && pendingSaveChoiceType === "polygon") {
+    const oldParcelIds = new Set(
+      state.layers
+        .filter(l => (l.id && l.id.startsWith("parcel_")) || l.type === "Dữ liệu vùng")
+        .map(l => l.id)
+    );
+    state.layers = state.layers.filter(l => !oldParcelIds.has(l.id));
+    state.features = state.features.filter(f => !oldParcelIds.has(f.layerId));
+  }
+
+  const layerId = (pendingGeometryData.layerPrefix || "lyr_") + Date.now();
+
+  if (pendingSaveChoiceType === "points") {
+    pts.forEach((ll, idx) => {
+      const vn = wgs84ToVn2000(ll[0], ll[1]);
+      state.features.push({
+        id: `pt_${Date.now()}_${idx}`,
+        layerId: "default_points",
+        geomType: "point",
+        name: customName ? `${customName} - P${idx + 1}` : `Mốc P${idx + 1}`,
+        lat: ll[0], lon: ll[1], vnX: vn.x, vnY: vn.y,
+        h: (latestGps.rawH || 0) + (state.deltaH || 0),
+        project: projName, note: noteVal, createdAt: updatedAt
+      });
+    });
+    showToast(`Đã tạo ${pts.length} mốc tọa độ!`);
+  } else if (pendingSaveChoiceType === "line") {
+    const totalLen = explodePolylineToSegments(pts, {
       layerId,
-      baseName: `Tuyến vẽ tay ${new Date().toLocaleTimeString("vi-VN")}`,
+      baseName: customName || `Tuyến đo ${new Date().toLocaleTimeString("vi-VN")}`,
       project: projName,
       color: "#3b82f6",
-      width: 4
+      width: 4,
+      note: noteVal,
+      createdAt: updatedAt
     });
     state.layers.push({
       id: layerId,
-      name: `Đường Line (${tempDrawPoints.length - 1} đoạn - ${formatLength(totalLen)})`,
-      type: "Đường Line",
+      name: `${customName || "Đường đo"} (${pts.length - 1} đoạn • ${formatLength(totalLen)})`,
+      type: "Dữ liệu đường",
       visible: true,
+      opacity: 100,
       color: "#3b82f6",
       width: 4,
       fillColor: "#10b981",
-      labelSize: 13,
+      labelSize: 11,
       showSegLength: true
     });
-    showToast(`Đã tạo ${tempDrawPoints.length - 1} đoạn line độc lập. Bấm vào từng đoạn để xem kích thước!`);
+    showToast(`Đã lưu đối tượng Đường (${formatLength(totalLen)})!`);
   } else {
-    const areaM2 = calcPolygonAreaM2(tempDrawPoints);
-    const closedPts = [...tempDrawPoints, tempDrawPoints[0]];
+    const areaM2 = calcPolygonAreaM2(pts);
+    const closedPts = [...pts, pts[0]];
     explodePolylineToSegments(closedPts, {
       layerId,
-      baseName: `Cạnh vùng vẽ tay`,
+      baseName: customName ? `${customName} - Cạnh` : "Cạnh ranh vùng",
       project: projName,
-      color: "#10b981",
-      width: 3
+      color: pendingGeometryData.layerPrefix === "parcel_" ? "#ef4444" : "#10b981",
+      width: 3,
+      note: noteVal,
+      createdAt: updatedAt
     });
     state.features.push({
-      id: "feat_" + Date.now(),
+      id: "poly_" + Date.now(),
       layerId,
       geomType: "polygon",
-      name: `Vùng khảo sát (${areaM2.toFixed(2)} m²)`,
-      coords: tempDrawPoints,
+      name: customName || `Vùng khảo sát (${areaM2.toFixed(2)} m²)`,
+      coords: pts,
       areaM2,
       project: projName,
-      note: state.surveyNote.content || "",
-      createdAt: new Date().toLocaleString("vi-VN")
+      note: noteVal,
+      createdAt: updatedAt
     });
     state.layers.push({
       id: layerId,
-      name: `Vùng (${areaM2.toFixed(1)} m² / ${(areaM2 / 10000).toFixed(4)} ha)`,
+      name: `${customName || "Vùng đo"} (${formatArea(areaM2)})`,
       type: "Dữ liệu vùng",
       visible: true,
-      color: "#10b981",
+      opacity: 100,
+      color: pendingGeometryData.layerPrefix === "parcel_" ? "#ef4444" : "#10b981",
       width: 3,
       fillColor: "#10b981",
-      labelSize: 13,
+      labelSize: 11,
       showSegLength: true
     });
-    showToast(`Đã vẽ vùng diện tích ${areaM2.toFixed(2)} m² và nổ các cạnh để đo kích thước!`);
+    showToast(`Đã lưu đối tượng Vùng (${formatArea(areaM2)})!`);
   }
 
+  pendingGeometryData = null;
+  closeModal("geometryAttrModal");
+  cancelDrawing();
   saveAppState();
   renderAllVectorFeatures();
-  cancelDrawing();
 }
 
 function explodePolylineToSegments(latlngList, meta) {
@@ -1865,7 +2206,7 @@ function explodePolylineToSegments(latlngList, meta) {
       width: meta.width || 3,
       project: meta.project || getActiveProject().name,
       note: meta.note || "",
-      createdAt: new Date().toLocaleString("vi-VN")
+      createdAt: meta.createdAt || new Date().toLocaleString("vi-VN")
     });
   }
   return totalLength;
@@ -1885,7 +2226,7 @@ function addPointAtCenter() {
     lon: c.lng,
     vnX: vn.x,
     vnY: vn.y,
-    h: latestGps.rawH + (state.deltaH || 0),
+    h: (latestGps.rawH || 0) + (state.deltaH || 0),
     project: getActiveProject().name,
     note: state.surveyNote.content || "",
     createdAt: new Date().toLocaleString("vi-VN")
@@ -1893,33 +2234,6 @@ function addPointAtCenter() {
   saveAppState();
   renderAllVectorFeatures();
   showToast(`Đã lưu ${name} tại tâm: X=${vn.x.toFixed(3)}, Y=${vn.y.toFixed(3)}`);
-}
-
-function deletePointAtCenter() {
-  const c = map.getCenter();
-  let bestIdx = -1;
-  let bestDist = Infinity;
-
-  state.features.forEach((f, idx) => {
-    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
-      const d = map.distance([c.lat, c.lng], [f.lat, f.lon]);
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = idx;
-      }
-    }
-  });
-
-  if (bestIdx === -1 || bestDist > 60) {
-    showToast("Không có điểm mốc nào gần tâm bản đồ (trong 60m) để xóa.");
-    return;
-  }
-
-  const removed = state.features[bestIdx];
-  state.features.splice(bestIdx, 1);
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(`Đã xóa điểm mốc "${removed.name || 'Mốc'}".`);
 }
 
 function toggleTracklog() {
@@ -1945,15 +2259,16 @@ function toggleTracklog() {
         name: `Tracklog GPS (${formatLength(len)})`,
         type: "Tuyến tracklog",
         visible: true,
+        opacity: 100,
         color: "#f97316",
         width: 4,
         fillColor: "#f97316",
-        labelSize: 12,
+        labelSize: 11,
         showSegLength: true
       });
       saveAppState();
       renderAllVectorFeatures();
-      showToast(`Đã lưu Tracklog dài ${formatLength(len)} (đã nổ từng đoạn).`);
+      showToast(`Đã lưu Tracklog dài ${formatLength(len)}.`);
     } else {
       showToast("Đã dừng Tracklog.");
     }
@@ -1961,15 +2276,9 @@ function toggleTracklog() {
 }
 
 function appendTracklogPoint(lat, lon) {
-  if (trackPoints.length === 0) {
-    trackPoints.push([lat, lon]);
-    return;
-  }
+  if (trackPoints.length === 0) { trackPoints.push([lat, lon]); return; }
   const last = trackPoints[trackPoints.length - 1];
-  const { distM } = calcSegmentMetrics(last, [lat, lon]);
-  if (distM >= 1.5) {
-    trackPoints.push([lat, lon]);
-  }
+  if (calcSegmentMetrics(last, [lat, lon]).distM >= 1.5) trackPoints.push([lat, lon]);
 }
 
 function triggerImportFile() {
@@ -1980,24 +2289,22 @@ async function handleImportGisFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   const ext = file.name.split(".").pop().toLowerCase();
+  const sizeKb = (file.size / 1024).toFixed(1);
   showToast(`Đang nạp & tự nổ đoạn tệp ${file.name}...`);
 
   try {
-    let kmlText = "";
     if (ext === "kmz") {
       const zip = await JSZip.loadAsync(file);
       const kmlFile = Object.values(zip.files).find(f => f.name.toLowerCase().endsWith(".kml"));
       if (!kmlFile) throw new Error("Không tìm thấy file KML bên trong gói KMZ.");
-      kmlText = await kmlFile.async("string");
-      parseAndExplodeKml(kmlText, file.name);
+      const kmlText = await kmlFile.async("string");
+      parseAndExplodeKml(kmlText, file.name, `${sizeKb} KB`);
     } else if (ext === "kml") {
-      kmlText = await file.text();
-      parseAndExplodeKml(kmlText, file.name);
+      parseAndExplodeKml(await file.text(), file.name, `${sizeKb} KB`);
     } else if (ext === "geojson" || ext === "json") {
-      const jsonObj = JSON.parse(await file.text());
-      parseAndExplodeGeoJson(jsonObj, file.name);
+      parseAndExplodeGeoJson(JSON.parse(await file.text()), file.name, `${sizeKb} KB`);
     } else if (ext === "gpx") {
-      parseAndExplodeGpx(await file.text(), file.name);
+      parseAndExplodeGpx(await file.text(), file.name, `${sizeKb} KB`);
     }
   } catch (err) {
     showToast("Lỗi đọc tệp: " + err.message);
@@ -2005,9 +2312,8 @@ async function handleImportGisFile(event) {
   event.target.value = "";
 }
 
-function parseAndExplodeKml(kmlString, fileName) {
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(kmlString, "text/xml");
+function parseAndExplodeKml(kmlString, fileName, fileSizeStr = "") {
+  const xml = new DOMParser().parseFromString(kmlString, "text/xml");
   const placemarks = Array.from(xml.getElementsByTagName("Placemark"));
   const layerId = "kmz_" + Date.now();
   let segCount = 0;
@@ -2016,10 +2322,8 @@ function parseAndExplodeKml(kmlString, fileName) {
 
   placemarks.forEach((pm, idx) => {
     const pmName = pm.getElementsByTagName("name")[0]?.textContent?.trim() || `${fileName} #${idx + 1}`;
-    const coordNodes = Array.from(pm.getElementsByTagName("coordinates"));
-    coordNodes.forEach((cn) => {
-      const rawPairs = cn.textContent.trim().split(/\s+/);
-      const latlngs = rawPairs
+    Array.from(pm.getElementsByTagName("coordinates")).forEach((cn) => {
+      const latlngs = cn.textContent.trim().split(/\s+/)
         .map(pair => pair.split(",").map(Number))
         .filter(arr => arr.length >= 2 && !isNaN(arr[0]) && !isNaN(arr[1]))
         .map(arr => [arr[1], arr[0]]);
@@ -2036,15 +2340,10 @@ function parseAndExplodeKml(kmlString, fileName) {
           createdAt: new Date().toLocaleString("vi-VN")
         });
       } else if (latlngs.length >= 2) {
-        const d = explodePolylineToSegments(latlngs, {
-          layerId,
-          baseName: pmName,
-          project: getActiveProject().name,
-          color: "#38bdf8",
-          width: 3,
-          note: `Tự nổ đoạn từ ${fileName}`
+        totalDist += explodePolylineToSegments(latlngs, {
+          layerId, baseName: pmName, project: getActiveProject().name,
+          color: "#38bdf8", width: 3, note: `Tự nổ đoạn từ ${fileName}`
         });
-        totalDist += d;
         segCount += (latlngs.length - 1);
       }
     });
@@ -2052,23 +2351,26 @@ function parseAndExplodeKml(kmlString, fileName) {
 
   state.layers.push({
     id: layerId,
-    name: `${fileName} (Nổ ${segCount} đoạn)`,
+    name: fileName,
+    fileSize: fileSizeStr,
+    summary: `Nổ ${segCount} đoạn (${formatLength(totalDist)})`,
     type: "Dữ liệu KML/KMZ",
     visible: true,
+    opacity: 100,
     color: "#38bdf8",
     width: 3,
     fillColor: "#10b981",
-    labelSize: 12,
+    labelSize: 11,
     showSegLength: true
   });
 
   saveAppState();
   renderAllVectorFeatures();
   if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] });
-  showToast(`Đã giải nén ${fileName}: tự nổ ${segCount} đoạn (${formatLength(totalDist)}). Chạm vào từng đoạn để xem kích thước!`);
+  showToast(`Đã nạp ${fileName}: tự nổ ${segCount} đoạn (${formatLength(totalDist)}).`);
 }
 
-function parseAndExplodeGeoJson(geojson, fileName) {
+function parseAndExplodeGeoJson(geojson, fileName, fileSizeStr = "") {
   const layerId = "json_" + Date.now();
   const feats = geojson.type === "FeatureCollection" ? geojson.features : [geojson];
   let segCount = 0;
@@ -2078,17 +2380,14 @@ function parseAndExplodeGeoJson(geojson, fileName) {
     const geom = f.geometry || f;
     const fName = f.properties?.name || f.properties?.TenDoiTuong || `${fileName} #${idx + 1}`;
     if (!geom) return;
-
     if (geom.type === "Point") {
       const [lon, lat] = geom.coordinates;
       bounds.push([lat, lon]);
       const vn = wgs84ToVn2000(lat, lon);
       state.features.push({
-        id: `gj_pt_${Date.now()}_${idx}`,
-        layerId, geomType: "point", name: fName,
-        lat, lon, vnX: vn.x, vnY: vn.y, h: 0,
-        project: getActiveProject().name, note: `Nạp từ ${fileName}`,
-        createdAt: new Date().toLocaleString("vi-VN")
+        id: `gj_pt_${Date.now()}_${idx}`, layerId, geomType: "point", name: fName,
+        lat, lon, vnX: vn.x, vnY: vn.y, h: 0, project: getActiveProject().name,
+        note: `Nạp từ ${fileName}`, createdAt: new Date().toLocaleString("vi-VN")
       });
     } else if (geom.type === "LineString") {
       const lls = geom.coordinates.map(c => [c[1], c[0]]);
@@ -2104,15 +2403,8 @@ function parseAndExplodeGeoJson(geojson, fileName) {
   });
 
   state.layers.push({
-    id: layerId,
-    name: `${fileName} (Nổ ${segCount} đoạn)`,
-    type: "Dữ liệu GeoJSON",
-    visible: true,
-    color: "#a855f7",
-    width: 3,
-    fillColor: "#10b981",
-    labelSize: 12,
-    showSegLength: true
+    id: layerId, name: fileName, fileSize: fileSizeStr, summary: `Nổ ${segCount} đoạn`,
+    type: "Dữ liệu GeoJSON", visible: true, opacity: 100, color: "#a855f7", width: 3, fillColor: "#10b981", labelSize: 11, showSegLength: true
   });
   saveAppState();
   renderAllVectorFeatures();
@@ -2120,7 +2412,7 @@ function parseAndExplodeGeoJson(geojson, fileName) {
   showToast(`Đã nạp ${fileName} và nổ thành ${segCount} đoạn độc lập.`);
 }
 
-function parseAndExplodeGpx(gpxText, fileName) {
+function parseAndExplodeGpx(gpxText, fileName, fileSizeStr = "") {
   const xml = new DOMParser().parseFromString(gpxText, "text/xml");
   const trkpts = Array.from(xml.getElementsByTagName("trkpt"));
   const lls = trkpts.map(pt => [parseFloat(pt.getAttribute("lat")), parseFloat(pt.getAttribute("lon"))]);
@@ -2128,15 +2420,48 @@ function parseAndExplodeGpx(gpxText, fileName) {
   const layerId = "gpx_" + Date.now();
   explodePolylineToSegments(lls, { layerId, baseName: fileName, project: getActiveProject().name, color: "#f59e0b", width: 3 });
   state.layers.push({
-    id: layerId, name: `${fileName} (${lls.length - 1} đoạn)`, type: "Dữ liệu GPX",
-    visible: true, color: "#f59e0b", width: 3, fillColor: "#f59e0b", labelSize: 12, showSegLength: true
+    id: layerId, name: fileName, fileSize: fileSizeStr, summary: `${lls.length - 1} đoạn`,
+    type: "Dữ liệu GPX", visible: true, opacity: 100, color: "#f59e0b", width: 3, fillColor: "#f59e0b", labelSize: 11, showSegLength: true
   });
   saveAppState();
   renderAllVectorFeatures();
   map.fitBounds(L.latLngBounds(lls), { padding: [30, 30] });
 }
 
+/* ============================================================================
+   5. THANH LỚP NHANH (ẨN/HIỆN THANH TRƯỢT + CÀI ĐẶT LỚP NHANH) & CHỈ HIỆN BẢN ĐỒ
+============================================================================ */
 let selectedQuickLayerId = null;
+
+function syncQuickSliderVisibility() {
+  const hidden = Boolean(state.quickLayerSliderHidden);
+  const bar = document.getElementById("quickSelectedLayerBar");
+  const pill = document.getElementById("reopenQuickSliderPill");
+  const hasLayers = Array.isArray(state.layers) && state.layers.length > 0;
+
+  if (!hasLayers) {
+    if (bar) bar.classList.remove("open");
+    if (pill) pill.classList.remove("open");
+    return;
+  }
+
+  if (hidden) {
+    if (bar) bar.classList.remove("open");
+    if (pill) pill.classList.add("open");
+  } else {
+    if (pill) pill.classList.remove("open");
+    if (bar) bar.classList.add("open");
+  }
+}
+
+function setQuickLayerSliderHidden(hidden) {
+  state.quickLayerSliderHidden = Boolean(hidden);
+  saveAppState();
+  syncQuickSliderVisibility();
+  const chk = document.getElementById("cfgQuickSliderChk");
+  if (chk) chk.checked = !state.quickLayerSliderHidden;
+  showToast(state.quickLayerSliderHidden ? "Đã ẩn thanh trượt lớp." : "Đã hiện thanh trượt lớp.");
+}
 
 function syncQuickSelectedLayerBar() {
   const bar = document.getElementById("quickSelectedLayerBar");
@@ -2144,10 +2469,12 @@ function syncQuickSelectedLayerBar() {
   const eyeBtn = document.getElementById("quickLayerEyeBtn");
   const slider = document.getElementById("quickLayerOpacitySlider");
   const valEl = document.getElementById("quickLayerOpacityVal");
+  const pill = document.getElementById("reopenQuickSliderPill");
   if (!bar || !sel || !slider || !valEl) return;
 
   if (!Array.isArray(state.layers) || state.layers.length === 0) {
     bar.classList.remove("open");
+    if (pill) pill.classList.remove("open");
     selectedQuickLayerId = null;
     return;
   }
@@ -2162,21 +2489,26 @@ function syncQuickSelectedLayerBar() {
 
   const activeLayer = state.layers.find(l => l.id === selectedQuickLayerId) || state.layers[0];
   const isVis = activeLayer.visible !== false;
-  if (eyeBtn) {
-    eyeBtn.textContent = isVis ? "👁️" : "🚫";
-    eyeBtn.classList.toggle("hidden-layer", !isVis);
-    eyeBtn.title = isVis ? "Đang hiện — Bấm để ẩn nhanh lớp" : "Đang ẩn — Bấm để hiện nhanh lớp";
-  }
+  if (eyeBtn) eyeBtn.textContent = isVis ? "👁️" : "🚫";
 
   const op = typeof activeLayer.opacity === "number" ? activeLayer.opacity : 100;
   slider.value = op;
   valEl.textContent = `${op}%`;
-  bar.classList.add("open");
+  syncQuickSliderVisibility();
 }
 
 function onQuickLayerSelectChange(layerId) {
   selectedQuickLayerId = layerId;
   syncQuickSelectedLayerBar();
+}
+
+function flyToSelectedQuickLayer() {
+  if (selectedQuickLayerId) flyToLayer(selectedQuickLayerId);
+}
+
+function openSelectedQuickLayerStyle() {
+  if (!selectedQuickLayerId) { showToast("Chưa có lớp nào được chọn."); return; }
+  openLayerStyleEditor(selectedQuickLayerId);
 }
 
 function toggleQuickSelectedLayerVisibility() {
@@ -2187,10 +2519,7 @@ function toggleQuickSelectedLayerVisibility() {
   saveAppState();
   renderAllVectorFeatures();
   syncQuickSelectedLayerBar();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
-  showToast(l.visible ? `Đã hiện lớp: ${l.name}` : `Đã ẩn lớp: ${l.name}`);
+  if (document.getElementById("layersModal")?.classList.contains("open")) renderLayersModal();
 }
 
 function onQuickLayerOpacityInput(val) {
@@ -2198,182 +2527,147 @@ function onQuickLayerOpacityInput(val) {
   const l = state.layers.find(x => x.id === selectedQuickLayerId);
   if (!l) return;
   l.opacity = Number(val);
-  const valEl = document.getElementById("quickLayerOpacityVal");
-  if (valEl) valEl.textContent = `${l.opacity}%`;
+  document.getElementById("quickLayerOpacityVal").textContent = `${l.opacity}%`;
   saveAppState();
   renderAllVectorFeatures();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
 }
 
-function updateSingleLayerOpacity(layerId, val) {
-  const l = state.layers.find(x => x.id === layerId);
-  if (!l) return;
-  l.opacity = Number(val);
-  saveAppState();
-  renderAllVectorFeatures();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
+function toggleCleanMapMode(enable) {
+  document.body.classList.toggle("clean-map-mode", Boolean(enable));
+  setTimeout(() => map.invalidateSize(), 120);
+  if (enable) showToast("Đang bật chế độ chỉ hiện bản đồ. Bấm nút góc dưới phải để hiện lại.");
 }
 
-async function toggleLockMapRotation(locked) {
-  state.lockMapRotation = Boolean(locked);
-  saveAppState();
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      if (state.lockMapRotation) {
-        const currentType = screen.orientation.type && screen.orientation.type.includes("landscape") ? "landscape" : "portrait";
-        await screen.orientation.lock(currentType);
-        showToast("Đã khóa chế độ xoay bản đồ.");
-      } else if (screen.orientation.unlock) {
-        screen.orientation.unlock();
-        showToast("Đã mở khóa chế độ xoay bản đồ.");
-      }
-      return;
-    }
-  } catch (e) {}
-  showToast(state.lockMapRotation ? "Đã bật khóa hướng hiển thị bản đồ." : "Đã tắt khóa hướng hiển thị bản đồ.");
-}
-
-function toggleAutoFollowGps(enabled) {
-  state.autoFollowGps = Boolean(enabled);
-  saveAppState();
-  if (state.autoFollowGps) {
-    showToast("Đã bật tự động di chuyển bản đồ theo GPS.");
-    if (latestGps.hasFix) {
-      map.setView([latestGps.lat, latestGps.lon], Math.max(map.getZoom(), 18), { animate: true });
-    } else {
-      locateUserNow(true);
-    }
-  } else {
-    showToast("Đã tắt tự động di chuyển bản đồ theo GPS.");
-  }
-}
-
+let _vecRenderRafId = null;
 function renderAllVectorFeatures() {
-  vectorLayerGroup.clearLayers();
-  labelLayerGroup.clearLayers();
-  const globalOpacity = (state.layerOpacity ?? 100) / 100;
-  const getEffOpacity = (lyrCfg) => {
-    const individual = (lyrCfg && typeof lyrCfg.opacity === "number") ? (lyrCfg.opacity / 100) : 1;
-    return globalOpacity * individual;
-  };
-  const layerMap = new Map(state.layers.map(l => [l.id, l]));
+  if (_vecRenderRafId) cancelAnimationFrame(_vecRenderRafId);
+  _vecRenderRafId = requestAnimationFrame(() => {
+    _vecRenderRafId = null;
+    vectorLayerGroup.clearLayers();
+    labelLayerGroup.clearLayers();
+    const globalOpacity = (state.layerOpacity ?? 100) / 100;
+    const getEffOpacity = (lyrCfg) => {
+      const individual = (lyrCfg && typeof lyrCfg.opacity === "number") ? (lyrCfg.opacity / 100) : 1;
+      return globalOpacity * individual;
+    };
+    const layerMap = new Map(state.layers.map(l => [l.id, l]));
+    const curZoom = map.getZoom();
+    const viewBounds = map.getBounds().pad(0.18);
 
-  state.features.forEach((f) => {
-    const lyrCfg = layerMap.get(f.layerId);
-    if (lyrCfg && lyrCfg.visible === false) return;
-    const effOp = getEffOpacity(lyrCfg);
+    state.features.forEach((f) => {
+      const lyrCfg = layerMap.get(f.layerId);
+      if (lyrCfg && lyrCfg.visible === false) return;
+      const effOp = getEffOpacity(lyrCfg);
+      const lblPx = Number(lyrCfg?.labelSize || 11);
 
-    if (f.geomType === "point") {
-      const marker = L.circleMarker([f.lat, f.lon], {
-        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: effOp, opacity: effOp
-      }).addTo(vectorLayerGroup);
+      if (f.geomType === "point") {
+        const marker = L.circleMarker([f.lat, f.lon], {
+          radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: effOp, opacity: effOp
+        }).addTo(vectorLayerGroup);
 
-      marker.bindPopup(`
-        <div style="color:#0f172a;font-size:12.5px;min-width:210px;">
-          <strong>📍 ${f.name}</strong><br/>
-          X(E): <b>${f.vnX.toFixed(3)}</b> m<br/>
-          Y(N): <b>${f.vnY.toFixed(3)}</b> m<br/>
-          Cao độ H: <b>${(f.h || 0).toFixed(2)} m</b><br/>
-          Dự án: ${f.project || ""}<br/>
-          ${f.note ? `Ghi chú: <i>${f.note}</i><br/>` : ""}
-          <small>${f.createdAt || ""}</small>
-        </div>
-      `);
-    } else if (f.geomType === "segment") {
-      const strokeColor = lyrCfg?.color || f.color || "#3b82f6";
-      const strokeWidth = lyrCfg?.width || f.width || 3;
+        marker.bindPopup(`
+          <div style="color:#0f172a;font-size:12.5px;min-width:210px;">
+            <strong>📍 ${f.name}</strong><br/>
+            X(E): <b>${f.vnX.toFixed(3)}</b> m<br/>
+            Y(N): <b>${f.vnY.toFixed(3)}</b> m<br/>
+            Cao độ H: <b>${(f.h || 0).toFixed(2)} m</b><br/>
+            Dự án: ${f.project || ""}<br/>
+            ${f.note ? `Ghi chú: <i>${f.note}</i><br/>` : ""}
+            <small>${f.createdAt || ""}</small>
+          </div>
+        `);
+      } else if (f.geomType === "segment") {
+        const strokeColor = lyrCfg?.color || f.color || "#3b82f6";
+        const strokeWidth = lyrCfg?.width || f.width || 3;
 
-      const segLine = L.polyline([f.p1, f.p2], {
-        color: strokeColor,
-        weight: strokeWidth + 1,
-        opacity: effOp
-      }).addTo(vectorLayerGroup);
+        const segLine = L.polyline([f.p1, f.p2], {
+          color: strokeColor,
+          weight: strokeWidth + 1,
+          opacity: effOp
+        }).addTo(vectorLayerGroup);
 
-      segLine.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        segLine.setStyle({ color: "#facc15", weight: strokeWidth + 3 });
-        setTimeout(() => segLine.setStyle({ color: strokeColor, weight: strokeWidth + 1 }), 2500);
+        segLine.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          segLine.setStyle({ color: "#facc15", weight: strokeWidth + 3 });
+          setTimeout(() => segLine.setStyle({ color: strokeColor, weight: strokeWidth + 1 }), 2500);
 
-        L.popup()
-          .setLatLng(e.latlng)
-          .setContent(`
-            <div style="color:#0f172a;font-size:13px;min-width:225px;">
-              <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
-              <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
-                Kích thước đoạn: <strong style="font-size:14px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
+          L.popup()
+            .setLatLng(e.latlng)
+            .setContent(`
+              <div style="color:#0f172a;font-size:13px;min-width:225px;">
+                <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
+                <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
+                  Kích thước đoạn: <strong style="font-size:14px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
+                </div>
+                <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
+                <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
+                <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
+                <div style="font-size:11px;color:#475569;margin-top:4px;">Dự án: ${f.project || ""}</div>
               </div>
-              <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
-              <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
-              <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
-              <div style="font-size:11px;color:#475569;margin-top:4px;">Dự án: ${f.project || ""}</div>
-            </div>
-          `)
-          .openOn(map);
-      });
+            `)
+            .openOn(map);
+        });
 
-      if ((state.showSegLabels !== false) && (lyrCfg?.showSegLength !== false) && map.getZoom() >= 17 && f.lengthM >= 0.5) {
         const midLat = (f.p1[0] + f.p2[0]) / 2;
         const midLon = (f.p1[1] + f.p2[1]) / 2;
-        L.marker([midLat, midLon], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="seg-label">${f.lengthM.toFixed(2)}m</div>`
-          })
-        }).addTo(labelLayerGroup);
-      }
-    } else if (f.geomType === "polygon") {
-      const poly = L.polygon(f.coords, {
-        color: lyrCfg?.color || "#10b981",
-        weight: lyrCfg?.width || 3,
-        fillColor: lyrCfg?.fillColor || "#10b981",
-        fillOpacity: 0.16 * effOp,
-        opacity: effOp
-      }).addTo(vectorLayerGroup);
-
-      if (Array.isArray(f.coords) && f.coords.length >= 3) {
-        f.coords.forEach((pt, pIdx) => {
-          L.marker(pt, {
+        if ((state.showSegLabels !== false) && (lyrCfg?.showSegLength !== false) && curZoom >= 17 && f.lengthM >= 0.5 && viewBounds.contains([midLat, midLon])) {
+          L.marker([midLat, midLon], {
             interactive: false,
             icon: L.divIcon({
               className: "",
-              html: `<div class="pt-seq-badge">${pIdx + 1}</div>`
+              html: `<div class="seg-label" style="font-size:${lblPx}px;">${f.lengthM.toFixed(2)}m</div>`
             })
           }).addTo(labelLayerGroup);
-        });
-        const bounds = L.latLngBounds(f.coords);
-        const centerPt = bounds.getCenter();
-        const aVal = Number(f.areaM2 || 0);
-        const haVal = (aVal / 10000).toFixed(4);
-        L.marker([centerPt.lat, centerPt.lng], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="area-label">${aVal.toFixed(1)} m² (${haVal} ha)</div>`
-          })
-        }).addTo(labelLayerGroup);
+        }
+      } else if (f.geomType === "polygon") {
+        const poly = L.polygon(f.coords, {
+          color: lyrCfg?.color || "#10b981",
+          weight: lyrCfg?.width || 3,
+          fillColor: lyrCfg?.fillColor || "#10b981",
+          fillOpacity: 0.16 * effOp,
+          opacity: effOp
+        }).addTo(vectorLayerGroup);
+
+        if (Array.isArray(f.coords) && f.coords.length >= 3) {
+          f.coords.forEach((pt, pIdx) => {
+            if (viewBounds.contains(pt)) {
+              L.marker(pt, {
+                interactive: false,
+                icon: L.divIcon({
+                  className: "",
+                  html: `<div class="pt-seq-badge">${pIdx + 1}</div>`
+                })
+              }).addTo(labelLayerGroup);
+            }
+          });
+          const centerPt = L.latLngBounds(f.coords).getCenter();
+          if (viewBounds.contains(centerPt)) {
+            const aVal = Number(f.areaM2 || 0);
+            L.marker([centerPt.lat, centerPt.lng], {
+              interactive: false,
+              icon: L.divIcon({
+                className: "",
+                html: `<div class="area-label" style="font-size:${lblPx}px;">${formatArea(aVal)}</div>`
+              })
+            }).addTo(labelLayerGroup);
+          }
+        }
+
+        poly.bindPopup(`
+          <div style="color:#0f172a;font-size:12.5px;">
+            <strong>⬠ ${f.name}</strong><br/>
+            Diện tích: <b>${formatArea(f.areaM2 || 0)}</b><br/>
+            Dự án: ${f.project || ""}<br/>
+            ${f.note ? `Ghi chú: <i>${f.note}</i>` : ""}
+          </div>
+        `);
       }
-
-      poly.bindPopup(`
-        <div style="color:#0f172a;font-size:12.5px;">
-          <strong>⬠ ${f.name}</strong><br/>
-          Diện tích: <b>${(f.areaM2 || 0).toFixed(2)} m²</b> (${((f.areaM2 || 0) / 10000).toFixed(4)} ha)<br/>
-          Dự án: ${f.project || ""}
-        </div>
-      `);
-    }
+    });
+    syncQuickSelectedLayerBar();
   });
-  syncQuickSelectedLayerBar();
 }
-map.on("zoomend", renderAllVectorFeatures);
+map.on("moveend zoomend", renderAllVectorFeatures);
 
-/* ============================================================================
-   5. THANH TRƯỢT ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN + XOAY MÀN HÌNH
-============================================================================ */
 function toggleOpacityPanel() {
   document.getElementById("opacityPanel").classList.toggle("open");
 }
@@ -2401,13 +2695,10 @@ function cycleBaseMap() {
 
 async function toggleScreenOrientation() {
   state.screenRotated = !state.screenRotated;
-  const btn = document.getElementById("btnRotateScreen");
-  btn.classList.toggle("active", state.screenRotated);
-
+  document.getElementById("btnRotateScreen").classList.toggle("active", state.screenRotated);
   try {
     if (screen.orientation && screen.orientation.lock) {
       await screen.orientation.lock(state.screenRotated ? "landscape" : "portrait");
-      showToast(state.screenRotated ? "Đã xoay màn hình ngang" : "Đã xoay màn hình dọc");
       setTimeout(() => map.invalidateSize(), 300);
       return;
     }
@@ -2419,13 +2710,12 @@ async function toggleScreenOrientation() {
     shell.style.height = "100vw";
     shell.style.transform = "rotate(90deg) translateY(-100vw)";
     shell.style.transformOrigin = "top left";
-    showToast("Đã bật chế độ xoay ngang màn hình");
   } else {
     shell.style.width = "100%";
     shell.style.height = "100%";
     shell.style.transform = "none";
-    showToast("Đã trở về màn hình dọc chuẩn");
   }
+  saveAppState();
   setTimeout(() => map.invalidateSize(), 260);
 }
 
@@ -2471,35 +2761,27 @@ function buildCompassDialTicks() {
 buildCompassDialTicks();
 
 let _lastCompassSampleAt = 0;
-
 function handleDeviceOrientation(e) {
   const now = performance.now();
   if (now - _lastCompassSampleAt < 80) return;
   _lastCompassSampleAt = now;
 
   let heading = null;
-  if (typeof e.webkitCompassHeading === "number") {
-    heading = e.webkitCompassHeading;
-  } else if (typeof e.alpha === "number") {
-    heading = (360 - e.alpha) % 360;
-  }
+  if (typeof e.webkitCompassHeading === "number") heading = e.webkitCompassHeading;
+  else if (typeof e.alpha === "number") heading = (360 - e.alpha) % 360;
   if (heading === null || isNaN(heading)) return;
 
-  // Quantize to 1 degree steps to reduce jitter when holding camera steady
   const quantized = Math.round(heading);
   let diff = quantized - rawTargetHeading;
   if (diff > 180) diff -= 360;
   if (diff < -180) diff += 360;
-  if (Math.abs(diff) >= 1.5) {
-    rawTargetHeading = (quantized + 360) % 360;
-  }
+  if (Math.abs(diff) >= 1.5) rawTargetHeading = (quantized + 360) % 360;
 }
 
 function toggleCameraCompassOverlay() {
   state.showCompassInCam = !(state.showCompassInCam !== false);
   saveAppState();
   syncCameraCompassOverlay();
-  showToast(state.showCompassInCam ? "Đã bật vòng la bàn trên màn hình chụp hình." : "Đã tắt vòng la bàn trên màn hình chụp hình.");
 }
 
 function syncCameraCompassOverlay() {
@@ -2515,15 +2797,14 @@ function startSmoothCompassLoop() {
   window.addEventListener("deviceorientation", handleDeviceOrientation, true);
   syncCameraCompassOverlay();
 
-  function tick() {
+  let _lastCamHudTick = 0;
+  function tick(now) {
     const currentMod = ((continuousHeading % 360) + 360) % 360;
     let delta = rawTargetHeading - currentMod;
     if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
 
-    if (Math.abs(delta) > 0.6) {
-      continuousHeading += delta * 0.08;
-    }
+    if (Math.abs(delta) > 0.6) continuousHeading += delta * 0.08;
     smoothedHeading = (((continuousHeading % 360) + 360) % 360);
 
     const dial = document.getElementById("compassDialSvg");
@@ -2535,7 +2816,17 @@ function startSmoothCompassLoop() {
     const mapArrow = document.getElementById("mapCompassArrow");
     if (mapArrow) mapArrow.style.transform = `rotate(${-smoothedHeading.toFixed(1)}deg)`;
 
-    updateCameraHudValues();
+    const crosshair = document.getElementById("mapCrosshair");
+    if (crosshair) {
+      crosshair.style.transform = state.rotateCrosshair
+        ? `rotate(${-smoothedHeading.toFixed(1)}deg)`
+        : "none";
+    }
+
+    if (document.getElementById("cameraModal")?.classList.contains("open") && (!now || now - _lastCamHudTick > 250)) {
+      _lastCamHudTick = now || performance.now();
+      updateCameraHudValues();
+    }
     compassAnimFrame = requestAnimationFrame(tick);
   }
   if (!compassAnimFrame) compassAnimFrame = requestAnimationFrame(tick);
@@ -2565,6 +2856,7 @@ function updateCameraHudValues() {
 }
 
 async function openSurveyCamera() {
+  updateCameraHudValues();
   document.getElementById("cameraModal").classList.add("open");
   if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
     try { await DeviceOrientationEvent.requestPermission(); } catch (e) {}
@@ -2583,10 +2875,7 @@ async function openSurveyCamera() {
 
 function closeSurveyCamera() {
   document.getElementById("cameraModal").classList.remove("open");
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
 }
 
 function switchCameraFacing() {
@@ -2599,15 +2888,11 @@ function toggleCameraGrid() {
   g.style.display = g.style.display === "block" ? "none" : "block";
 }
 
-function calibrateCompassHeading() {
-  showToast("Xoay điện thoại theo hình số 8 để tự động cân bằng la bàn từ trường.");
-}
-
 function savePointFromCamera() {
   const c = map.getCenter();
   const lat = latestGps.hasFix ? latestGps.lat : c.lat;
   const lon = latestGps.hasFix ? latestGps.lon : c.lng;
-  const vn = latestGps.hasFix && latestGps.smoothX !== null
+  const vn = useGps && latestGps.smoothX !== null
     ? { x: latestGps.smoothX, y: latestGps.smoothY }
     : wgs84ToVn2000(lat, lon);
   const finalH = (latestGps.rawH || 0) + (state.deltaH || 0);
@@ -2619,10 +2904,7 @@ function savePointFromCamera() {
     layerId: "default_points",
     geomType: "point",
     name: ptName,
-    lat, lon,
-    vnX: vn.x,
-    vnY: vn.y,
-    h: finalH,
+    lat, lon, vnX: vn.x, vnY: vn.y, h: finalH,
     azimuth: Math.round(smoothedHeading),
     project: getActiveProject().name,
     note: state.surveyNote.content || "",
@@ -2646,7 +2928,7 @@ function captureSurveyPhoto() {
   ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
   ctx.fillStyle = "#fbbf24";
   ctx.font = "bold 22px sans-serif";
-  ctx.fillText(`PD GIS PRO • GÓC PHƯƠNG VỊ: ${Math.round(smoothedHeading)}° | ΔH: ${(state.deltaH || 0).toFixed(2)}m`, 24, canvas.height - 92);
+  ctx.fillText(`PD GIS PRO 1.1 • GÓC PHƯƠNG VỊ: ${Math.round(smoothedHeading)}° | ΔH: ${(state.deltaH || 0).toFixed(2)}m`, 24, canvas.height - 92);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 24px monospace";
   ctx.fillText(`X(E): ${document.getElementById("camXText").textContent} m | Y(N): ${document.getElementById("camYText").textContent} m | H: ${document.getElementById("camHText").textContent}`, 24, canvas.height - 56);
@@ -2655,10 +2937,9 @@ function captureSurveyPhoto() {
   ctx.fillText(`Dự án: ${getActiveProject().name} | Ghi chú: ${state.surveyNote.content || state.surveyNote.workTitle || "Hiện trường"}`, 24, canvas.height - 22);
 
   canvas.toBlob((blob) => {
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `PD_GIS_${Date.now()}.jpg`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `PD_GIS_1_1_${Date.now()}.jpg`;
     a.click();
     savePointFromCamera();
     showToast("Đã chụp ảnh hiện trường đóng dấu tọa độ & lưu điểm!");
@@ -2666,7 +2947,7 @@ function captureSurveyPhoto() {
 }
 
 /* ============================================================================
-   7. QUÉT TỌA ĐỘ BẰNG CAMERA & ẢNH CHO SỔ ĐỎ / VẼ RANH GIỚI THỬA ĐẤT
+   7. QUÉT TỌA ĐỘ SỔ ĐỎ (DANH SÁCH 1..N + ĐẢO CỘT X/Y + HỎI LƯU ĐỐI TƯỢNG)
 ============================================================================ */
 let ocrStream = null;
 
@@ -2715,9 +2996,7 @@ function groupWordsIntoRows(words) {
     const h = Math.max(8, (bbox.y1 ?? 0) - (bbox.y0 ?? 0));
     for (const m of matches) {
       const val = parseFloat(m);
-      if (isFinite(val) && val >= 20000) {
-        numWords.push({ val, cy, cx, h });
-      }
+      if (isFinite(val) && val >= 20000) numWords.push({ val, cy, cx, h });
     }
   }
   if (numWords.length === 0) return [];
@@ -2736,9 +3015,7 @@ function groupWordsIntoRows(words) {
         break;
       }
     }
-    if (!placed) {
-      rows.push({ avgCy: item.cy, avgH: item.h, items: [item] });
-    }
+    if (!placed) rows.push({ avgCy: item.cy, avgH: item.h, items: [item] });
   }
   rows.sort((a, b) => a.avgCy - b.avgCy);
   return rows.map(r => r.items.sort((a, b) => a.cx - b.cx).map(x => x.val));
@@ -2754,7 +3031,7 @@ function extractVn2000PairsFromOcrResult(ocrData) {
       for (let i = 0; i + 1 < rowNums.length; i += 2) {
         const { easting, northing } = normalizeVn2000Pair(rowNums[i], rowNums[i + 1]);
         if (isFinite(easting) && isFinite(northing) && easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
-          orderedPairs.push(`${northing.toFixed(2)}, ${easting.toFixed(2)}`);
+          orderedPairs.push(`${easting.toFixed(2)}, ${northing.toFixed(2)}`);
         }
       }
     }
@@ -2766,21 +3043,17 @@ function extractVn2000PairsFromOcrResult(ocrData) {
     for (const line of lines) {
       const normalizedLine = line.replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
       const rawTokens = normalizedLine.match(/\d{5,9}(?:\.\d{1,3})?/g) || [];
-      const candidateNums = rawTokens
-        .map(t => parseFloat(t))
-        .filter(n => isFinite(n) && n >= 20000);
-
+      const candidateNums = rawTokens.map(t => parseFloat(t)).filter(n => isFinite(n) && n >= 20000);
       if (candidateNums.length >= 2) {
         for (let i = 0; i + 1 < candidateNums.length; i += 2) {
           const { easting, northing } = normalizeVn2000Pair(candidateNums[i], candidateNums[i + 1]);
           if (isFinite(easting) && isFinite(northing) && easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
-            orderedPairs.push(`${northing.toFixed(2)}, ${easting.toFixed(2)}`);
+            orderedPairs.push(`${easting.toFixed(2)}, ${northing.toFixed(2)}`);
           }
         }
       }
     }
   }
-
   return orderedPairs;
 }
 
@@ -2789,21 +3062,60 @@ async function runOcrOnSource(source) {
   st.textContent = "⏳ Đang quét & trích xuất cặp tọa độ VN-2000 từ hình ảnh...";
   try {
     const res = await Tesseract.recognize(source, "eng");
-    const ocrData = (res && res.data) ? res.data : {};
-    const pairs = extractVn2000PairsFromOcrResult(ocrData);
+    const pairs = extractVn2000PairsFromOcrResult(res?.data || {});
     if (pairs.length > 0) {
       document.getElementById("parcelCoordsInput").value = pairs.join("\n");
-      st.textContent = `✅ Đã nhận diện được ${pairs.length} cặp tọa độ! Kiểm tra lại và bấm Vẽ ranh giới.`;
+      renderParsedCoordTable();
+      st.textContent = `✅ Đã nhận diện ${pairs.length} cặp tọa độ! Kiểm tra danh sách bên dưới rồi bấm Vẽ ranh giới.`;
     } else {
-      st.textContent = "⚠️ Chưa bắt được cặp số tọa độ rõ nét, anh có thể chụp gần bảng tọa độ hơn hoặc nhập tay.";
+      st.textContent = "⚠️ Chưa bắt được cặp số tọa độ rõ nét, hãy chụp sát bảng tọa độ hơn hoặc nhập tay.";
     }
   } catch (err) {
     st.textContent = "Lỗi nhận diện OCR: " + err.message;
   }
 }
 
+function normalizeDecimalCommaInParcel() {
+  const ta = document.getElementById("parcelCoordsInput");
+  ta.value = ta.value.replace(/(\d+),(\d{1,3})\b/g, "$1.$2");
+  renderParsedCoordTable();
+  showToast("Đã chuẩn hóa dấu thập phân (,) thành dấu chấm (.).");
+}
+
+function renderParsedCoordTable() {
+  const box = document.getElementById("parsedCoordListBox");
+  const raw = (document.getElementById("parcelCoordsInput")?.value || "").trim();
+  state.lastParcelCoordsText = raw;
+  saveAppState();
+  if (!box) return;
+  if (!raw) {
+    box.innerHTML = `<div style="color:#94a3b8;">Chưa có cặp tọa độ nào.</div>`;
+    return;
+  }
+  const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  box.innerHTML = lines.map((line, i) => {
+    const clean = line.replace(/(\d+),(\d{1,3})\b/g, "$1.$2");
+    const parts = clean.split(/[,;\s\t]+/).map(Number).filter(n => !isNaN(n));
+    if (parts.length < 2) return `<div class="parsed-coord-row" style="color:#f87171;">${i + 1}. Dòng chưa đủ 2 số: ${line}</div>`;
+    return `<div class="parsed-coord-row"><span><strong>${i + 1}.</strong> X: <b>${parts[0]}</b></span><span>Y: <b>${parts[1]}</b></span></div>`;
+  }).join("");
+}
+
+function swapParcelXyColumns() {
+  const ta = document.getElementById("parcelCoordsInput");
+  const lines = ta.value.trim().split(/\r?\n/).filter(Boolean);
+  ta.value = lines.map((line) => {
+    const parts = line.split(/[,;\s\t]+/).map(s => s.trim()).filter(Boolean);
+    if (parts.length >= 2) return `${parts[1]}, ${parts[0]}`;
+    return line;
+  }).join("\n");
+  renderParsedCoordTable();
+  showToast("Đã đảo vị trí 2 cột tọa độ.");
+}
+
 function drawParcelFromVn2000() {
-  const raw = document.getElementById("parcelCoordsInput").value.trim();
+  const raw = document.getElementById("parcelCoordsInput").value.trim().replace(/(\d+),(\d{1,3})\b/g, "$1.$2");
+  state.lastParcelCoordsText = raw;
   if (!raw) { showToast("Vui lòng nhập hoặc quét danh sách tọa độ X, Y."); return; }
 
   const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
@@ -2814,9 +3126,7 @@ function drawParcelFromVn2000() {
       const { easting, northing } = normalizeVn2000Pair(parts[0], parts[1]);
       if (isFinite(easting) && isFinite(northing)) {
         const wgs = vn2000ToWgs84(easting, northing);
-        if (isFinite(wgs.lat) && isFinite(wgs.lon)) {
-          orderedLatLngs.push([wgs.lat, wgs.lon]);
-        }
+        if (isFinite(wgs.lat) && isFinite(wgs.lon)) orderedLatLngs.push([wgs.lat, wgs.lon]);
       }
     }
   });
@@ -2830,95 +3140,43 @@ function drawParcelFromVn2000() {
   if (sequenceRing.length > 3) {
     const first = sequenceRing[0];
     const last = sequenceRing[sequenceRing.length - 1];
-    if (Math.hypot(first[0] - last[0], first[1] - last[1]) < 1e-7) {
-      sequenceRing.pop();
-    }
+    if (Math.hypot(first[0] - last[0], first[1] - last[1]) < 1e-7) sequenceRing.pop();
   }
 
-  if (document.getElementById("clearOldParcelsBeforeDraw")?.checked) {
-    const oldParcelIds = new Set(
-      state.layers
-        .filter(l => (l.id && l.id.startsWith("parcel_")) || l.type === "Dữ liệu vùng")
-        .map(l => l.id)
-    );
-    state.layers = state.layers.filter(l => !oldParcelIds.has(l.id));
-    state.features = state.features.filter(f => !oldParcelIds.has(f.layerId));
-  }
-
-  const areaM2 = calcPolygonAreaM2(sequenceRing);
-  const layerId = "parcel_" + Date.now();
-  const closedSequence = [...sequenceRing, sequenceRing[0]];
-  explodePolylineToSegments(closedSequence, {
-    layerId,
-    baseName: "Cạnh ranh thửa đất",
-    project: getActiveProject().name,
-    color: "#ef4444",
-    width: 3
-  });
-  state.features.push({
-    id: "poly_" + Date.now(),
-    layerId,
-    geomType: "polygon",
-    name: `Ranh giới thửa đất (${areaM2.toFixed(2)} m²)`,
-    coords: sequenceRing,
-    areaM2,
-    project: getActiveProject().name,
-    note: state.surveyNote.content || "",
-    createdAt: new Date().toLocaleString("vi-VN")
-  });
-  state.layers.push({
-    id: layerId,
-    name: `Ranh thửa đất (${areaM2.toFixed(1)} m² • 1→${sequenceRing.length}→1)`,
-    type: "Dữ liệu vùng",
-    visible: true,
-    color: "#ef4444",
-    width: 3,
-    fillColor: "#f59e0b",
-    labelSize: 13,
-    showSegLength: true
-  });
-
-  saveAppState();
-  renderAllVectorFeatures();
+  const clearOld = Boolean(document.getElementById("clearOldParcelsBeforeDraw")?.checked);
   closeModal("parcelModal");
   map.fitBounds(L.latLngBounds(sequenceRing), { padding: [45, 45] });
-  showToast(`Đã vẽ theo trình tự 1→${sequenceRing.length}→1 • Diện tích: ${areaM2.toFixed(2)} m²`);
+
+  pendingGeometryData = {
+    points: sequenceRing,
+    clearOldParcels: clearOld,
+    layerPrefix: "parcel_"
+  };
+  openModal("saveGeometryChoiceModal");
 }
 
 function deleteLastParcel() {
   let targetLayerId = null;
   for (let i = state.layers.length - 1; i >= 0; i--) {
-    const l = state.layers[i];
-    if (l.id && l.id.startsWith("parcel_")) {
-      targetLayerId = l.id;
+    if (state.layers[i].id && state.layers[i].id.startsWith("parcel_")) {
+      targetLayerId = state.layers[i].id;
       break;
     }
   }
   if (!targetLayerId) {
     for (let i = state.features.length - 1; i >= 0; i--) {
-      const feat = state.features[i];
-      if (feat.geomType === "polygon" && feat.layerId) {
-        targetLayerId = feat.layerId;
+      if (state.features[i].geomType === "polygon" && state.features[i].layerId) {
+        targetLayerId = state.features[i].layerId;
         break;
       }
     }
   }
-  if (!targetLayerId) {
-    showToast("Không tìm thấy thửa đất nào để xóa.");
-    return;
-  }
-  state.layers = state.layers.filter(l => l.id !== targetLayerId);
-  state.features = state.features.filter(f => f.layerId !== targetLayerId);
-  saveAppState();
-  renderAllVectorFeatures();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
-  showToast("Đã xóa thửa đất vừa vẽ.");
+  if (!targetLayerId) { showToast("Không tìm thấy thửa đất nào để xóa."); return; }
+  deleteLayer(targetLayerId, true);
 }
 
 /* ============================================================================
-   8. CHUYỂN ĐỔI HAI CHIỀU VN-2000 <-> WGS84 & NHẬP TỌA ĐỘ ĐA HỆ
+   8. CHUYỂN ĐỔI HAI CHIỀU VN-2000 <-> WGS84 & NHẬP TỌA ĐỘ
 ============================================================================ */
 let convDirection = "vn2wgs";
 let lastConvertedWgs = null;
@@ -2937,14 +3195,10 @@ function setConvDirection(dir) {
   if (dir === "vn2wgs") {
     document.getElementById("convLbl1").textContent = "VN-2000 X(E) [6 số nguyên]:";
     document.getElementById("convLbl2").textContent = "VN-2000 Y(N) [7 số nguyên]:";
-    document.getElementById("convIn1").placeholder = "VD: 536316.454";
-    document.getElementById("convIn2").placeholder = "VD: 1208232.551";
     document.getElementById("btnRunSingleConv").textContent = "Tính sang Vĩ độ / Kinh độ (WGS84)";
   } else {
     document.getElementById("convLbl1").textContent = "WGS84 Vĩ độ (Latitude):";
     document.getElementById("convLbl2").textContent = "WGS84 Kinh độ (Longitude):";
-    document.getElementById("convIn1").placeholder = "VD: 10.928900";
-    document.getElementById("convIn2").placeholder = "VD: 108.102100";
     document.getElementById("btnRunSingleConv").textContent = "Tính sang tọa độ VN-2000 X(E) / Y(N)";
   }
 }
@@ -2952,22 +3206,17 @@ function setConvDirection(dir) {
 function runSingleConversion() {
   const v1 = parseFloat(document.getElementById("convIn1").value);
   const v2 = parseFloat(document.getElementById("convIn2").value);
-  if (isNaN(v1) || isNaN(v2)) {
-    showToast("Vui lòng nhập đầy đủ 2 giá trị tọa độ hợp lệ.");
-    return;
-  }
+  if (isNaN(v1) || isNaN(v2)) { showToast("Vui lòng nhập đầy đủ 2 giá trị tọa độ hợp lệ."); return; }
   if (convDirection === "vn2wgs") {
     let [x, y] = [v1, v2];
     if (x > 1000000 && y < 1000000) [x, y] = [y, x];
     const res = vn2000ToWgs84(x, y);
     lastConvertedWgs = { lat: res.lat, lon: res.lon, vnX: x, vnY: y };
-    document.getElementById("convSingleResult").textContent =
-      `Vĩ độ (Lat): ${res.lat.toFixed(7)}°  |  Kinh độ (Lon): ${res.lon.toFixed(7)}°`;
+    document.getElementById("convSingleResult").textContent = `Vĩ độ (Lat): ${res.lat.toFixed(7)}°  |  Kinh độ (Lon): ${res.lon.toFixed(7)}°`;
   } else {
     const res = wgs84ToVn2000(v1, v2);
     lastConvertedWgs = { lat: v1, lon: v2, vnX: res.x, vnY: res.y };
-    document.getElementById("convSingleResult").textContent =
-      `VN-2000 X(E): ${res.x.toFixed(3)} m  |  Y(N): ${res.y.toFixed(3)} m`;
+    document.getElementById("convSingleResult").textContent = `VN-2000 X(E): ${res.x.toFixed(3)} m  |  Y(N): ${res.y.toFixed(3)} m`;
   }
 }
 
@@ -2980,18 +3229,10 @@ function flyToConvertedPoint() {
 function saveConvertedPoint() {
   if (!lastConvertedWgs) return;
   state.features.push({
-    id: "conv_" + Date.now(),
-    layerId: "default_points",
-    geomType: "point",
-    name: "Điểm quy đổi tọa độ",
-    lat: lastConvertedWgs.lat,
-    lon: lastConvertedWgs.lon,
-    vnX: lastConvertedWgs.vnX,
-    vnY: lastConvertedWgs.vnY,
-    h: 0,
-    project: getActiveProject().name,
-    note: "Tạo từ công cụ chuyển đổi 2 chiều",
-    createdAt: new Date().toLocaleString("vi-VN")
+    id: "conv_" + Date.now(), layerId: "default_points", geomType: "point",
+    name: "Điểm quy đổi tọa độ", lat: lastConvertedWgs.lat, lon: lastConvertedWgs.lon,
+    vnX: lastConvertedWgs.vnX, vnY: lastConvertedWgs.vnY, h: 0,
+    project: getActiveProject().name, note: "Tạo từ chuyển đổi 2 chiều", createdAt: new Date().toLocaleString("vi-VN")
   });
   saveAppState();
   renderAllVectorFeatures();
@@ -3003,13 +3244,8 @@ function runBatchConversion(dir) {
   const out = lines.map((line) => {
     const [a, b] = line.split(/[,;\s\t]+/).map(Number);
     if (isNaN(a) || isNaN(b)) return "Dòng không hợp lệ: " + line;
-    if (dir === "vn2wgs") {
-      const r = vn2000ToWgs84(a, b);
-      return `${r.lat.toFixed(7)}, ${r.lon.toFixed(7)}`;
-    } else {
-      const r = wgs84ToVn2000(a, b);
-      return `${r.x.toFixed(3)}, ${r.y.toFixed(3)}`;
-    }
+    if (dir === "vn2wgs") { const r = vn2000ToWgs84(a, b); return `${r.lat.toFixed(7)}, ${r.lon.toFixed(7)}`; }
+    const r = wgs84ToVn2000(a, b); return `${r.x.toFixed(3)}, ${r.y.toFixed(3)}`;
   });
   document.getElementById("convBatchOutput").value = out.join("\n");
 }
@@ -3020,8 +3256,8 @@ function updateCoordInputPlaceholder() {
     document.getElementById("inCoordLbl1").textContent = "Tọa độ X(E):";
     document.getElementById("inCoordLbl2").textContent = "Tọa độ Y(N):";
   } else {
-    document.getElementById("inCoordLbl1").textContent = "Vĩ độ / Giá trị 1:";
-    document.getElementById("inCoordLbl2").textContent = "Kinh độ / Giá trị 2:";
+    document.getElementById("inCoordLbl1").textContent = "Vĩ độ (Latitude):";
+    document.getElementById("inCoordLbl2").textContent = "Kinh độ (Longitude):";
   }
 }
 
@@ -3030,7 +3266,6 @@ function submitCoordInput(createPin) {
   const v1 = parseFloat(document.getElementById("inCoordVal1").value);
   const v2 = parseFloat(document.getElementById("inCoordVal2").value);
   if (isNaN(v1) || isNaN(v2)) { showToast("Vui lòng nhập tọa độ hợp lệ."); return; }
-
   let lat, lon, vnX, vnY;
   if (fmt === "vn2000") {
     let [x, y] = [v1, v2];
@@ -3042,7 +3277,6 @@ function submitCoordInput(createPin) {
     const vn = wgs84ToVn2000(lat, lon);
     vnX = vn.x; vnY = vn.y;
   }
-
   if (createPin) {
     state.features.push({
       id: "inpt_" + Date.now(), layerId: "default_points", geomType: "point",
@@ -3057,7 +3291,7 @@ function submitCoordInput(createPin) {
 }
 
 /* ============================================================================
-   9. QUẢN LÝ DỰ ÁN ĐỘNG, BÙ CAO ĐỘ ΔH, CÀI ĐẶT LỚP, XUẤT FILE & SAO LƯU
+   9. DỰ ÁN, BÙ ΔH, QUẢN LÝ LỚP KML/KMZ, XUẤT CÓ CHỌN LỚP & SAO LƯU
 ============================================================================ */
 function getActiveProject() {
   return state.projects.find(p => p.id === state.activeProjectId) || state.projects[0];
@@ -3066,7 +3300,6 @@ function getActiveProject() {
 function renderProjectsUI() {
   const active = getActiveProject();
   document.getElementById("activeProjectLabel").textContent = active.name;
-
   const container = document.getElementById("projectListContainer");
   if (container) {
     container.innerHTML = state.projects.map(p => `
@@ -3079,11 +3312,8 @@ function renderProjectsUI() {
       </div>
     `).join("");
   }
-
   const sel = document.getElementById("noteProjectSelect");
-  if (sel) {
-    sel.innerHTML = state.projects.map(p => `<option value="${p.id}" ${p.id === active.id ? "selected" : ""}>${p.name}</option>`).join("");
-  }
+  if (sel) sel.innerHTML = state.projects.map(p => `<option value="${p.id}" ${p.id === active.id ? "selected" : ""}>${p.name}</option>`).join("");
 }
 
 function selectProjectScope(id) {
@@ -3140,7 +3370,6 @@ function calibrateDeltaHFromBenchmark() {
   document.getElementById("manualDeltaHInput").value = state.deltaH.toFixed(3);
   saveAppState();
   openDeltaHModal();
-  showToast(`Đã tính độ bù cao độ ΔH = ${state.deltaH.toFixed(3)} m`);
 }
 
 function applyManualDeltaH() {
@@ -3176,6 +3405,8 @@ function selectCrs(crsObj) {
   state.activeCrs = crsObj;
   document.getElementById("hudCrsTitle").textContent = `${crsObj.name} [m]`;
   document.getElementById("convCrsLabel").textContent = `${crsObj.name} (${crsObj.lon0}°)`;
+  const pCrs = document.getElementById("parcelCrsNameDisplay");
+  if (pCrs) pCrs.textContent = crsObj.name;
   saveAppState();
   updateCenterHud();
   closeModal("crsModal");
@@ -3187,26 +3418,14 @@ function flyToLayer(layerId) {
   const pts = [];
   state.features.forEach((f) => {
     if (f.layerId !== layerId) return;
-    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
-      pts.push([f.lat, f.lon]);
-    } else if (f.geomType === "segment") {
-      if (Array.isArray(f.p1)) pts.push(f.p1);
-      if (Array.isArray(f.p2)) pts.push(f.p2);
-    } else if (f.geomType === "polygon" && Array.isArray(f.coords)) {
-      f.coords.forEach(c => pts.push(c));
-    }
+    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") pts.push([f.lat, f.lon]);
+    else if (f.geomType === "segment") { if (Array.isArray(f.p1)) pts.push(f.p1); if (Array.isArray(f.p2)) pts.push(f.p2); }
+    else if (f.geomType === "polygon" && Array.isArray(f.coords)) f.coords.forEach(c => pts.push(c));
   });
-  if (pts.length === 0) {
-    showToast("Lớp này chưa có tọa độ trên bản đồ.");
-    return;
-  }
+  if (pts.length === 0) { showToast("Lớp này chưa có tọa độ trên bản đồ."); return; }
   closeModal("layersModal");
-  if (pts.length === 1) {
-    map.setView(pts[0], 19, { animate: true });
-  } else {
-    map.fitBounds(L.latLngBounds(pts), { padding: [36, 36], animate: true });
-  }
-  showToast("Đã di chuyển bản đồ tới vị trí lớp dự án.");
+  if (pts.length === 1) map.setView(pts[0], 19, { animate: true });
+  else map.fitBounds(L.latLngBounds(pts), { padding: [36, 36], animate: true });
 }
 
 function openQuickDeleteLayerModal() {
@@ -3222,10 +3441,11 @@ function renderLayersModal() {
   }
   container.innerHTML = state.layers.map(l => `
     <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <div style="flex:1;cursor:pointer;" onclick="flyToLayer('${l.id}')" title="Chạm để chạy tới vị trí lớp">
-        <div style="font-weight:700;font-size:13px;color:#60a5fa;">🎯 ${l.name}</div>
-        <div style="font-size:11px;color:#94a3b8;">${l.type} • Chạm tên lớp để bay tới</div>
+      <div style="flex:1;cursor:pointer;" onclick="flyToLayer('${l.id}')">
+        <div style="font-weight:700;font-size:13px;color:#60a5fa;">${l.name}</div>
+        <div style="font-size:11px;color:#94a3b8;">${l.type} ${l.fileSize ? "• " + l.fileSize : ""} ${l.summary ? "• " + l.summary : ""} • Độ mờ ${l.opacity ?? 100}%</div>
       </div>
+      <button class="mini-btn" onclick="flyToLayer('${l.id}')" title="Zoom tới lớp">🔍</button>
       <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
       <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
       <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
@@ -3241,23 +3461,41 @@ function toggleLayerVisibility(id) {
   renderAllVectorFeatures();
 }
 
-function deleteLayer(id) {
+function deleteLayer(id, silentToast = false) {
+  const targetLayer = state.layers.find(x => x.id === id) || null;
+  const relatedFeatures = state.features.filter(f => f.layerId === id);
+  if (!targetLayer && relatedFeatures.length === 0) return;
+
+  pushToTrash({
+    kind: "layer_bundle",
+    title: targetLayer ? targetLayer.name : (relatedFeatures[0]?.name || "Lớp dữ liệu"),
+    meta: `${targetLayer?.type || "Dữ liệu"} • ${relatedFeatures.length} đối tượng`,
+    layer: targetLayer ? structuredClone(targetLayer) : null,
+    features: structuredClone(relatedFeatures)
+  });
+
   state.layers = state.layers.filter(x => x.id !== id);
   state.features = state.features.filter(f => f.layerId !== id);
   saveAppState();
   renderLayersModal();
   renderAllVectorFeatures();
+  if (!silentToast) showToast("Đã chuyển lớp vào Thùng rác (có thể khôi phục bất kỳ lúc nào).");
+  else showToast("Đã chuyển thửa đất vừa vẽ vào Thùng rác.");
 }
 
 function openLayerStyleEditor(id) {
   editingLayerId = id;
   const l = state.layers.find(x => x.id === id);
   if (!l) return;
-  document.getElementById("layerStyleTitle").textContent = `⚙️ Cài đặt hiển thị: ${l.name}`;
+  document.getElementById("layerStyleTitle").textContent = `⚙️ Cài đặt lớp: ${l.name}`;
   document.getElementById("stStrokeColor").value = l.color || "#3b82f6";
   document.getElementById("stStrokeWidth").value = l.width || 3;
   document.getElementById("stFillColor").value = l.fillColor || "#10b981";
+  document.getElementById("stLabelSize").value = l.labelSize || 11;
   document.getElementById("stShowSegLength").checked = l.showSegLength !== false;
+  const opVal = l.opacity ?? 100;
+  document.getElementById("stLayerOpacity").value = opVal;
+  document.getElementById("stLayerOpLabel").textContent = `${opVal}%`;
   openModal("layerStyleModal");
 }
 
@@ -3265,23 +3503,24 @@ function saveLayerStyleConfig() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
   l.color = document.getElementById("stStrokeColor").value;
-  l.width = Number(document.getElementById("stStrokeWidth").value) || 3;
+  l.width = Math.max(1, Number(document.getElementById("stStrokeWidth").value) || 3);
   l.fillColor = document.getElementById("stFillColor").value;
+  l.labelSize = Math.max(9, Number(document.getElementById("stLabelSize").value) || 11);
   l.showSegLength = document.getElementById("stShowSegLength").checked;
+  l.opacity = Number(document.getElementById("stLayerOpacity").value);
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
-  showToast("Đã cập nhật hiển thị lớp.");
+  showToast(`Đã lưu cài đặt cho lớp "${l.name}".`);
 }
 
 function resetLayerStyleDefault() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
-  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.showSegLength = true;
+  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.labelSize = 11; l.showSegLength = true; l.opacity = 100;
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
-  showToast("Đã khôi phục hiển thị mặc định.");
 }
 
 function renderTagsModal() {
@@ -3297,28 +3536,16 @@ function addNewTag() {
   const name = document.getElementById("newTagName").value.trim();
   if (!name) return;
   state.tags.push({
-    id: "tag_" + Date.now(),
-    name,
-    desc: document.getElementById("newTagDesc").value.trim(),
-    color: document.getElementById("newTagColor").value,
-    bg: document.getElementById("newTagBg").value
+    id: "tag_" + Date.now(), name, desc: document.getElementById("newTagDesc").value.trim(),
+    color: document.getElementById("newTagColor").value, bg: document.getElementById("newTagBg").value
   });
   document.getElementById("newTagName").value = "";
   saveAppState();
   renderTagsModal();
 }
 
-function sortTagsList() {
-  state.tags.sort((a, b) => a.name.localeCompare(b.name, "vi"));
-  saveAppState();
-  renderTagsModal();
-}
-
-function clearAllTags() {
-  state.tags = [];
-  saveAppState();
-  renderTagsModal();
-}
+function sortTagsList() { state.tags.sort((a, b) => a.name.localeCompare(b.name, "vi")); saveAppState(); renderTagsModal(); }
+function clearAllTags() { state.tags = []; saveAppState(); renderTagsModal(); }
 
 function renderSchemaFields() {
   document.getElementById("schemaFieldsList").innerHTML = state.schemaFields.map(f => `
@@ -3331,8 +3558,7 @@ function renderSchemaFields() {
 
 function applySatelliteOverlay() {
   auxLayerGroup.clearLayers();
-  const b = map.getBounds();
-  L.rectangle(b, { color: "#38bdf8", weight: 2, dashArray: "6 6", fillOpacity: 0.06 }).addTo(auxLayerGroup);
+  L.rectangle(map.getBounds(), { color: "#38bdf8", weight: 2, dashArray: "6 6", fillOpacity: 0.06 }).addTo(auxLayerGroup);
   closeModal("satelliteModal");
   showToast("Đã khoanh vùng truy xuất ảnh vệ tinh Sentinel-2 (10m).");
 }
@@ -3341,11 +3567,9 @@ function loadFireHotspots() {
   auxLayerGroup.clearLayers();
   const c = map.getCenter();
   for (let i = 0; i < 6; i++) {
-    const lat = c.lat + (Math.random() - 0.5) * 0.08;
-    const lon = c.lng + (Math.random() - 0.5) * 0.08;
-    L.circleMarker([lat, lon], { radius: 7, color: "#fff", fillColor: "#ef4444", fillOpacity: 0.9 })
-      .bindPopup("🔥 Điểm cảnh báo nhiệt VIIRS 375m (Nguy cơ cao)")
-      .addTo(auxLayerGroup);
+    L.circleMarker([c.lat + (Math.random() - 0.5) * 0.08, c.lng + (Math.random() - 0.5) * 0.08], {
+      radius: 7, color: "#fff", fillColor: "#ef4444", fillOpacity: 0.9
+    }).bindPopup("🔥 Điểm cảnh báo nhiệt VIIRS 375m").addTo(auxLayerGroup);
   }
   closeModal("fireModal");
   showToast("Đã hiển thị các điểm cảnh báo cháy quanh khu vực.");
@@ -3354,54 +3578,81 @@ function loadFireHotspots() {
 function renderNoFlyZones() {
   auxLayerGroup.clearLayers();
   const c = map.getCenter();
-  L.circle(c, { radius: 2500, color: "#ef4444", fillColor: "#ef4444", fillOpacity: 0.14 })
-    .bindPopup("🚁 Khu vực hạn chế bay UAV (Bán kính kiểm tra)")
-    .addTo(auxLayerGroup);
-  L.circle(c, { radius: 5000, color: "#f59e0b", fillColor: "#f59e0b", fillOpacity: 0.08 })
-    .bindPopup("🚁 Khu vực cảnh báo độ cao bay UAV")
-    .addTo(auxLayerGroup);
+  L.circle(c, { radius: 2500, color: "#ef4444", fillColor: "#ef4444", fillOpacity: 0.14 }).addTo(auxLayerGroup);
+  L.circle(c, { radius: 5000, color: "#f59e0b", fillColor: "#f59e0b", fillOpacity: 0.08 }).addTo(auxLayerGroup);
   closeModal("nfzModal");
-  showToast("Đã hiển thị lớp vùng hạn chế & cảnh báo bay UAV.");
+  showToast("Đã hiển thị vùng hạn chế / cảnh báo bay UAV.");
 }
 
-function exportDataFile(fmt) {
+function renderExportModal() {
+  const nameInp = document.getElementById("exportDatasetName");
+  if (nameInp && !nameInp.value) {
+    nameInp.value = state.lastExportName || "PD_GIS_Pro_1_1_Export";
+  }
+
+  const groups = [
+    { key: "point", label: "Điểm mốc / Dữ liệu điểm", count: state.features.filter(f => f.geomType === "point").length, checked: true },
+    { key: "segment", label: "Dữ liệu đường / Đoạn tuyến", count: state.features.filter(f => f.geomType === "segment").length, checked: true },
+    { key: "polygon", label: "Dữ liệu vùng / Thửa đất", count: state.features.filter(f => f.geomType === "polygon").length, checked: true }
+  ];
+
+  document.getElementById("exportLayerFilterList").innerHTML = groups.map(g => `
+    <label class="list-card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:6px;">
+      <span style="font-size:12.5px;font-weight:700;">${g.label} <strong style="color:#38bdf8;">(${g.count})</strong></span>
+      <input type="checkbox" class="export-group-chk" data-gtype="${g.key}" ${g.checked ? "checked" : ""} style="width:18px;height:18px;accent-color:#10b981;" />
+    </label>
+  `).join("");
+}
+
+function runSelectedExport() {
+  const baseName = (document.getElementById("exportDatasetName").value.trim() || "PD_GIS_Pro_1_1_Export").replace(/[^\w\-À-ỹ]/g, "_");
+  state.lastExportName = baseName;
+  saveAppState();
+
+  const fmt = document.getElementById("exportFormatSelect").value;
+  const selectedTypes = new Set(
+    Array.from(document.querySelectorAll(".export-group-chk:checked")).map(el => el.dataset.gtype)
+  );
+  const filteredFeats = state.features.filter(f => selectedTypes.has(f.geomType));
+  if (filteredFeats.length === 0) {
+    showToast("Không có đối tượng nào thuộc nhóm lớp đã chọn để xuất.");
+    return;
+  }
+
   let content = "";
-  let fileName = `PD_GIS_Export_${Date.now()}.${fmt}`;
+  const fileName = `${baseName}_1_1.${fmt}`;
   let mime = "text/plain;charset=utf-8";
 
   if (fmt === "geojson") {
     const fc = {
       type: "FeatureCollection",
-      features: state.features.map(f => {
-        if (f.geomType === "point") {
-          return { type: "Feature", properties: { name: f.name, vnX: f.vnX, vnY: f.vnY, h: f.h, project: f.project, note: f.note }, geometry: { type: "Point", coordinates: [f.lon, f.lat] } };
-        }
-        if (f.geomType === "segment") {
-          return { type: "Feature", properties: { name: f.name, lengthM: f.lengthM, azimuth: f.azimuth, project: f.project }, geometry: { type: "LineString", coordinates: [[f.p1[1], f.p1[0]], [f.p2[1], f.p2[0]]] } };
-        }
-        return { type: "Feature", properties: { name: f.name, areaM2: f.areaM2, project: f.project }, geometry: { type: "Polygon", coordinates: [f.coords.map(c => [c[1], c[0]])] } };
+      features: filteredFeats.map(f => {
+        if (f.geomType === "point") return { type: "Feature", properties: { name: f.name, vnX: f.vnX, vnY: f.vnY, h: f.h, project: f.project, note: f.note }, geometry: { type: "Point", coordinates: [f.lon, f.lat] } };
+        if (f.geomType === "segment") return { type: "Feature", properties: { name: f.name, lengthM: f.lengthM, azimuth: f.azimuth, project: f.project }, geometry: { type: "LineString", coordinates: [[f.p1[1], f.p1[0]], [f.p2[1], f.p2[0]]] } };
+        return { type: "Feature", properties: { name: f.name, areaM2: f.areaM2, project: f.project, note: f.note }, geometry: { type: "Polygon", coordinates: [f.coords.map(c => [c[1], c[0]])] } };
       })
     };
     content = JSON.stringify(fc, null, 2);
     mime = "application/json";
   } else if (fmt === "csv") {
     const rows = ["Loai,Ten,X_VN2000,Y_VN2000,CaoDo_H,KichThuoc_m,DienTich_m2,DuAn,GhiChu"];
-    state.features.forEach(f => {
+    filteredFeats.forEach(f => {
       if (f.geomType === "point") rows.push(`Diem,"${f.name}",${f.vnX.toFixed(3)},${f.vnY.toFixed(3)},${(f.h||0).toFixed(2)},,,"${f.project}","${f.note||""}"`);
       if (f.geomType === "segment") rows.push(`DoanLine,"${f.name}",${f.vn1.x.toFixed(3)},${f.vn1.y.toFixed(3)},,${f.lengthM.toFixed(3)},,"${f.project}","${f.note||""}"`);
       if (f.geomType === "polygon") rows.push(`Vung,"${f.name}",,,,,${f.areaM2.toFixed(2)},"${f.project}","${f.note||""}"`);
     });
     content = "\uFEFF" + rows.join("\n");
   } else if (fmt === "kml") {
-    const pms = state.features.map(f => {
+    const pms = filteredFeats.map(f => {
       if (f.geomType === "point") return `<Placemark><name>${f.name}</name><Point><coordinates>${f.lon},${f.lat},0</coordinates></Point></Placemark>`;
       if (f.geomType === "segment") return `<Placemark><name>${f.name} (${f.lengthM.toFixed(2)}m)</name><LineString><coordinates>${f.p1[1]},${f.p1[0]},0 ${f.p2[1]},${f.p2[0]},0</coordinates></LineString></Placemark>`;
+      if (f.geomType === "polygon") return `<Placemark><name>${f.name}</name><Polygon><outerBoundaryIs><LinearRing><coordinates>${f.coords.map(c => `${c[1]},${c[0]},0`).join(" ")}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`;
       return "";
     }).join("\n");
     content = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${pms}</Document></kml>`;
   } else if (fmt === "dxf") {
     let entities = "";
-    state.features.forEach(f => {
+    filteredFeats.forEach(f => {
       if (f.geomType === "segment") {
         entities += `0\nLINE\n8\nPD_GIS\n10\n${f.vn1.x.toFixed(3)}\n20\n${f.vn1.y.toFixed(3)}\n11\n${f.vn2.x.toFixed(3)}\n21\n${f.vn2.y.toFixed(3)}\n`;
       } else if (f.geomType === "point") {
@@ -3416,11 +3667,12 @@ function exportDataFile(fmt) {
   a.href = URL.createObjectURL(blob);
   a.download = fileName;
   a.click();
-  showToast(`Đã xuất file ${fileName}`);
+  closeModal("exportModal");
+  showToast(`Đã xuất thành công "${fileName}" (${filteredFeats.length} đối tượng).`);
 }
 
 function downloadBackupJson() {
-  const name = (document.getElementById("backupNameInput").value.trim() || "PD_GIS_Backup") + ".json";
+  const name = (document.getElementById("backupNameInput").value.trim() || "PD_GIS_Pro_1_1_Backup") + ".json";
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -3436,6 +3688,8 @@ function handleRestoreJson(event) {
   reader.onload = () => {
     try {
       state = Object.assign(structuredClone(defaultState), JSON.parse(reader.result));
+      if (!Array.isArray(state.trash)) state.trash = [];
+      state.version = "1.1";
       saveAppState();
       renderProjectsUI();
       renderAllVectorFeatures();
@@ -3455,7 +3709,7 @@ function filterSearchFeatures() {
     <div class="list-card" style="cursor:pointer;" onclick="jumpToFeature('${f.id}')">
       <div style="font-weight:700;font-size:13px;">${f.name}</div>
       <div style="font-size:11.5px;color:#94a3b8;">
-        ${f.geomType === "segment" ? `Kích thước: ${formatLength(f.lengthM)}` : f.geomType === "point" ? `X=${f.vnX.toFixed(3)}, Y=${f.vnY.toFixed(3)}` : `Diện tích: ${f.areaM2.toFixed(2)} m²`}
+        ${f.geomType === "segment" ? `Kích thước: ${formatLength(f.lengthM)}` : f.geomType === "point" ? `X=${f.vnX.toFixed(3)}, Y=${f.vnY.toFixed(3)}` : `Diện tích: ${formatArea(f.areaM2)}`}
       </div>
     </div>
   `).join("") || `<div style="color:#94a3b8;font-size:12.5px;">Không tìm thấy đối tượng phù hợp.</div>`;
@@ -3476,7 +3730,7 @@ function renderSavedPointsList() {
     <div class="list-card" style="cursor:pointer;" onclick="jumpToFeature('${f.id}')">
       <div style="font-weight:700;font-size:13px;">${f.name}</div>
       <div style="font-size:11.5px;color:#38bdf8;">
-        ${f.geomType === "segment" ? `Đoạn line: ${formatLength(f.lengthM)}` : f.geomType === "point" ? `X=${f.vnX.toFixed(3)} | Y=${f.vnY.toFixed(3)} | H=${(f.h||0).toFixed(2)}m` : `Diện tích: ${f.areaM2.toFixed(2)} m²`}
+        ${f.geomType === "segment" ? `Đoạn line: ${formatLength(f.lengthM)}` : f.geomType === "point" ? `X=${f.vnX.toFixed(3)} | Y=${f.vnY.toFixed(3)} | H=${(f.h||0).toFixed(2)}m` : `Diện tích: ${formatArea(f.areaM2)}`}
       </div>
       <div style="font-size:11px;color:#94a3b8;">${f.project || ""} • ${f.createdAt || ""}</div>
     </div>
@@ -3484,13 +3738,12 @@ function renderSavedPointsList() {
 }
 
 /* ============================================================================
-   10. ĐIỀU KHIỂN DRAWER, MODAL & KHỞI CHẠY TỰ ĐỘNG
+   10. ĐIỀU KHIỂN DRAWER, MODAL & KHỞI CHẠY MƯỢT MÀ
 ============================================================================ */
-function openDrawer() { document.getElementById("mainDrawer").classList.add("open"); }
+function openDrawer() { updateTrashBadge(); document.getElementById("mainDrawer").classList.add("open"); }
 function closeDrawer() { document.getElementById("mainDrawer").classList.remove("open"); }
 
 let _wakeLockSentinel = null;
-
 async function toggleScreenWakeLock(enabled) {
   try {
     if (enabled && "wakeLock" in navigator) {
@@ -3529,24 +3782,51 @@ function toggleSegLblFromSettings(checked) {
   renderAllVectorFeatures();
 }
 
+function toggleRotateCrosshair(checked) {
+  state.rotateCrosshair = Boolean(checked);
+  saveAppState();
+}
+
+async function toggleLockMapRotation(locked) {
+  state.lockMapRotation = Boolean(locked);
+  saveAppState();
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      if (state.lockMapRotation) {
+        const currentType = screen.orientation.type && screen.orientation.type.includes("landscape") ? "landscape" : "portrait";
+        await screen.orientation.lock(currentType);
+      } else if (screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    }
+  } catch (e) {}
+  showToast(state.lockMapRotation ? "Đã khóa chế độ xoay bản đồ." : "Đã mở khóa xoay bản đồ.");
+}
+
+function toggleAutoFollowGps(enabled) {
+  state.autoFollowGps = Boolean(enabled);
+  saveAppState();
+  if (state.autoFollowGps) {
+    if (latestGps.hasFix) map.setView([latestGps.lat, latestGps.lon], Math.max(map.getZoom(), 18), { animate: true });
+    else locateUserNow(true);
+  }
+}
+
 function syncSettingsModal() {
   const dh = Number(state.deltaH || 0);
-  const inp = document.getElementById("cfgDeltaHInput");
-  const badge = document.getElementById("cfgDeltaHVal");
-  if (inp) inp.value = dh;
-  if (badge) badge.textContent = `${dh.toFixed(2)} m`;
+  if (document.getElementById("cfgDeltaHInput")) document.getElementById("cfgDeltaHInput").value = dh;
+  if (document.getElementById("cfgDeltaHVal")) document.getElementById("cfgDeltaHVal").textContent = `${dh.toFixed(2)} m`;
 
   const op = Number(state.layerOpacity ?? 100);
-  const rng = document.getElementById("cfgLayerOpacityRange");
-  const txt = document.getElementById("cfgLayerOpacityText");
-  if (rng) rng.value = op;
-  if (txt) txt.textContent = `${op}%`;
+  if (document.getElementById("cfgLayerOpacityRange")) document.getElementById("cfgLayerOpacityRange").value = op;
+  if (document.getElementById("cfgLayerOpacityText")) document.getElementById("cfgLayerOpacityText").textContent = `${op}%`;
 
-  const cChk = document.getElementById("cfgCompassChk");
-  if (cChk) cChk.checked = state.showCompassInCam !== false;
-
-  const sChk = document.getElementById("cfgSegLblChk");
-  if (sChk) sChk.checked = state.showSegLabels !== false;
+  if (document.getElementById("cfgQuickSliderChk")) document.getElementById("cfgQuickSliderChk").checked = !state.quickLayerSliderHidden;
+  if (document.getElementById("cfgCompassChk")) document.getElementById("cfgCompassChk").checked = state.showCompassInCam !== false;
+  if (document.getElementById("cfgSegLblChk")) document.getElementById("cfgSegLblChk").checked = state.showSegLabels !== false;
+  if (document.getElementById("cfgRotateCrosshairChk")) document.getElementById("cfgRotateCrosshairChk").checked = Boolean(state.rotateCrosshair);
+  if (document.getElementById("cfgLockRotChk")) document.getElementById("cfgLockRotChk").checked = Boolean(state.lockMapRotation);
+  if (document.getElementById("cfgAutoGpsChk")) document.getElementById("cfgAutoGpsChk").checked = Boolean(state.autoFollowGps);
 }
 
 function openModal(id) {
@@ -3555,11 +3835,21 @@ function openModal(id) {
   if (id === "projectScopeModal") renderProjectsUI();
   if (id === "crsModal") renderCrsList();
   if (id === "layersModal") renderLayersModal();
+  if (id === "trashModal") renderTrashModal();
   if (id === "tagsModal") renderTagsModal();
   if (id === "fieldSchemaModal") renderSchemaFields();
   if (id === "searchModal") filterSearchFeatures();
   if (id === "savedPointsModal") renderSavedPointsList();
+  if (id === "exportModal") renderExportModal();
+  if (id === "parcelModal") {
+    const pCrs = document.getElementById("parcelCrsNameDisplay");
+    if (pCrs) pCrs.textContent = state.activeCrs?.name || "VN-2000 / LÂM ĐỒNG (2025)";
+    const ta = document.getElementById("parcelCoordsInput");
+    if (ta && !ta.value && state.lastParcelCoordsText) ta.value = state.lastParcelCoordsText;
+    renderParsedCoordTable();
+  }
 }
+
 function closeModal(id) {
   document.getElementById(id).classList.remove("open");
   if (id === "parcelModal") closeOcrCameraScanner();
@@ -3593,13 +3883,17 @@ window.addEventListener("DOMContentLoaded", () => {
   if (snapBtn) snapBtn.classList.toggle("active", state.snapToStart !== false);
   const segBtn = document.getElementById("btnQuickSegLabels");
   if (segBtn) segBtn.classList.toggle("active", state.showSegLabels !== false);
+
+  updateTrashBadge();
   renderProjectsUI();
   renderAllVectorFeatures();
   syncQuickSelectedLayerBar();
   hydrateStateFromIdb();
   startSmoothCompassLoop();
 
-  locateUserNow(true);
+  if (state.autoFollowGps) {
+    locateUserNow(true);
+  }
   startContinuousGpsWatch();
 });
 </script>
