@@ -171,38 +171,6 @@
       font-size: 20px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55); cursor: pointer;
     }
 
-    /* Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ */
-    #quickSelectedLayerBar {
-      position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 8px) + 152px);
-      left: 8px;
-      right: 8px;
-      max-width: 540px;
-      z-index: 890;
-      background: var(--panel-dark);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      border-radius: 12px;
-      padding: 6px 10px;
-      display: none;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-    }
-    #quickSelectedLayerBar.open {
-      display: flex;
-    }
-    #quickLayerSelect {
-      max-width: 155px;
-      background: #1e293b;
-      border: 1px solid var(--border-subtle);
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 4px 6px;
-      font-size: 11.5px;
-      font-weight: 700;
-    }
-
     /* Thanh HUD Tọa độ dưới cùng (Vị trí 12) */
     .bottom-hud {
       position: absolute; bottom: env(safe-area-inset-bottom, 8px); left: 8px; right: 8px;
@@ -441,6 +409,69 @@
     }
     .warn-text { font-size: 11.5px; color: #fbbf24; line-height: 1.4; margin: 6px 0; }
 
+
+    /* Nhãn diện tích thửa đất trực tiếp trên bản đồ */
+    .area-label {
+      background: rgba(15, 23, 42, 0.9);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.75);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.55);
+      transform: translate(-50%, -50%);
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      font-size: 13px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .setting-row:last-child {
+      border-bottom: 0;
+    }
+    .setting-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+    .map-only-hidden .top-bar,
+    .map-only-hidden .left-stack,
+    .map-only-hidden .right-stack,
+    .map-only-hidden .bottom-hud,
+    .map-only-hidden #opacityPanel {
+      display: none !important;
+    }
+    #restoreMenuFab {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 10px) + 12px);
+      right: 12px;
+      z-index: 2600;
+      display: none;
+      background: rgba(15, 23, 42, 0.92);
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+    }
+    .map-only-hidden #restoreMenuFab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     /* Toast thông báo nhanh */
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
@@ -501,12 +532,10 @@
     <!-- Thanh công cụ vẽ trực tiếp & đo kích thước -->
     <div class="draw-toolbar" style="width:fit-content;">
       <button class="icon-btn" title="Thêm Điểm mốc tại tâm" onclick="addPointAtCenter()">📍</button>
-      <button class="icon-btn" style="color:#fca5a5;" title="Xóa điểm mốc gần tâm bản đồ" onclick="deletePointAtCenter()">🎯</button>
       <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line (Click đường để xem kích thước)" onclick="startDrawing('line')">📏</button>
       <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
       <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét Camera" onclick="openModal('parcelModal')">📐</button>
-      <button class="icon-btn" style="color:#f87171;" title="Xóa nhanh lớp/thửa vừa tạo (Thùng rác)" onclick="deleteLastLayerOrParcel()">🗑️</button>
       <button class="icon-btn" title="11. Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
@@ -552,13 +581,6 @@
     </div>
   </div>
 
-  <!-- Thanh chỉnh độ mờ của lớp đang chọn ngay bên ngoài bản đồ -->
-  <div id="quickSelectedLayerBar">
-    <select id="quickLayerSelect" title="Chọn lớp cần chỉnh độ mờ" onchange="onQuickLayerSelectChange(this.value)"></select>
-    <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;" oninput="onQuickLayerOpacityInput(this.value)" />
-    <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:38px;text-align:right;">100%</span>
-  </div>
-
   <!-- Thanh HUD Tọa độ phía dưới (Vị trí 12) -->
   <div class="bottom-hud" id="bottomHud">
     <div class="hud-header">
@@ -585,6 +607,7 @@
 <!-- ===================================================================== -->
 <!-- MÀN HÌNH CAMERA AR TRẮC ĐỊA (Tâm vuông + Vòng la bàn mượt + Ghi chú) -->
 <!-- ===================================================================== -->
+  <button id="restoreMenuFab" onclick="toggleMapOnlyMode(false)">🗺️ Hiện menu</button>
 <div id="cameraModal">
   <video id="cameraVideo" autoplay playsinline muted></video>
   <div id="cameraGrid"></div>
@@ -878,6 +901,13 @@
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <button class="btn-primary" onclick="triggerImportFile()">+ Nạp file KMZ (tự nổ đoạn) / KML / GeoJSON / GPX</button>
     </div>
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:#fde047;">📏 Hiển thị nhãn kích thước trên bản đồ</div>
+        <div style="font-size:11px;color:#94a3b8;">Tắt khi có nhiều đoạn để chạy mượt hơn; chạm vào đường vẫn xem được kích thước.</div>
+      </div>
+      <input type="checkbox" id="layersModalSegToggle" checked onchange="toggleGlobalSegLabels(this.checked)" style="width:18px;height:18px;accent-color:#3b82f6;" />
+    </div>
     <div id="layersListContainer"></div>
   </div>
 </div>
@@ -1137,25 +1167,103 @@
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal-card">
     <div class="modal-head">
-      <span class="modal-title">⚙️ Cài Đặt & Bảng Chú Thích 15 Chức Năng</span>
+      <span class="modal-title">⚙️ CÀI ĐẶT VÀ TÙY CHỌN</span>
       <button class="close-x" onclick="closeModal('settingsModal')">✕</button>
     </div>
-    <div style="font-size:12px;line-height:1.55;color:#cbd5e1;">
-      <div><strong>1.</strong> Mở menu chính của ứng dụng</div>
-      <div><strong>2.</strong> Mở máy ảnh khảo sát AR và chụp nhanh ảnh hiện trường</div>
-      <div><strong>3.</strong> Tìm kiếm dữ liệu Điểm mốc, Điểm tọa độ, Đường, Vùng, Tracklog</div>
-      <div><strong>4.</strong> Quản lý các lớp dữ liệu được hỗ trợ & Cài đặt hiển thị</div>
-      <div><strong>5.</strong> Mở cài đặt cấu hình, tùy chọn thêm cho ứng dụng</div>
-      <div><strong>6.</strong> Mở la bàn số / Đưa bản đồ về hướng Bắc</div>
-      <div><strong>7.</strong> Thông số hiển thị các vệ tinh thu được</div>
-      <div><strong>8.</strong> Nút phóng to, thu nhỏ bản đồ</div>
-      <div><strong>9.</strong> Hiển thị mức zoom hiện tại từ Z0 đến Z24</div>
-      <div><strong>10.</strong> Nút định vị đưa người dùng về vị trí GPS hiện tại</div>
-      <div><strong>11.</strong> Mở thanh trượt làm mờ các lớp phủ và lớp nền</div>
-      <div><strong>12.</strong> Thanh thông số GPS & tọa độ tâm tính chuyển theo hệ chiếu</div>
-      <div><strong>13.</strong> Biểu tượng hiển thị vị trí hiện tại trên bản đồ</div>
-      <div><strong>14.</strong> Vị trí tâm của bản đồ</div>
-      <div><strong>15.</strong> Công cụ vẽ Điểm mốc, Đường line (xem kích thước), Vùng & Tracklog</div>
+
+    <div class="menu-section-title" style="color:#f59e0b;margin-top:0;">CẤU HÌNH ỨNG DỤNG HIỆN TRƯỜNG</div>
+
+    <div class="list-card" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.35);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:12.5px;font-weight:700;color:#fde047;">⛰️ Bù trừ cao độ ΔH (mét)</span>
+        <span id="cfgDeltaHBadge" style="font-size:12px;font-weight:800;color:#fbbf24;">0.00 m</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="number" step="any" id="cfgDeltaHInput" class="form-input" value="0" placeholder="VD: 0 hoặc +5.10" />
+        <button class="btn-secondary" style="background:#d97706;color:#fff;border:0;font-weight:700;white-space:nowrap;" onclick="saveDeltaHFromSettings()">Lưu ΔH</button>
+      </div>
+      <div class="setting-sub">Đặt đế máy tại mốc chuẩn, đọc cao độ mốc để nhập độ lệch bù trừ.</div>
+    </div>
+
+    <div class="list-card" style="padding:4px 10px;">
+      <div class="setting-row">
+        <div>
+          <div>🧭 La bàn số</div>
+          <div class="setting-sub">Hiển thị la bàn và đưa bản đồ về hướng Bắc</div>
+        </div>
+        <input type="checkbox" id="cfgCompassChk" checked onchange="toggleCompassFeature(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>📏 Nhãn kích thước từng đoạn</div>
+          <div class="setting-sub">Tắt khi có nhiều đoạn để app chạy mượt; chạm đường vẫn xem kích thước</div>
+        </div>
+        <input type="checkbox" id="cfgSegLabelsChk" checked onchange="toggleGlobalSegLabels(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>📐 Nhãn diện tích thửa đất</div>
+          <div class="setting-sub">Hiển thị diện tích (m² / ha) trực tiếp trên vùng đã vẽ</div>
+        </div>
+        <input type="checkbox" id="cfgAreaLabelsChk" checked onchange="toggleAreaLabelsFeature(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:5px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🌓 Độ hiển thị lớp phủ bản đồ</span>
+          <strong id="cfgLayerOpacityPct" style="color:#818cf8;">100%</strong>
+        </div>
+        <input type="range" id="cfgLayerOpacityRange" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value); syncSettingsUi();" />
+      </div>
+
+      <div class="setting-row" style="cursor:pointer;" onclick="toggleMapOnlyMode(true)">
+        <div>
+          <div style="color:#60a5fa;">⛶ Màn hình chỉ hiện bản đồ (Ẩn toàn bộ menu)</div>
+          <div class="setting-sub">Mở rộng tối đa không gian bản đồ khi khảo sát</div>
+        </div>
+        <span style="color:#60a5fa;font-weight:800;">›</span>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>🔒 Khóa chế độ xoay bản đồ</div>
+          <div class="setting-sub">Khóa hướng hiển thị bản đồ khi khảo sát hiện trường</div>
+        </div>
+        <input type="checkbox" id="cfgLockRotationChk" onchange="toggleLockMapRotation(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>🛰️ Tự động di chuyển bản đồ theo GPS</div>
+          <div class="setting-sub">Tự động đưa bản đồ bám theo vị trí GPS đang di chuyển</div>
+        </div>
+        <input type="checkbox" id="cfgAutoFollowGpsChk" onchange="toggleAutoFollowGps(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>⊕ Ký hiệu tâm bản đồ</div>
+          <div class="setting-sub">Hiển thị tâm ngắm tọa độ ở giữa màn hình</div>
+        </div>
+        <input type="checkbox" id="cfgCrosshairChk" checked onchange="toggleCrosshairFeature(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div>📍 Tạm ẩn vị trí GPS</div>
+          <div class="setting-sub">Ẩn chấm vị trí GPS hiện tại trên bản đồ khi cần</div>
+        </div>
+        <input type="checkbox" id="cfgHideGpsChk" onchange="toggleHideGpsFeature(this.checked)" style="width:18px;height:18px;accent-color:#4f46e5;" />
+      </div>
+    </div>
+
+    <div class="list-card" style="font-size:11.5px;line-height:1.5;color:#cbd5e1;">
+      <div style="font-weight:700;color:#38bdf8;margin-bottom:4px;">Chú thích 15 chức năng:</div>
+      <div><strong>1.</strong> Menu chính • <strong>2.</strong> Máy ảnh khảo sát AR • <strong>3.</strong> Tìm kiếm • <strong>4.</strong> Quản lý lớp • <strong>5.</strong> Cài đặt</div>
+      <div><strong>6.</strong> La bàn số • <strong>7.</strong> Vệ tinh GPS • <strong>8.</strong> Phóng to/thu nhỏ • <strong>9.</strong> Mức zoom Z0–Z24 • <strong>10.</strong> Định vị GPS</div>
+      <div><strong>11.</strong> Độ mờ lớp & nền • <strong>12.</strong> HUD tọa độ • <strong>13.</strong> Vị trí hiện tại • <strong>14.</strong> Tâm bản đồ • <strong>15.</strong> Vẽ & đo kích thước</div>
     </div>
   </div>
 </div>
@@ -1235,6 +1343,13 @@ const defaultState = {
   baseOpacity: 100,
   screenRotated: false,
   surveyNote: { workTitle: "", content: "" },
+  showSegLabels: true,
+  showAreaLabels: true,
+  showCompass: true,
+  showCrosshair: true,
+  hideGps: false,
+  lockMapRotation: false,
+  autoFollowGps: false,
   schemaFields: [
     { key: "TenDoiTuong", label: "Tên đối tượng", mode: "manual", required: false },
     { key: "ThongTinDoiTuong", label: "Thông tin đối tượng", mode: "manual", required: false },
@@ -1259,61 +1374,8 @@ function loadAppState() {
     return structuredClone(defaultState);
   }
 }
-const IDB_NAME = "PD_GIS_PRO_DB";
-const IDB_STORE = "app_state_store";
-
-function openIdb() {
-  return new Promise((resolve, reject) => {
-    if (!("indexedDB" in window)) return reject(new Error("No IndexedDB"));
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function saveAppStateAsync() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  try {
-    const db = await openIdb();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, "readwrite");
-      tx.objectStore(IDB_STORE).put(structuredClone(state), STORAGE_KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (e) {}
-}
-
 function saveAppState() {
-  saveAppStateAsync();
-}
-
-async function hydrateStateFromIdb() {
-  try {
-    const db = await openIdb();
-    const saved = await new Promise((resolve) => {
-      const tx = db.transaction(IDB_STORE, "readonly");
-      const req = tx.objectStore(IDB_STORE).get(STORAGE_KEY);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
-    });
-    if (saved && (Array.isArray(saved.features) || Array.isArray(saved.layers))) {
-      const curLen = (state.features || []).length + (state.layers || []).length;
-      const savLen = (saved.features || []).length + (saved.layers || []).length;
-      if (savLen >= curLen) {
-        state = Object.assign(structuredClone(defaultState), saved);
-        renderProjectsUI();
-        renderAllVectorFeatures();
-        updateCenterHud();
-      }
-    }
-  } catch (e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
 }
 
 function showToast(msg) {
@@ -1437,7 +1499,7 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
     userAccuracyCircle.setLatLng([latitude, longitude]).setRadius(Math.max(latestGps.acc, 3));
   }
 
-  if (flyToPos) {
+  if (flyToPos || state.autoFollowGps) {
     map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
   }
 
@@ -1635,56 +1697,6 @@ function addPointAtCenter() {
   saveAppState();
   renderAllVectorFeatures();
   showToast(`Đã lưu ${name} tại tâm: X=${vn.x.toFixed(3)}, Y=${vn.y.toFixed(3)}`);
-}
-
-function deletePointAtCenter() {
-  const c = map.getCenter();
-  let bestIdx = -1;
-  let bestDist = Infinity;
-
-  state.features.forEach((f, idx) => {
-    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
-      const d = map.distance([c.lat, c.lng], [f.lat, f.lon]);
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = idx;
-      }
-    }
-  });
-
-  if (bestIdx === -1 || bestDist > 60) {
-    showToast("Không có điểm mốc nào gần tâm bản đồ (trong 60m) để xóa.");
-    return;
-  }
-
-  const removed = state.features[bestIdx];
-  state.features.splice(bestIdx, 1);
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast(`Đã xóa điểm mốc "${removed.name || 'Mốc'}".`);
-}
-
-function deleteLastLayerOrParcel() {
-  if (state.layers.length > 0) {
-    const lastLayer = state.layers.pop();
-    state.features = state.features.filter(f => f.layerId !== lastLayer.id);
-    saveAppState();
-    renderAllVectorFeatures();
-    if (document.getElementById("layersModal")?.classList.contains("open")) {
-      renderLayersModal();
-    }
-    showToast(`Đã xóa lớp: ${lastLayer.name}`);
-    return;
-  }
-  const lastPtIdx = [...state.features].map((f, i) => ({ f, i })).reverse().find(x => x.f.geomType === "point");
-  if (lastPtIdx) {
-    state.features.splice(lastPtIdx.i, 1);
-    saveAppState();
-    renderAllVectorFeatures();
-    showToast("Đã xóa điểm mốc vừa tạo.");
-    return;
-  }
-  showToast("Không có lớp hoặc dữ liệu nào để xóa.");
 }
 
 function toggleTracklog() {
@@ -1901,64 +1913,10 @@ function parseAndExplodeGpx(gpxText, fileName) {
   map.fitBounds(L.latLngBounds(lls), { padding: [30, 30] });
 }
 
-
-let selectedQuickLayerId = null;
-
-function syncQuickSelectedLayerBar() {
-  const bar = document.getElementById("quickSelectedLayerBar");
-  const sel = document.getElementById("quickLayerSelect");
-  const slider = document.getElementById("quickLayerOpacitySlider");
-  const valEl = document.getElementById("quickLayerOpacityVal");
-  if (!bar || !sel || !slider || !valEl) return;
-
-  if (!Array.isArray(state.layers) || state.layers.length === 0) {
-    bar.classList.remove("open");
-    selectedQuickLayerId = null;
-    return;
-  }
-
-  if (!selectedQuickLayerId || !state.layers.some(l => l.id === selectedQuickLayerId)) {
-    selectedQuickLayerId = state.layers[state.layers.length - 1].id;
-  }
-
-  sel.innerHTML = state.layers.map(l =>
-    `<option value="${l.id}" ${l.id === selectedQuickLayerId ? "selected" : ""}>${l.name}</option>`
-  ).join("");
-
-  const activeLayer = state.layers.find(l => l.id === selectedQuickLayerId) || state.layers[0];
-  const op = typeof activeLayer.opacity === "number" ? activeLayer.opacity : 100;
-  slider.value = op;
-  valEl.textContent = `${op}%`;
-  bar.classList.add("open");
-}
-
-function onQuickLayerSelectChange(layerId) {
-  selectedQuickLayerId = layerId;
-  syncQuickSelectedLayerBar();
-}
-
-function onQuickLayerOpacityInput(val) {
-  if (!selectedQuickLayerId) return;
-  const l = state.layers.find(x => x.id === selectedQuickLayerId);
-  if (!l) return;
-  l.opacity = Number(val);
-  const valEl = document.getElementById("quickLayerOpacityVal");
-  if (valEl) valEl.textContent = `${l.opacity}%`;
-  saveAppState();
-  renderAllVectorFeatures();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
-}
-
 function renderAllVectorFeatures() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
-  const globalOpacity = (state.layerOpacity ?? 100) / 100;
-  const getEffOpacity = (lyrCfg) => {
-    const individual = (lyrCfg && typeof lyrCfg.opacity === "number") ? (lyrCfg.opacity / 100) : 1;
-    return globalOpacity * individual;
-  };
+  const opacity = (state.layerOpacity ?? 100) / 100;
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
 
   state.features.forEach((f) => {
@@ -1967,7 +1925,7 @@ function renderAllVectorFeatures() {
 
     if (f.geomType === "point") {
       const marker = L.circleMarker([f.lat, f.lon], {
-        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: getEffOpacity(lyrCfg), opacity: getEffOpacity(lyrCfg)
+        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: opacity, opacity
       }).addTo(vectorLayerGroup);
 
       marker.bindPopup(`
@@ -1988,7 +1946,7 @@ function renderAllVectorFeatures() {
       const segLine = L.polyline([f.p1, f.p2], {
         color: strokeColor,
         weight: strokeWidth + 1,
-        opacity: getEffOpacity(lyrCfg)
+        opacity
       }).addTo(vectorLayerGroup);
 
       segLine.on("click", (e) => {
@@ -2013,7 +1971,7 @@ function renderAllVectorFeatures() {
           .openOn(map);
       });
 
-      if ((lyrCfg?.showSegLength !== false) && map.getZoom() >= 17 && f.lengthM >= 0.5) {
+      if ((state.showSegLabels !== false) && (lyrCfg?.showSegLength !== false) && map.getZoom() >= 17 && f.lengthM >= 0.5) {
         const midLat = (f.p1[0] + f.p2[0]) / 2;
         const midLon = (f.p1[1] + f.p2[1]) / 2;
         L.marker([midLat, midLon], {
@@ -2029,8 +1987,8 @@ function renderAllVectorFeatures() {
         color: lyrCfg?.color || "#10b981",
         weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
-        fillOpacity: 0.16 * getEffOpacity(lyrCfg),
-        opacity: getEffOpacity(lyrCfg)
+        fillOpacity: 0.16 * opacity,
+        opacity
       }).addTo(vectorLayerGroup);
 
       poly.bindPopup(`
@@ -2040,17 +1998,24 @@ function renderAllVectorFeatures() {
           Dự án: ${f.project || ""}
         </div>
       `);
+
+      if ((state.showAreaLabels !== false) && Array.isArray(f.coords) && f.coords.length >= 3) {
+        const bounds = L.latLngBounds(f.coords);
+        const centerPt = bounds.getCenter();
+        const aVal = Number(f.areaM2 || 0);
+        const haVal = (aVal / 10000).toFixed(4);
+        L.marker([centerPt.lat, centerPt.lng], {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="area-label">${aVal.toFixed(1)} m² (${haVal} ha)</div>`
+          })
+        }).addTo(labelLayerGroup);
+      }
     }
   });
 }
-map.on("zoomend", () => {
-  renderAllVectorFeatures();
-});
-const _origRenderAllVectorFeatures = renderAllVectorFeatures;
-renderAllVectorFeatures = function() {
-  _origRenderAllVectorFeatures();
-  syncQuickSelectedLayerBar();
-};
+map.on("zoomend", renderAllVectorFeatures);
 
 /* ============================================================================
    5. THANH TRƯỢT ĐỘ MỜ CÁC LỚP & ĐỘ MỜ LỚP NỀN + XOAY MÀN HÌNH
@@ -2712,38 +2677,17 @@ function renderLayersModal() {
     container.innerHTML = `<div class="list-card" style="color:#94a3b8;font-size:12.5px;">Chưa có lớp tệp ngoài. Hãy bấm nút phía trên để nạp file KMZ (tự nổ đoạn), KML, GeoJSON hoặc vẽ trực tiếp trên bản đồ.</div>`;
     return;
   }
-  container.innerHTML = state.layers.map(l => {
-    const op = typeof l.opacity === "number" ? l.opacity : 100;
-    return `
-    <div class="list-card" style="display:flex;flex-direction:column;gap:7px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:13px;">${l.name}</div>
-          <div style="font-size:11px;color:#94a3b8;">${l.type} • Độ mờ lớp: <strong style="color:#38bdf8;">${op}%</strong></div>
-        </div>
-        <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
-        <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
-        <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
+  container.innerHTML = state.layers.map(l => `
+    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;">${l.name}</div>
+        <div style="font-size:11px;color:#94a3b8;">${l.type}</div>
       </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#cbd5e1;margin-bottom:2px;">
-          <span>Độ mờ riêng lớp này (soi xung đột hạ tầng):</span>
-          <span>${op}%</span>
-        </div>
-        <input type="range" min="0" max="100" value="${op}" oninput="updateSingleLayerOpacity('${l.id}', this.value)" />
-      </div>
+      <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
+      <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
+      <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
     </div>
-  `;
-  }).join("");
-}
-
-function updateSingleLayerOpacity(layerId, val) {
-  const l = state.layers.find(x => x.id === layerId);
-  if (!l) return;
-  l.opacity = Number(val);
-  saveAppState();
-  renderAllVectorFeatures();
-  renderLayersModal();
+  `).join("");
 }
 
 function toggleLayerVisibility(id) {
@@ -3002,8 +2946,150 @@ function renderSavedPointsList() {
 function openDrawer() { document.getElementById("mainDrawer").classList.add("open"); }
 function closeDrawer() { document.getElementById("mainDrawer").classList.remove("open"); }
 
+
+function toggleGlobalSegLabels(enabled) {
+  state.showSegLabels = Boolean(enabled);
+  saveAppState();
+  renderAllVectorFeatures();
+  syncSettingsUi();
+  showToast(state.showSegLabels ? "Đã bật nhãn kích thước các đoạn." : "Đã tắt nhãn kích thước để chạy mượt hơn.");
+}
+
+function toggleAreaLabelsFeature(enabled) {
+  state.showAreaLabels = Boolean(enabled);
+  saveAppState();
+  renderAllVectorFeatures();
+  syncSettingsUi();
+}
+
+function toggleCompassFeature(enabled) {
+  state.showCompass = Boolean(enabled);
+  const compBtn = document.querySelector(".compass-btn");
+  if (compBtn) compBtn.style.display = state.showCompass ? "flex" : "none";
+  saveAppState();
+}
+
+function toggleCrosshairFeature(enabled) {
+  state.showCrosshair = Boolean(enabled);
+  const ch = document.getElementById("mapCrosshair");
+  if (ch) ch.style.display = state.showCrosshair ? "block" : "none";
+  saveAppState();
+}
+
+function toggleHideGpsFeature(hidden) {
+  state.hideGps = Boolean(hidden);
+  if (state.hideGps) {
+    if (userMarker && map.hasLayer(userMarker)) map.removeLayer(userMarker);
+    if (userAccuracyCircle && map.hasLayer(userAccuracyCircle)) map.removeLayer(userAccuracyCircle);
+  } else {
+    if (userMarker && !map.hasLayer(userMarker)) userMarker.addTo(map);
+    if (userAccuracyCircle && !map.hasLayer(userAccuracyCircle)) userAccuracyCircle.addTo(map);
+  }
+  saveAppState();
+}
+
+function toggleMapOnlyMode(enableMapOnly) {
+  const shell = document.getElementById("appShell");
+  if (!shell) return;
+  if (enableMapOnly) {
+    shell.classList.add("map-only-hidden");
+    closeModal("settingsModal");
+    showToast("Đã bật chế độ chỉ hiện bản đồ.");
+  } else {
+    shell.classList.remove("map-only-hidden");
+    showToast("Đã khôi phục thanh công cụ bản đồ.");
+  }
+  setTimeout(() => map.invalidateSize(), 150);
+}
+
+function saveDeltaHFromSettings() {
+  const val = parseFloat(document.getElementById("cfgDeltaHInput")?.value);
+  if (isNaN(val)) {
+    showToast("Vui lòng nhập số bù trừ ΔH hợp lệ.");
+    return;
+  }
+  state.deltaH = val;
+  saveAppState();
+  syncSettingsUi();
+  updateCameraHudValues();
+  showToast(`Đã lưu bù trừ cao độ ΔH = ${val >= 0 ? "+" : ""}${val.toFixed(2)} m`);
+}
+
+function syncSettingsUi() {
+  const dh = Number(state.deltaH || 0);
+  const dhInp = document.getElementById("cfgDeltaHInput");
+  const dhBadge = document.getElementById("cfgDeltaHBadge");
+  if (dhInp) dhInp.value = dh;
+  if (dhBadge) dhBadge.textContent = `${dh >= 0 ? "+" : ""}${dh.toFixed(2)} m`;
+
+  const segOn = state.showSegLabels !== false;
+  const segChk = document.getElementById("cfgSegLabelsChk");
+  const lyrSegChk = document.getElementById("layersModalSegToggle");
+  if (segChk) segChk.checked = segOn;
+  if (lyrSegChk) lyrSegChk.checked = segOn;
+
+  const areaChk = document.getElementById("cfgAreaLabelsChk");
+  if (areaChk) areaChk.checked = state.showAreaLabels !== false;
+
+  const compChk = document.getElementById("cfgCompassChk");
+  if (compChk) compChk.checked = state.showCompass !== false;
+
+  const chChk = document.getElementById("cfgCrosshairChk");
+  if (chChk) chChk.checked = state.showCrosshair !== false;
+
+  const gpsChk = document.getElementById("cfgHideGpsChk");
+  if (gpsChk) gpsChk.checked = Boolean(state.hideGps);
+
+  const lockRotChk = document.getElementById("cfgLockRotationChk");
+  if (lockRotChk) lockRotChk.checked = Boolean(state.lockMapRotation);
+
+  const followGpsChk = document.getElementById("cfgAutoFollowGpsChk");
+  if (followGpsChk) followGpsChk.checked = Boolean(state.autoFollowGps);
+
+  const op = Number(state.layerOpacity ?? 100);
+  const opRange = document.getElementById("cfgLayerOpacityRange");
+  const opPct = document.getElementById("cfgLayerOpacityPct");
+  if (opRange) opRange.value = op;
+  if (opPct) opPct.textContent = `${op}%`;
+}
+
+async function toggleLockMapRotation(locked) {
+  state.lockMapRotation = Boolean(locked);
+  saveAppState();
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      if (state.lockMapRotation) {
+        const currentType = screen.orientation.type && screen.orientation.type.includes("landscape") ? "landscape" : "portrait";
+        await screen.orientation.lock(currentType);
+        showToast("Đã khóa chế độ xoay bản đồ.");
+      } else if (screen.orientation.unlock) {
+        screen.orientation.unlock();
+        showToast("Đã mở khóa chế độ xoay bản đồ.");
+      }
+      return;
+    }
+  } catch (e) {}
+  showToast(state.lockMapRotation ? "Đã bật khóa hướng hiển thị bản đồ." : "Đã tắt khóa hướng hiển thị bản đồ.");
+}
+
+function toggleAutoFollowGps(enabled) {
+  state.autoFollowGps = Boolean(enabled);
+  saveAppState();
+  if (state.autoFollowGps) {
+    showToast("Đã bật tự động di chuyển bản đồ theo GPS.");
+    if (latestGps.hasFix) {
+      map.setView([latestGps.lat, latestGps.lon], Math.max(map.getZoom(), 18), { animate: true });
+    } else {
+      locateUserNow(true);
+    }
+  } else {
+    showToast("Đã tắt tự động di chuyển bản đồ theo GPS.");
+  }
+}
+
 function openModal(id) {
   document.getElementById(id).classList.add("open");
+  if (id === "settingsModal" || id === "layersModal") syncSettingsUi();
   if (id === "projectScopeModal") renderProjectsUI();
   if (id === "crsModal") renderCrsList();
   if (id === "layersModal") renderLayersModal();
@@ -3043,8 +3129,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   renderProjectsUI();
   renderAllVectorFeatures();
-  syncQuickSelectedLayerBar();
-  hydrateStateFromIdb();
+  syncSettingsUi();
+  toggleCompassFeature(state.showCompass !== false);
+  toggleCrosshairFeature(state.showCrosshair !== false);
   startSmoothCompassLoop();
 
   locateUserNow(true);
