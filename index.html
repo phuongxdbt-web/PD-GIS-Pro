@@ -18,8 +18,6 @@
 
   <!-- Tesseract OCR nhận diện tọa độ từ Camera / Ảnh -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <!-- Giải mã ảnh HEIC/HEIF từ thư viện điện thoại -->
-  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
   <style>
     :root {
@@ -83,24 +81,6 @@
       font-weight: 700;
       white-space: nowrap;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-
-    /* Nhãn số thứ tự đỉnh 1, 2, 3... theo trình tự khép vòng */
-    .pt-seq-badge {
-      background: #ef4444;
-      color: #ffffff;
-      border: 1.5px solid #ffffff;
-      border-radius: 999px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 4px;
-      font-size: 10px;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.65);
-      transform: translate(-50%, -50%);
     }
 
     /* Thanh công cụ trên cùng */
@@ -429,86 +409,6 @@
     }
     .warn-text { font-size: 11.5px; color: #fbbf24; line-height: 1.4; margin: 6px 0; }
 
-
-    /* Modal quét tọa độ rộng lớn để quét trọn bảng tọa độ */
-    #parcelModal .modal-card {
-      max-width: 96vw;
-      width: 96vw;
-      max-height: 94vh;
-      padding: 12px;
-    }
-    #ocrCamWrap {
-      position: relative;
-    }
-    #ocrCamWrap video {
-      width: 100%;
-      height: 54vh;
-      max-height: 54vh;
-      object-fit: contain;
-      background: #000;
-      display: block;
-    }
-    .ocr-guide-frame {
-      position: absolute;
-      top: 10%; left: 5%; right: 5%; bottom: 12%;
-      border: 2px solid #38bdf8;
-      border-radius: 8px;
-      box-shadow: 0 0 0 9999px rgba(2, 6, 23, 0.38);
-      pointer-events: none;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 6px;
-      z-index: 2;
-    }
-    .ocr-guide-frame::before, .ocr-guide-frame::after {
-      content: "";
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      border-color: #fde047;
-      border-style: solid;
-    }
-    .ocr-scan-rule-box {
-      background: rgba(15, 23, 42, 0.82);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 10px;
-      padding: 8px 10px;
-      margin-bottom: 8px;
-      font-size: 11.5px;
-      line-height: 1.45;
-      color: #cbd5e1;
-    }
-    .ocr-guide-badge {
-      background: rgba(15, 23, 42, 0.85);
-      color: #fde047;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(250, 204, 21, 0.5);
-    }
-    #ocrGalleryPreviewWrap {
-      display: none;
-      margin-bottom: 10px;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(56, 189, 248, 0.5);
-    }
-    #ocrGalleryPreviewImg {
-      width: 100%;
-      max-height: 46vh;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-    }
-    #parcelCoordsInput {
-      min-height: 155px;
-      font-size: 13.5px;
-      line-height: 1.45;
-    }
-
     /* Toast thông báo nhanh */
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
@@ -569,11 +469,12 @@
     <!-- Thanh công cụ vẽ trực tiếp & đo kích thước -->
     <div class="draw-toolbar" style="width:fit-content;">
       <button class="icon-btn" title="Thêm Điểm mốc tại tâm" onclick="addPointAtCenter()">📍</button>
+      <button class="icon-btn" style="color:#fca5a5;" title="Xóa điểm mốc gần tâm bản đồ" onclick="deletePointAtCenter()">🎯</button>
       <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line (Click đường để xem kích thước)" onclick="startDrawing('line')">📏</button>
       <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
       <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét Camera" onclick="openModal('parcelModal')">📐</button>
-      <button class="icon-btn" style="color:#fca5a5;" title="Xóa nhanh thửa đất vừa vẽ" onclick="deleteLastParcel()">🗑️</button>
+      <button class="icon-btn" style="color:#f87171;" title="Xóa nhanh lớp/thửa vừa tạo (Thùng rác)" onclick="deleteLastLayerOrParcel()">🗑️</button>
       <button class="icon-btn" title="11. Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
@@ -747,7 +648,7 @@
 <!-- Input ẩn nạp file GIS / KMZ / Khôi phục -->
 <input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
 <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="handleRestoreJson(event)" />
-<input type="file" id="ocrImageInput" accept="image/*,.heic,.heif" style="display:none" onchange="handleOcrImageFile(event)" />
+<input type="file" id="ocrImageInput" accept="image/*" capture="environment" style="display:none" onchange="handleOcrImageFile(event)" />
 
 <!-- ===================================================================== -->
 <!-- CÁC MODAL CHỨC NĂNG CHI TIẾT                                          -->
@@ -846,7 +747,7 @@
   </div>
 </div>
 
-<!-- Modal: Quét tọa độ bằng Camera / Thư viện ảnh & Vẽ Ranh Giới Sổ Đỏ (VN-2000) -->
+<!-- Modal: Quét tọa độ bằng Camera / Ảnh & Vẽ Ranh Giới Sổ Đỏ (VN-2000) -->
 <div class="modal-backdrop" id="parcelModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -855,46 +756,27 @@
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <button class="btn-primary" style="background:#0284c7;" onclick="openOcrCameraScanner()">📷 Quét tọa độ bằng Camera</button>
-      <button class="btn-secondary" style="background:#0f766e;color:#fff;border:0;font-weight:700;" onclick="openOcrGalleryPicker()">🖼️ Lấy ảnh từ thư viện</button>
+      <button class="btn-secondary" onclick="document.getElementById('ocrImageInput').click()">🖼️ Chọn ảnh bảng tọa độ</button>
     </div>
 
     <div id="ocrCamWrap" style="display:none;margin-bottom:10px;background:#000;border-radius:12px;overflow:hidden;position:relative;">
-      <video id="ocrVideo" autoplay playsinline muted></video>
-      <div class="ocr-guide-frame"><span class="ocr-guide-badge">Đưa trọn bảng tọa độ X(m), Y(m) vào khung này</span></div>
-      <div style="display:flex;gap:8px;padding:8px;background:#0f172a;position:relative;z-index:3;">
-        <button class="btn-primary" style="background:#10b981;" onclick="captureAndOcrFrame()">⚡ Chụp & Quét toàn bộ bảng tọa độ</button>
+      <video id="ocrVideo" autoplay playsinline muted style="width:100%;max-height:220px;object-fit:cover;"></video>
+      <div style="display:flex;gap:8px;padding:8px;background:#0f172a;">
+        <button class="btn-primary" style="background:#10b981;" onclick="captureAndOcrFrame()">⚡ Chụp & Nhận diện tọa độ</button>
         <button class="btn-secondary" onclick="closeOcrCameraScanner()">Đóng</button>
       </div>
     </div>
 
-    <div id="ocrGalleryPreviewWrap">
-      <img id="ocrGalleryPreviewImg" alt="Ảnh bảng tọa độ từ thư viện" />
-      <div style="display:flex;gap:8px;padding:8px;background:#0f172a;">
-        <button class="btn-primary" style="background:#10b981;" onclick="rerunGalleryOcr()">⚡ Quét lại tọa độ từ ảnh này</button>
-        <button class="btn-secondary" onclick="openOcrGalleryPicker()">Đổi ảnh khác</button>
-        <button class="btn-secondary" onclick="closeOcrGalleryPreview()">Ẩn ảnh</button>
-      </div>
-    </div>
-
-    <div id="ocrStatusText" style="font-size:12px;color:#38bdf8;margin-bottom:6px;font-weight:600;"></div>
+    <div id="ocrStatusText" style="font-size:12px;color:#38bdf8;margin-bottom:6px;"></div>
 
     <div class="form-group">
-      <label class="form-label">Danh sách tọa độ góc ranh VN-2000 (mỗi dòng 1 điểm — tự nhận diện cả cột X(m) trước hoặc Y(m) trước):</label>
-      <textarea id="parcelCoordsInput" class="form-textarea" placeholder="1212570.92, 456050.32&#10;1212583.99, 456054.40&#10;1212582.42, 456058.08&#10;1212558.10, 456055.54"></textarea>
-    </div>
-    <div class="ocr-scan-rule-box">
-      <div style="font-weight:800;color:#38bdf8;margin-bottom:3px;">📋 Quy ước đóng khung quét chuẩn (Chế độ Scan):</div>
-      <div>• Đặt trọn bảng <b>TT | X(m) | Y(m)</b> nằm gọn trong khung viền xanh (từ dòng đầu đến dòng khép vòng cuối).</div>
-      <div>• Giữ mặt phẳng bảng song song màn hình, đủ sáng, tránh bóng loá cắt ngang hàng số.</div>
-      <div>• Hệ thống tự gom theo từng hàng ngang theo trình tự <b>1 → 2 → ... → khép về 1</b>.</div>
+      <label class="form-label">Danh sách tọa độ góc ranh VN-2000 (mỗi dòng 1 điểm theo định dạng: X, Y):</label>
+      <textarea id="parcelCoordsInput" class="form-textarea" placeholder="536350.12, 1208250.45&#10;536410.50, 1208260.10&#10;536400.00, 1208310.80&#10;536340.20, 1208300.15"></textarea>
     </div>
     <div class="warn-text">
-      ⚠️ Trên sổ đỏ Việt Nam: tọa độ Bắc <b>X(m) / N</b> có <b>7 chữ số nguyên</b> (VD: 1212570.92), tọa độ Đông <b>Y(m) / E</b> có <b>6 chữ số nguyên</b> (VD: 456050.32). Hệ thống tự động chuẩn hóa đúng trục tọa độ lên bản đồ và nổ từng cạnh để xem chiều dài.
+      ⚠️ Lưu ý: X(E) thường có 6 số nguyên, Y(N) thường có 7 số nguyên. Hệ thống tự nổ từng cạnh thửa đất để bấm vào xem kích thước từng đoạn.
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn-danger" style="flex:1;" onclick="drawParcelFromVn2000()">Vẽ ranh giới & Tính diện tích (Tự nổ các cạnh)</button>
-      <button type="button" class="btn-secondary" style="padding:11px 12px;color:#fca5a5;border-color:rgba(248,113,113,0.45);font-weight:700;white-space:nowrap;" onclick="deleteLastParcel()">🗑️ Xóa thửa vừa vẽ</button>
-    </div>
+    <button class="btn-danger" onclick="drawParcelFromVn2000()">Vẽ ranh giới & Tính diện tích (Tự nổ các cạnh)</button>
   </div>
 </div>
 
@@ -1287,55 +1169,14 @@ function getProj4Def(lon0) {
   return `+proj=tmerc +lat_0=0 +lon_0=${lon0} +k=0.9999 +x_0=500000 +y_0=0 +ellps=WGS84 +towgs84=-191.90441429,-39.30318279,-111.45032835,0.00928836,-0.01975479,0.00427372,0.252906278 +units=m +no_defs`;
 }
 
-// Hiệu chỉnh số tọa độ VN-2000 nếu OCR đọc thiếu dấu chấm thập phân (VD: 4560542.00 -> 456054.20)
-function repairVn2000Number(val, expectedAxis) {
-  let n = Math.abs(Number(val));
-  if (!isFinite(n) || n <= 0) return NaN;
-
-  // Nếu mất dấu chấm thập phân thành 8-9 chữ số (VD: 121257092 -> 1212570.92, 45605032 -> 456050.32)
-  if (n >= 10000000) {
-    n = n / 100;
-    while (n > 2650000) n = n / 10;
-  }
-
-  if (expectedAxis === "north") {
-    if (n >= 2650000) n = n / 10;
-    if (n > 0 && n < 900000) n = n * 10;
-  } else if (expectedAxis === "east") {
-    if (n >= 2650000) n = n / 10;
-    if (n > 0 && n < 200000) n = n * 10;
-  } else if (n >= 2650000 && n < 10000000) {
-    n = n / 10;
-  }
-
-  return Number(n.toFixed(3));
-}
-
-// Chuẩn hóa cặp tọa độ VN-2000 về đúng [Easting (6 số), Northing (7 số)] cho Proj4
-function normalizeVn2000Pair(v1, v2) {
-  const n1 = repairVn2000Number(v1);
-  const n2 = repairVn2000Number(v2);
-  let easting = n1;
-  let northing = n2;
-  if (n1 >= 900000 && n2 < 900000) {
-    easting = n2;
-    northing = n1;
-  } else if (n1 < 900000 && n2 >= 900000) {
-    easting = n1;
-    northing = n2;
-  }
-  return { easting, northing };
-}
-
 function wgs84ToVn2000(lat, lon, lon0 = state.activeCrs.lon0) {
   const [x, y] = proj4("EPSG:4326", getProj4Def(lon0), [lon, lat]);
   return { x, y };
 }
 
 function vn2000ToWgs84(x, y, lon0 = state.activeCrs.lon0) {
-  const { easting, northing } = normalizeVn2000Pair(x, y);
-  const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [easting, northing]);
-  return { lat, lon, easting, northing };
+  const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [x, y]);
+  return { lat, lon };
 }
 
 /* ============================================================================
@@ -1379,8 +1220,61 @@ function loadAppState() {
     return structuredClone(defaultState);
   }
 }
-function saveAppState() {
+const IDB_NAME = "PD_GIS_PRO_DB";
+const IDB_STORE = "app_state_store";
+
+function openIdb() {
+  return new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) return reject(new Error("No IndexedDB"));
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveAppStateAsync() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  try {
+    const db = await openIdb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).put(structuredClone(state), STORAGE_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {}
+}
+
+function saveAppState() {
+  saveAppStateAsync();
+}
+
+async function hydrateStateFromIdb() {
+  try {
+    const db = await openIdb();
+    const saved = await new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, "readonly");
+      const req = tx.objectStore(IDB_STORE).get(STORAGE_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+    if (saved && (Array.isArray(saved.features) || Array.isArray(saved.layers))) {
+      const curLen = (state.features || []).length + (state.layers || []).length;
+      const savLen = (saved.features || []).length + (saved.layers || []).length;
+      if (savLen >= curLen) {
+        state = Object.assign(structuredClone(defaultState), saved);
+        renderProjectsUI();
+        renderAllVectorFeatures();
+        updateCenterHud();
+      }
+    }
+  } catch (e) {}
 }
 
 function showToast(msg) {
@@ -1704,6 +1598,56 @@ function addPointAtCenter() {
   showToast(`Đã lưu ${name} tại tâm: X=${vn.x.toFixed(3)}, Y=${vn.y.toFixed(3)}`);
 }
 
+function deletePointAtCenter() {
+  const c = map.getCenter();
+  let bestIdx = -1;
+  let bestDist = Infinity;
+
+  state.features.forEach((f, idx) => {
+    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
+      const d = map.distance([c.lat, c.lng], [f.lat, f.lon]);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = idx;
+      }
+    }
+  });
+
+  if (bestIdx === -1 || bestDist > 60) {
+    showToast("Không có điểm mốc nào gần tâm bản đồ (trong 60m) để xóa.");
+    return;
+  }
+
+  const removed = state.features[bestIdx];
+  state.features.splice(bestIdx, 1);
+  saveAppState();
+  renderAllVectorFeatures();
+  showToast(`Đã xóa điểm mốc "${removed.name || 'Mốc'}".`);
+}
+
+function deleteLastLayerOrParcel() {
+  if (state.layers.length > 0) {
+    const lastLayer = state.layers.pop();
+    state.features = state.features.filter(f => f.layerId !== lastLayer.id);
+    saveAppState();
+    renderAllVectorFeatures();
+    if (document.getElementById("layersModal")?.classList.contains("open")) {
+      renderLayersModal();
+    }
+    showToast(`Đã xóa lớp: ${lastLayer.name}`);
+    return;
+  }
+  const lastPtIdx = [...state.features].map((f, i) => ({ f, i })).reverse().find(x => x.f.geomType === "point");
+  if (lastPtIdx) {
+    state.features.splice(lastPtIdx.i, 1);
+    saveAppState();
+    renderAllVectorFeatures();
+    showToast("Đã xóa điểm mốc vừa tạo.");
+    return;
+  }
+  showToast("Không có lớp hoặc dữ liệu nào để xóa.");
+}
+
 function toggleTracklog() {
   isTrackingGps = !isTrackingGps;
   const btn = document.getElementById("btnTracklog");
@@ -1921,7 +1865,11 @@ function parseAndExplodeGpx(gpxText, fileName) {
 function renderAllVectorFeatures() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
-  const opacity = (state.layerOpacity ?? 100) / 100;
+  const globalOpacity = (state.layerOpacity ?? 100) / 100;
+  const getEffOpacity = (lyrCfg) => {
+    const individual = (lyrCfg && typeof lyrCfg.opacity === "number") ? (lyrCfg.opacity / 100) : 1;
+    return globalOpacity * individual;
+  };
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
 
   state.features.forEach((f) => {
@@ -1930,7 +1878,7 @@ function renderAllVectorFeatures() {
 
     if (f.geomType === "point") {
       const marker = L.circleMarker([f.lat, f.lon], {
-        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: opacity, opacity
+        radius: 6, color: "#fff", weight: 2, fillColor: "#ef4444", fillOpacity: getEffOpacity(lyrCfg), opacity: getEffOpacity(lyrCfg)
       }).addTo(vectorLayerGroup);
 
       marker.bindPopup(`
@@ -1951,7 +1899,7 @@ function renderAllVectorFeatures() {
       const segLine = L.polyline([f.p1, f.p2], {
         color: strokeColor,
         weight: strokeWidth + 1,
-        opacity
+        opacity: getEffOpacity(lyrCfg)
       }).addTo(vectorLayerGroup);
 
       segLine.on("click", (e) => {
@@ -1992,21 +1940,9 @@ function renderAllVectorFeatures() {
         color: lyrCfg?.color || "#10b981",
         weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
-        fillOpacity: 0.16 * opacity,
-        opacity
+        fillOpacity: 0.16 * getEffOpacity(lyrCfg),
+        opacity: getEffOpacity(lyrCfg)
       }).addTo(vectorLayerGroup);
-
-      if (Array.isArray(f.coords) && f.coords.length >= 3) {
-        f.coords.forEach((pt, pIdx) => {
-          L.marker(pt, {
-            interactive: false,
-            icon: L.divIcon({
-              className: "",
-              html: `<div class="pt-seq-badge">${pIdx + 1}</div>`
-            })
-          }).addTo(labelLayerGroup);
-        });
-      }
 
       poly.bindPopup(`
         <div style="color:#0f172a;font-size:12.5px;">
@@ -2285,40 +2221,18 @@ function captureSurveyPhoto() {
 }
 
 /* ============================================================================
-   7. QUÉT TỌA ĐỘ BẰNG CAMERA & THƯ VIỆN ẢNH CHO SỔ ĐỎ / VẼ RANH GIỚI THỬA ĐẤT
+   7. QUÉT TỌA ĐỘ BẰNG CAMERA & ẢNH CHO SỔ ĐỎ / VẼ RANH GIỚI THỬA ĐẤT
 ============================================================================ */
 let ocrStream = null;
-let lastGalleryCanvas = null;
-let cachedOcrWorker = null;
-
-async function getFastOcrWorker() {
-  if (cachedOcrWorker) return cachedOcrWorker;
-  const worker = await Tesseract.createWorker("eng", 1, {
-    logger: () => {}
-  });
-  await worker.setParameters({
-    tessedit_char_whitelist: "0123456789., \n\t",
-    tessedit_pageseg_mode: "6"
-  });
-  cachedOcrWorker = worker;
-  return worker;
-}
 
 async function openOcrCameraScanner() {
-  closeOcrGalleryPreview();
   const wrap = document.getElementById("ocrCamWrap");
   wrap.style.display = "block";
   try {
-    if (ocrStream) ocrStream.getTracks().forEach(t => t.stop());
-    ocrStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
-      audio: false
-    });
-    const vid = document.getElementById("ocrVideo");
-    vid.srcObject = ocrStream;
-    try { await vid.play(); } catch (e) {}
+    ocrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    document.getElementById("ocrVideo").srcObject = ocrStream;
   } catch (e) {
-    showToast("Không mở được camera quét, vui lòng dùng nút Lấy ảnh từ thư viện.");
+    showToast("Không mở được camera quét, vui lòng dùng nút Chọn ảnh bảng tọa độ.");
   }
 }
 
@@ -2327,316 +2241,93 @@ function closeOcrCameraScanner() {
   if (ocrStream) { ocrStream.getTracks().forEach(t => t.stop()); ocrStream = null; }
 }
 
-function openOcrGalleryPicker() {
-  closeOcrCameraScanner();
-  const inp = document.getElementById("ocrImageInput");
-  inp.value = "";
-  inp.click();
-}
-
-function closeOcrGalleryPreview() {
-  document.getElementById("ocrGalleryPreviewWrap").style.display = "none";
-}
-
 async function captureAndOcrFrame() {
   const video = document.getElementById("ocrVideo");
-  const vw = video.videoWidth || 1920;
-  const vh = video.videoHeight || 1080;
-  const sx = Math.round(vw * 0.04);
-  const sy = Math.round(vh * 0.06);
-  const sw = Math.round(vw * 0.92);
-  const sh = Math.round(vh * 0.78);
-
   const canvas = document.createElement("canvas");
-  canvas.width = sw;
-  canvas.height = sh;
-  canvas.getContext("2d").drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+  canvas.width = video.videoWidth || 1280;
+  canvas.height = video.videoHeight || 720;
+  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
   closeOcrCameraScanner();
   await runOcrOnSource(canvas);
-}
-
-async function loadAnyImageToCanvas(fileOrBlob) {
-  let blob = fileOrBlob;
-  const fileName = (fileOrBlob.name || "").toLowerCase();
-  const fileType = (fileOrBlob.type || "").toLowerCase();
-
-  if (fileName.endsWith(".heic") || fileName.endsWith(".heif") || fileType.includes("heic") || fileType.includes("heif")) {
-    if (typeof heic2any === "function") {
-      const converted = await heic2any({ blob: fileOrBlob, toType: "image/jpeg", quality: 0.92 });
-      blob = Array.isArray(converted) ? converted[0] : converted;
-    }
-  }
-
-  if (typeof createImageBitmap === "function") {
-    try {
-      const bmp = await createImageBitmap(blob);
-      const c = document.createElement("canvas");
-      c.width = bmp.width;
-      c.height = bmp.height;
-      c.getContext("2d").drawImage(bmp, 0, 0);
-      bmp.close?.();
-      return c;
-    } catch (e) {}
-  }
-
-  return await new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas");
-      c.width = img.naturalWidth || 1280;
-      c.height = img.naturalHeight || 720;
-      c.getContext("2d").drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-      resolve(c);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Trình duyệt không giải mã được định dạng ảnh này (thử chụp màn hình ảnh bảng tọa độ rồi chọn lại)."));
-    };
-    img.src = url;
-  });
 }
 
 async function handleOcrImageFile(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const st = document.getElementById("ocrStatusText");
-  st.textContent = "⏳ Đang nạp ảnh từ thư viện...";
-  try {
-    const rawCanvas = await loadAnyImageToCanvas(file);
-    lastGalleryCanvas = rawCanvas;
-    const imgEl = document.getElementById("ocrGalleryPreviewImg");
-    imgEl.src = rawCanvas.toDataURL("image/jpeg", 0.85);
-    document.getElementById("ocrGalleryPreviewWrap").style.display = "block";
-    await runOcrOnSource(rawCanvas);
-  } catch (err) {
-    const msg = (err && err.message) ? err.message : String(err || "Không đọc được tệp ảnh");
-    st.textContent = "⚠️ " + msg;
-  }
+  await runOcrOnSource(file);
   event.target.value = "";
 }
 
-async function rerunGalleryOcr() {
-  if (!lastGalleryCanvas) {
-    openOcrGalleryPicker();
-    return;
-  }
-  await runOcrOnSource(lastGalleryCanvas);
-}
-
-function preprocessImageForOcr(sourceCanvas) {
-  const w = sourceCanvas.width || 1280;
-  const h = sourceCanvas.height || 720;
-  const targetW = w < 1000 ? 1500 : (w > 1800 ? 1600 : w);
-  const scale = targetW / w;
-  const cw = Math.round(w * scale);
-  const ch = Math.round(h * scale);
-
-  const c = document.createElement("canvas");
-  c.width = cw;
-  c.height = ch;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, cw, ch);
-  ctx.drawImage(sourceCanvas, 0, 0, cw, ch);
-
-  const imgData = ctx.getImageData(0, 0, cw, ch);
-  const d = imgData.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    const boosted = Math.min(255, Math.max(0, (gray - 125) * 1.65 + 125));
-    d[i] = d[i + 1] = d[i + 2] = boosted;
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return c;
-}
-
-function groupWordsIntoRows(words) {
-  if (!Array.isArray(words) || words.length === 0) return [];
-  const numWords = [];
-  for (const w of words) {
-    const rawTxt = (w.text || "").trim().replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
-    const matches = rawTxt.match(/\d{5,9}(?:\.\d{1,3})?/g) || [];
-    const bbox = w.bbox || {};
-    const cy = ((bbox.y0 ?? 0) + (bbox.y1 ?? 0)) / 2;
-    const cx = ((bbox.x0 ?? 0) + (bbox.x1 ?? 0)) / 2;
-    const h = Math.max(8, (bbox.y1 ?? 0) - (bbox.y0 ?? 0));
-    for (const m of matches) {
-      const val = parseFloat(m);
-      if (isFinite(val) && val >= 20000) {
-        numWords.push({ val, cy, cx, h });
-      }
-    }
-  }
-  if (numWords.length === 0) return [];
-  numWords.sort((a, b) => a.cy - b.cy);
-
-  const rows = [];
-  for (const item of numWords) {
-    let placed = false;
-    for (const row of rows) {
-      const tol = Math.max(10, Math.min(row.avgH, item.h) * 0.65);
-      if (Math.abs(item.cy - row.avgCy) <= tol) {
-        row.items.push(item);
-        row.avgCy = row.items.reduce((s, x) => s + x.cy, 0) / row.items.length;
-        row.avgH = row.items.reduce((s, x) => s + x.h, 0) / row.items.length;
-        placed = true;
-        break;
-      }
-    }
-    if (!placed) {
-      rows.push({ avgCy: item.cy, avgH: item.h, items: [item] });
-    }
-  }
-  rows.sort((a, b) => a.avgCy - b.avgCy);
-  return rows.map(r => r.items.sort((a, b) => a.cx - b.cx).map(x => x.val));
-}
-
-function extractVn2000PairsFromOcrResult(ocrData) {
-  const rawText = (ocrData && ocrData.text) ? ocrData.text : "";
-  const rowArrays = groupWordsIntoRows(ocrData && ocrData.words);
-  const orderedPairs = [];
-
-  for (const rowNums of rowArrays) {
-    if (rowNums.length >= 2) {
-      for (let i = 0; i + 1 < rowNums.length; i += 2) {
-        const { easting, northing } = normalizeVn2000Pair(rowNums[i], rowNums[i + 1]);
-        if (isFinite(easting) && isFinite(northing) && easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
-          orderedPairs.push(`${northing.toFixed(2)}, ${easting.toFixed(2)}`);
-        }
-      }
-    }
-  }
-
-  if (orderedPairs.length < 3) {
-    const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    orderedPairs.length = 0;
-    for (const line of lines) {
-      const normalizedLine = line.replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
-      const rawTokens = normalizedLine.match(/\d{5,9}(?:\.\d{1,3})?/g) || [];
-      const candidateNums = rawTokens
-        .map(t => parseFloat(t))
-        .filter(n => isFinite(n) && n >= 20000);
-
-      if (candidateNums.length >= 2) {
-        for (let i = 0; i + 1 < candidateNums.length; i += 2) {
-          const { easting, northing } = normalizeVn2000Pair(candidateNums[i], candidateNums[i + 1]);
-          if (isFinite(easting) && isFinite(northing) && easting >= 200000 && easting <= 850000 && northing >= 900000 && northing <= 2650000) {
-            orderedPairs.push(`${northing.toFixed(2)}, ${easting.toFixed(2)}`);
-          }
-        }
-      }
-    }
-  }
-
-  if (orderedPairs.length < 3) {
-    const fullNormalized = rawText.replace(/(\d{5,9}),(\d{1,3})\b/g, "$1.$2");
-    const allNums = (fullNormalized.match(/\d{5,9}(?:\.\d{1,3})?/g) || []).map(Number).filter(n => isFinite(n) && n >= 20000);
-    const northList = allNums.map(n => repairVn2000Number(n, "north")).filter(n => isFinite(n) && n >= 900000 && n <= 2650000);
-    const eastList = allNums.map(n => repairVn2000Number(n, "east")).filter(n => isFinite(n) && n >= 200000 && n <= 850000);
-    const count = Math.min(northList.length, eastList.length);
-    if (count >= 3) {
-      orderedPairs.length = 0;
-      for (let i = 0; i < count; i++) {
-        orderedPairs.push(`${northList[i].toFixed(2)}, ${eastList[i].toFixed(2)}`);
-      }
-    }
-  }
-
-  return orderedPairs;
-}
-
-function extractVn2000PairsFromOcrText(rawText) {
-  return extractVn2000PairsFromOcrResult({ text: rawText, words: [] });
-}
-
-async function runOcrOnSource(sourceCanvas) {
+async function runOcrOnSource(source) {
   const st = document.getElementById("ocrStatusText");
-  const t0 = performance.now();
-  st.textContent = "⏳ Đang quét toàn bộ bảng tọa độ VN-2000...";
+  st.textContent = "⏳ Đang quét & trích xuất cặp tọa độ VN-2000 từ hình ảnh...";
   try {
-    const enhancedCanvas = preprocessImageForOcr(sourceCanvas);
-    const worker = await getFastOcrWorker();
-    const res = await worker.recognize(enhancedCanvas);
-    const ocrData = (res && res.data) ? res.data : {};
-    const pairs = extractVn2000PairsFromOcrResult(ocrData);
-    const sec = ((performance.now() - t0) / 1000).toFixed(1);
+    const res = await Tesseract.recognize(source, "eng");
+    const text = res.data.text || "";
+    const nums = text.match(/\d{6,7}(?:\.\d+)?/g) || [];
+    const pairs = [];
+    for (let i = 0; i + 1 < nums.length; i += 2) {
+      let a = parseFloat(nums[i]);
+      let b = parseFloat(nums[i + 1]);
+      if (a > 1000000 && b < 1000000) [a, b] = [b, a];
+      pairs.push(`${a.toFixed(2)}, ${b.toFixed(2)}`);
+    }
     if (pairs.length > 0) {
       document.getElementById("parcelCoordsInput").value = pairs.join("\n");
-      st.textContent = `✅ Hoàn tất trong ${sec}s: nhận diện được ${pairs.length} cặp tọa độ! Kiểm tra lại và bấm Vẽ ranh giới.`;
+      st.textContent = `✅ Đã nhận diện được ${pairs.length} cặp tọa độ! Kiểm tra lại và bấm Vẽ ranh giới.`;
     } else {
-      st.textContent = `⚠️ Quét xong (${sec}s) nhưng chưa rõ chữ số tọa độ, hãy đưa trọn bảng tọa độ vào khung quét.`;
+      st.textContent = "⚠️ Chưa bắt được cặp số tọa độ rõ nét, anh có thể chụp gần bảng tọa độ hơn hoặc nhập tay.";
     }
   } catch (err) {
-    const errMsg = (err && err.message) ? err.message : (typeof err === "string" ? err : "Không thể xử lý ảnh");
-    st.textContent = "⚠️ Lỗi nhận diện OCR: " + errMsg;
+    st.textContent = "Lỗi nhận diện OCR: " + err.message;
   }
 }
 
-// Vẽ nghiêm ngặt theo trình tự 1 -> 2 -> 3 -> ... -> n -> khép về điểm 1
 function drawParcelFromVn2000() {
   const raw = document.getElementById("parcelCoordsInput").value.trim();
   if (!raw) { showToast("Vui lòng nhập hoặc quét danh sách tọa độ X, Y."); return; }
 
   const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-  const orderedLatLngs = [];
-
+  const latlngs = [];
   lines.forEach((line) => {
     const parts = line.split(/[,;\s\t]+/).map(Number).filter(n => !isNaN(n));
     if (parts.length >= 2) {
-      const { easting, northing } = normalizeVn2000Pair(parts[0], parts[1]);
-      if (isFinite(easting) && isFinite(northing)) {
-        const wgs = vn2000ToWgs84(easting, northing);
-        if (isFinite(wgs.lat) && isFinite(wgs.lon)) {
-          orderedLatLngs.push([wgs.lat, wgs.lon]);
-        }
-      }
+      let [x, y] = parts;
+      if (x > 1000000 && y < 1000000) [x, y] = [y, x];
+      const wgs = vn2000ToWgs84(x, y);
+      latlngs.push([wgs.lat, wgs.lon]);
     }
   });
 
-  if (orderedLatLngs.length < 3) {
+  if (latlngs.length < 3) {
     showToast("Cần ít nhất 3 cặp tọa độ góc ranh hợp lệ.");
     return;
   }
 
-  // Nếu dòng cuối trùng điểm đầu (khép vòng về điểm 1) thì bỏ dòng trùng ở cuối để nối khép kín 1 -> 2 -> ... -> n -> 1
-  const sequenceRing = [...orderedLatLngs];
-  if (sequenceRing.length > 3) {
-    const first = sequenceRing[0];
-    const last = sequenceRing[sequenceRing.length - 1];
-    if (Math.hypot(first[0] - last[0], first[1] - last[1]) < 1e-7) {
-      sequenceRing.pop();
-    }
-  }
-
-  const areaM2 = calcPolygonAreaM2(sequenceRing);
+  const areaM2 = calcPolygonAreaM2(latlngs);
   const layerId = "parcel_" + Date.now();
-  const closedSequence = [...sequenceRing, sequenceRing[0]];
-
-  explodePolylineToSegments(closedSequence, {
+  const closed = [...latlngs, latlngs[0]];
+  explodePolylineToSegments(closed, {
     layerId,
     baseName: "Cạnh ranh thửa đất",
     project: getActiveProject().name,
     color: "#ef4444",
     width: 3
   });
-
   state.features.push({
     id: "poly_" + Date.now(),
     layerId,
     geomType: "polygon",
     name: `Ranh giới thửa đất (${areaM2.toFixed(2)} m²)`,
-    coords: sequenceRing,
+    coords: latlngs,
     areaM2,
     project: getActiveProject().name,
     note: state.surveyNote.content || "",
     createdAt: new Date().toLocaleString("vi-VN")
   });
-
   state.layers.push({
     id: layerId,
-    name: `Ranh thửa đất (${areaM2.toFixed(1)} m² • 1→${sequenceRing.length}→1)`,
+    name: `Ranh thửa đất (${areaM2.toFixed(1)} m² - ${latlngs.length} cạnh)`,
     type: "Dữ liệu vùng",
     visible: true,
     color: "#ef4444",
@@ -2649,40 +2340,8 @@ function drawParcelFromVn2000() {
   saveAppState();
   renderAllVectorFeatures();
   closeModal("parcelModal");
-  map.fitBounds(L.latLngBounds(sequenceRing), { padding: [45, 45] });
-  showToast(`Đã vẽ theo trình tự 1→${sequenceRing.length}→1 • Diện tích: ${areaM2.toFixed(2)} m²`);
-}
-
-function deleteLastParcel() {
-  let targetLayerId = null;
-  for (let i = state.layers.length - 1; i >= 0; i--) {
-    const l = state.layers[i];
-    if (l.id && l.id.startsWith("parcel_")) {
-      targetLayerId = l.id;
-      break;
-    }
-  }
-  if (!targetLayerId) {
-    for (let i = state.features.length - 1; i >= 0; i--) {
-      const feat = state.features[i];
-      if (feat.geomType === "polygon" && feat.layerId) {
-        targetLayerId = feat.layerId;
-        break;
-      }
-    }
-  }
-  if (!targetLayerId) {
-    showToast("Không tìm thấy thửa đất nào để xóa.");
-    return;
-  }
-  state.layers = state.layers.filter(l => l.id !== targetLayerId);
-  state.features = state.features.filter(f => f.layerId !== targetLayerId);
-  saveAppState();
-  renderAllVectorFeatures();
-  if (document.getElementById("layersModal")?.classList.contains("open")) {
-    renderLayersModal();
-  }
-  showToast("Đã xóa thửa đất vừa vẽ.");
+  map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
+  showToast(`Đã vẽ ranh thửa đất: ${areaM2.toFixed(2)} m² và tự nổ ${latlngs.length} cạnh!`);
 }
 
 /* ============================================================================
@@ -2957,17 +2616,38 @@ function renderLayersModal() {
     container.innerHTML = `<div class="list-card" style="color:#94a3b8;font-size:12.5px;">Chưa có lớp tệp ngoài. Hãy bấm nút phía trên để nạp file KMZ (tự nổ đoạn), KML, GeoJSON hoặc vẽ trực tiếp trên bản đồ.</div>`;
     return;
   }
-  container.innerHTML = state.layers.map(l => `
-    <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:13px;">${l.name}</div>
-        <div style="font-size:11px;color:#94a3b8;">${l.type}</div>
+  container.innerHTML = state.layers.map(l => {
+    const op = typeof l.opacity === "number" ? l.opacity : 100;
+    return `
+    <div class="list-card" style="display:flex;flex-direction:column;gap:7px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;">${l.name}</div>
+          <div style="font-size:11px;color:#94a3b8;">${l.type} • Độ mờ lớp: <strong style="color:#38bdf8;">${op}%</strong></div>
+        </div>
+        <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
+        <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
+        <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
       </div>
-      <button class="mini-btn" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
-      <button class="mini-btn" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
-      <button class="mini-btn" style="color:#f87171;" onclick="deleteLayer('${l.id}')">🗑️</button>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#cbd5e1;margin-bottom:2px;">
+          <span>Độ mờ riêng lớp này (soi xung đột hạ tầng):</span>
+          <span>${op}%</span>
+        </div>
+        <input type="range" min="0" max="100" value="${op}" oninput="updateSingleLayerOpacity('${l.id}', this.value)" />
+      </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
+}
+
+function updateSingleLayerOpacity(layerId, val) {
+  const l = state.layers.find(x => x.id === layerId);
+  if (!l) return;
+  l.opacity = Number(val);
+  saveAppState();
+  renderAllVectorFeatures();
+  renderLayersModal();
 }
 
 function toggleLayerVisibility(id) {
@@ -3267,11 +2947,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
   renderProjectsUI();
   renderAllVectorFeatures();
+  hydrateStateFromIdb();
   startSmoothCompassLoop();
 
   locateUserNow(true);
   startContinuousGpsWatch();
-  setTimeout(() => { getFastOcrWorker().catch(() => {}); }, 1500);
 });
 </script>
 </body>
