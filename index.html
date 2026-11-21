@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro </title>
+  <title>PD GIS Pro - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -516,6 +516,7 @@
     <!-- Thanh công cụ vẽ trực tiếp & đo kích thước -->
     <div class="draw-toolbar" style="width:fit-content;">
       <button class="icon-btn" title="Thêm Điểm mốc tại tâm" onclick="addPointAtCenter()">📍</button>
+      <button class="icon-btn" style="color:#fca5a5;" title="Xóa điểm mốc gần tâm bản đồ" onclick="deletePointAtCenter()">❌</button>
       <button class="icon-btn" id="btnDrawLine" title="Vẽ đường Line (Click đường để xem kích thước)" onclick="startDrawing('line')">📏</button>
       <button class="icon-btn" id="btnDrawPoly" title="Vẽ Vùng / Ranh giới thửa" onclick="startDrawing('polygon')">⬠</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
@@ -1596,6 +1597,33 @@ function addPointAtCenter() {
   saveAppState();
   renderAllVectorFeatures();
   showToast(`Đã lưu ${name} tại tâm: X=${vn.x.toFixed(3)}, Y=${vn.y.toFixed(3)}`);
+}
+
+function deletePointAtCenter() {
+  const c = map.getCenter();
+  let bestIdx = -1;
+  let bestDist = Infinity;
+
+  state.features.forEach((f, idx) => {
+    if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
+      const d = map.distance([c.lat, c.lng], [f.lat, f.lon]);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = idx;
+      }
+    }
+  });
+
+  if (bestIdx === -1 || bestDist > 60) {
+    showToast("Không có điểm mốc nào gần tâm bản đồ (trong 60m) để xóa.");
+    return;
+  }
+
+  const removed = state.features[bestIdx];
+  state.features.splice(bestIdx, 1);
+  saveAppState();
+  renderAllVectorFeatures();
+  showToast(`Đã xóa điểm mốc "${removed.name || 'Mốc'}".`);
 }
 
 function toggleTracklog() {
