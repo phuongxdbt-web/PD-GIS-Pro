@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro 1.2.4 </title>
+  <title>PD GIS Pro 1.2.4 - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1055,7 +1055,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:16px;font-weight:800;color:#38bdf8;">PD GIS PRO 1.2.4</div>
-        <div style="font-size:11px;color:#94a3b8;">Ban QLDA Phương Đông • Trắc địa & GIS</div>
+        <div style="font-size:11px;color:#94a3b8;">Phương Đông Trắc địa & GIS</div>
       </div>
       <button class="close-x" onclick="closeDrawer()">✕</button>
     </div>
@@ -1535,8 +1535,12 @@
       <input type="text" id="imgOverlayName" class="form-input" placeholder="VD: QH 1/500 KCN Tuy Phong" />
     </div>
     <div class="form-group">
-      <label class="form-label">Chọn tệp ảnh mặt bằng / sơ đồ (JPG, PNG):</label>
-      <input type="file" id="imgOverlayFileInput" accept="image/*" class="form-input" />
+      <label class="form-label">Chọn tệp bản vẽ / mặt bằng (JPG, PNG, PDF):</label>
+      <input type="file" id="imgOverlayFileInput" accept="image/*,application/pdf,.pdf" class="form-input" />
+      <div id="pdfPageSelectRow" style="display:none;margin-top:6px;">
+        <label class="form-label">Trang PDF cần phủ lên bản đồ:</label>
+        <input type="number" min="1" value="1" id="imgPdfPageNumber" class="form-input" placeholder="Trang số (mặc định: 1)" />
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Phạm vi tọa độ góc Tây-Nam & Đông-Bắc (VN-2000 X, Y):</label>
@@ -1795,6 +1799,15 @@
     <div class="modal-head">
       <span class="modal-title">🔍 Tìm Kiếm Đối Tượng & Đoạn Tuyến</span>
       <button class="close-x" onclick="closeModal('searchModal')">✕</button>
+    </div>
+    <div class="list-card" style="border-color:rgba(56,189,248,0.45);background:rgba(15,23,42,0.85);margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:6px;">🗺️ TÌM KIẾM ĐỊA DANH / KHU CÔNG NGHIỆP & BAY TỚI VỊ TRÍ</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="placeSearchInput" class="form-input" placeholder="VD: xã Lộc Sơn, tỉnh Lâm Đồng; Phương Đông; KCN Tuy Phong..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchMapPlacesNow();}" />
+        <button type="button" class="btn-primary" style="width:auto;background:#0284c7;padding:8px 13px;white-space:nowrap;" id="btnSearchPlacesNow" onclick="searchMapPlacesNow()">🔎 Tìm vị trí</button>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Hỗ trợ địa danh hành chính (xã/phường/tỉnh), khu công nghiệp, dự án/điểm lưu hoặc tọa độ X,Y.</div>
+      <div id="placeSearchResultsBox" style="margin-top:8px;max-height:190px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
       <select id="searchProjectFilter" class="form-select" onchange="filterSearchFeatures()">
@@ -6825,6 +6838,359 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 })();
+</script>
+
+
+<script>
+/* ============================================================================
+   TÌM KIẾM ĐỊA DANH / KHU CÔNG NGHIỆP / TỌA ĐỘ & TỰ ĐỘNG BAY TỚI VỊ TRÍ
+============================================================================ */
+(function initPlaceGeocoderSearch() {
+  let _placeSearchMarker = null;
+
+  function flyMapToLatLonZoom(lat, lon, zoomLevel, labelText) {
+    const z = Number(zoomLevel) || 16;
+    closeModal("searchModal");
+    if (_placeSearchMarker) {
+      try { map.removeLayer(_placeSearchMarker); } catch (e) {}
+      _placeSearchMarker = null;
+    }
+    map.setView([lat, lon], z, { animate: true });
+    const vn = typeof wgs84ToVn2000 === "function" ? wgs84ToVn2000(lat, lon) : { x: 0, y: 0 };
+    _placeSearchMarker = L.circleMarker([lat, lon], {
+      radius: 9,
+      color: "#ffffff",
+      weight: 2.5,
+      fillColor: "#38bdf8",
+      fillOpacity: 0.92
+    }).addTo(map);
+    _placeSearchMarker.bindPopup(
+      `<div style="color:#0f172a;font-size:12px;min-width:190px;">` +
+      `<div style="font-weight:800;color:#0369a1;margin-bottom:3px;">📍 ${labelText || "Vị trí đã chọn"}</div>` +
+      `<div>VN-2000 X(E): <b>${vn.x.toFixed(2)}</b></div>` +
+      `<div>VN-2000 Y(N): <b>${vn.y.toFixed(2)}</b></div>` +
+      `<div>WGS84: ${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}</div>` +
+      `</div>`
+    ).openPopup();
+    if (typeof updateCenterHud === "function") updateCenterHud();
+  }
+
+  window.flyToFoundPlace = function(lat, lon, zoomLevel, encodedLabel) {
+    let label = "";
+    try { label = decodeURIComponent(encodedLabel || ""); } catch (e) { label = encodedLabel || ""; }
+    flyMapToLatLonZoom(Number(lat), Number(lon), Number(zoomLevel) || 16, label);
+    showToast(`Đã di chuyển bản đồ tới: ${label || "vị trí đã chọn"}`);
+  };
+
+  function getLocalQuickMatches(rawQuery) {
+    const q = rawQuery.trim().toLowerCase();
+    if (!q) return [];
+    const matches = [];
+
+    // Địa danh & dự án quen thuộc khu vực Lâm Đồng - Bình Thuận - Tuy Phong - Hàm Kiệm
+    const presets = [
+      { title: "Xã Lộc Sơn, TP. Bảo Lộc, tỉnh Lâm Đồng", sub: "Địa danh hành chính • Lâm Đồng", lat: 11.5318, lon: 107.7935, zoom: 15 },
+      { title: "KCN Tuy Phong (xã Vĩnh Hảo, tỉnh Lâm Đồng)", sub: "Khu công nghiệp 150 ha • Tuy Phong", lat: 11.2485, lon: 108.6752, zoom: 15 },
+      { title: "KCN Hàm Kiệm I (xã Tuyên Quang, tỉnh Lâm Đồng)", sub: "Khu công nghiệp • Hàm Kiệm I", lat: 10.8352, lon: 107.9864, zoom: 15 },
+      { title: "Khu Nhà ở xã hội KCN Hàm Kiệm I (13,5 ha)", sub: "Dự án NOXH • Xã Tuyên Quang, Lâm Đồng", lat: 10.8395, lon: 107.9920, zoom: 16 },
+      { title: "Phường Phan Thiết, tỉnh Lâm Đồng", sub: "Trung tâm khu vực • Lâm Đồng", lat: 10.9289, lon: 108.1021, zoom: 14 },
+      { title: "Xã Vĩnh Hảo, huyện Tuy Phong cũ / Lâm Đồng", sub: "Địa danh hành chính • Vĩnh Hảo", lat: 11.2240, lon: 108.6520, zoom: 14 },
+      { title: "Xã Tuyên Quang (Hàm Kiệm), tỉnh Lâm Đồng", sub: "Địa danh hành chính • Tuyên Quang", lat: 10.8330, lon: 107.9810, zoom: 14 },
+      { title: "Cù Lao Tăng Văn Phương (Thôn Lương Đông)", sub: "Địa danh & đất canh tác • 1,6 ha", lat: 11.1250, lon: 108.4520, zoom: 16 }
+    ];
+
+    presets.forEach(p => {
+      const hay = `${p.title} ${p.sub}`.toLowerCase();
+      if (hay.includes(q) || q.split(/[\s,]+/).filter(w => w.length >= 2).some(w => hay.includes(w))) {
+        matches.push({
+          title: p.title,
+          sub: p.sub,
+          lat: p.lat,
+          lon: p.lon,
+          zoom: p.zoom
+        });
+      }
+    });
+
+    // Tìm trong các đối tượng / mốc / tuyến / vùng đã lưu của người dùng
+    if (typeof state !== "undefined" && Array.isArray(state.features)) {
+      state.features.forEach(f => {
+        const text = `${f.name || ""} ${f.project || ""} ${f.workName || ""} ${f.categoryName || ""} ${f.note || ""}`.toLowerCase();
+        if (text.includes(q)) {
+          let ll = null;
+          if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
+            ll = [f.lat, f.lon];
+          } else if (f.geomType === "segment" && Array.isArray(f.p1)) {
+            ll = f.p1;
+          } else if (f.geomType === "polygon" && Array.isArray(f.coords) && f.coords[0]) {
+            ll = f.coords[0];
+          }
+          if (ll) {
+            matches.push({
+              title: f.name || "Đối tượng đã lưu",
+              sub: `Dữ liệu trên app • ${f.project || "Chế độ chung"}`,
+              lat: ll[0],
+              lon: ll[1],
+              zoom: 18
+            });
+          }
+        }
+      });
+    }
+
+    return matches.slice(0, 6);
+  }
+
+  function tryParseDirectCoordinates(rawQuery) {
+    const cleaned = rawQuery.replace(/,/g, ".").trim();
+    const nums = cleaned.match(/-?\d+(?:\.\d+)?/g);
+    if (!nums || nums.length < 2) return null;
+    const a = parseFloat(nums[0]);
+    const b = parseFloat(nums[1]);
+    if (isNaN(a) || isNaN(b)) return null;
+
+    // Nếu là tọa độ VN-2000 (X ~ 100k-900k, Y ~ 900k-2.6M hoặc đảo thứ tự)
+    if ((Math.abs(a) >= 100000 && Math.abs(b) >= 100000) && typeof vn2000ToWgs84 === "function") {
+      const wgs = vn2000ToWgs84(a, b);
+      if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
+        return [{
+          title: `Tọa độ VN-2000: ${wgs.easting.toFixed(2)}, ${wgs.northing.toFixed(2)}`,
+          sub: state?.activeCrs?.name || "VN-2000",
+          lat: wgs.lat,
+          lon: wgs.lon,
+          zoom: 18
+        }];
+      }
+    }
+
+    // Nếu là WGS84 Lat, Lon
+    if (Math.abs(a) <= 90 && Math.abs(b) <= 180 && (Math.abs(a) > 5 || Math.abs(b) > 5)) {
+      return [{
+        title: `Tọa độ WGS84: ${a.toFixed(6)}, ${b.toFixed(6)}`,
+        sub: "Vĩ độ / Kinh độ (WGS84)",
+        lat: a,
+        lon: b,
+        zoom: 18
+      }];
+    }
+    return null;
+  }
+
+  async function fetchOnlineNominatimPlaces(rawQuery) {
+    const q = rawQuery.trim();
+    const hasVietnam = /việt nam|vietnam|lâm đồng|bình thuận|đắk nông|bảo lộc|phan thiết|tuy phong|hàm kiệm|lộc sơn|vĩnh hảo|tuyên quang/i.test(q);
+    const searchStr = hasVietnam ? q : `${q}, Việt Nam`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=vi&q=${encodeURIComponent(searchStr)}`;
+    const resp = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const arr = await resp.json();
+    if (!Array.isArray(arr)) return [];
+    return arr.map(item => {
+      const parts = (item.display_name || "").split(",").map(s => s.trim()).filter(Boolean);
+      const title = parts.slice(0, 2).join(", ") || item.display_name;
+      const sub = parts.slice(2, 5).join(", ") || "Địa danh bản đồ";
+      const z = item.class === "boundary" ? 14 : (item.class === "landuse" || item.class === "industrial" ? 15 : 16);
+      return {
+        title,
+        sub,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+        zoom: z
+      };
+    }).filter(x => isFinite(x.lat) && isFinite(x.lon));
+  }
+
+  function renderPlaceResultsList(items, statusNote) {
+    const box = document.getElementById("placeSearchResultsBox");
+    if (!box) return;
+    if (!items || items.length === 0) {
+      box.innerHTML = `<div style="font-size:11.5px;color:#fbbf24;padding:4px 2px;">${statusNote || "Không tìm thấy vị trí phù hợp. Hãy thử gõ rõ hơn tên xã/phường/tỉnh hoặc khu công nghiệp."}</div>`;
+      return;
+    }
+    const statusHtml = statusNote
+      ? `<div style="font-size:11px;color:#94a3b8;margin-bottom:5px;">${statusNote}</div>`
+      : "";
+    box.innerHTML = statusHtml + items.map(it => {
+      const enc = encodeURIComponent(it.title);
+      return `
+        <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 9px;margin-bottom:5px;cursor:pointer;background:#0f172a;"
+             onclick="flyToFoundPlace(${it.lat}, ${it.lon}, ${it.zoom}, '${enc}')">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:700;color:#f8fafc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${it.title}</div>
+            <div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.sub}</div>
+          </div>
+          <span class="mini-btn" style="background:#0284c7;color:#fff;border:0;white-space:nowrap;">Bay tới ›</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  window.searchMapPlacesNow = async function() {
+    const inp = document.getElementById("placeSearchInput");
+    const btn = document.getElementById("btnSearchPlacesNow");
+    const box = document.getElementById("placeSearchResultsBox");
+    const rawQuery = (inp?.value || "").trim();
+    if (!rawQuery) {
+      showToast("Vui lòng nhập tên xã, phường, tỉnh, khu công nghiệp hoặc tọa độ.");
+      inp?.focus();
+      return;
+    }
+
+    const directCoords = tryParseDirectCoordinates(rawQuery);
+    if (directCoords && directCoords.length > 0) {
+      renderPlaceResultsList(directCoords, "Đã nhận diện tọa độ — bấm để bay tới hoặc tự chuyển ngay:");
+      flyMapToLatLonZoom(directCoords[0].lat, directCoords[0].lon, directCoords[0].zoom, directCoords[0].title);
+      return;
+    }
+
+    const localMatches = getLocalQuickMatches(rawQuery);
+    if (box) box.innerHTML = `<div style="font-size:11.5px;color:#38bdf8;padding:4px 2px;">⏳ Đang tìm kiếm vị trí "${rawQuery}"...</div>`;
+    if (btn) btn.disabled = true;
+
+    try {
+      const onlineMatches = await fetchOnlineNominatimPlaces(rawQuery);
+      const merged = [];
+      const seenKey = new Set();
+      [...localMatches, ...onlineMatches].forEach(m => {
+        const key = `${m.lat.toFixed(4)}_${m.lon.toFixed(4)}_${m.title}`;
+        if (!seenKey.has(key)) {
+          seenKey.add(key);
+          merged.push(m);
+        }
+      });
+      if (merged.length > 0) {
+        renderPlaceResultsList(merged.slice(0, 8), `Tìm thấy ${Math.min(merged.length, 8)} vị trí (bấm để chạy tới):`);
+      } else {
+        renderPlaceResultsList([], `Không tìm thấy vị trí cho "${rawQuery}".`);
+      }
+    } catch (err) {
+      if (localMatches.length > 0) {
+        renderPlaceResultsList(localMatches, "Hiển thị kết quả địa phương/đã lưu (mạng tra cứu ngoài tạm chậm):");
+      } else {
+        renderPlaceResultsList([], "Chưa tra cứu được địa danh trực tuyến. Anh có thể nhập trực tiếp tọa độ X, Y hoặc vĩ độ, kinh độ.");
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+})();
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ============================================================================
+   HỖ TRỢ NẠP & PHỦ FILE PDF QUY HOẠCH / MẶT BẰNG LÊN BẢN ĐỒ
+============================================================================ */
+(function initPdfOverlaySupport() {
+  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  document.addEventListener("change", (ev) => {
+    if (ev.target && ev.target.id === "imgOverlayFileInput") {
+      const f = ev.target.files && ev.target.files[0];
+      const isPdf = f && (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+      const row = document.getElementById("pdfPageSelectRow");
+      if (row) row.style.display = isPdf ? "block" : "none";
+      const nameInp = document.getElementById("imgOverlayName");
+      if (f && nameInp && !nameInp.value.trim()) {
+        nameInp.value = f.name.replace(/\.[^/.]+$/, "");
+      }
+    }
+  });
+
+  async function renderPdfFileToDataUrl(file, pageNum = 1, scale = 2.0) {
+    if (!window.pdfjsLib) {
+      throw new Error("Không tải được thư viện đọc PDF.");
+    }
+    const buf = await file.arrayBuffer();
+    const loadingTask = window.pdfjsLib.getDocument({ data: buf });
+    const pdfDoc = await loadingTask.promise;
+    const safePage = Math.max(1, Math.min(Number(pageNum) || 1, pdfDoc.numPages || 1));
+    const page = await pdfDoc.getPage(safePage);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(viewport.width));
+    canvas.height = Math.max(1, Math.round(viewport.height));
+    const ctx = canvas.getContext("2d");
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return { dataUrl: canvas.toDataURL("image/jpeg", 0.92), totalPages: pdfDoc.numPages, pageUsed: safePage };
+  }
+
+  const _origCreateImageOverlayLayer = window.createImageOverlayLayer;
+  window.createImageOverlayLayer = async function() {
+    const fileInput = document.getElementById("imgOverlayFileInput");
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) {
+      if (typeof _origCreateImageOverlayLayer === "function") return _origCreateImageOverlayLayer();
+      return;
+    }
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      if (typeof _origCreateImageOverlayLayer === "function") return _origCreateImageOverlayLayer();
+      return;
+    }
+
+    const name = (document.getElementById("imgOverlayName")?.value || "").trim() || file.name.replace(/\.[^/.]+$/, "");
+    let swX = parseFloat(document.getElementById("imgSwX")?.value);
+    let swY = parseFloat(document.getElementById("imgSwY")?.value);
+    let neX = parseFloat(document.getElementById("imgNeX")?.value);
+    let neY = parseFloat(document.getElementById("imgNeY")?.value);
+
+    if ([swX, swY, neX, neY].some(isNaN) && typeof fillImageOverlayBoundsFromView === "function") {
+      fillImageOverlayBoundsFromView();
+      swX = parseFloat(document.getElementById("imgSwX")?.value);
+      swY = parseFloat(document.getElementById("imgSwY")?.value);
+      neX = parseFloat(document.getElementById("imgNeX")?.value);
+      neY = parseFloat(document.getElementById("imgNeY")?.value);
+    }
+
+    const pageNum = parseInt(document.getElementById("imgPdfPageNumber")?.value || "1", 10) || 1;
+    showToast(`⏳ Đang chuyển trang PDF #${pageNum} thành lớp phủ bản đồ...`);
+
+    try {
+      const rendered = await renderPdfFileToDataUrl(file, pageNum, 2.0);
+      const swWgs = vn2000ToWgs84(swX, swY);
+      const neWgs = vn2000ToWgs84(neX, neY);
+
+      if (!Array.isArray(state.imageOverlays)) state.imageOverlays = [];
+      state.imageOverlays.push({
+        id: "pdfov_" + Date.now(),
+        name: `${name} (PDF tr.${rendered.pageUsed}/${rendered.totalPages})`,
+        dataUrl: rendered.dataUrl,
+        swLatLng: [swWgs.lat, swWgs.lon],
+        neLatLng: [neWgs.lat, neWgs.lon],
+        opacity: 80,
+        visible: true
+      });
+
+      saveAppState();
+      renderExternalOverlaysAndServices();
+      closeModal("imageOverlayModal");
+      if (document.getElementById("layersModal")?.classList.contains("open") && typeof renderLayersModal === "function") {
+        renderLayersModal();
+      }
+      map.fitBounds([[swWgs.lat, swWgs.lon], [neWgs.lat, neWgs.lon]]);
+      showToast(`Đã phủ trang ${rendered.pageUsed}/${rendered.totalPages} của file PDF lên bản đồ!`);
+    } catch (err) {
+      showToast("Lỗi nạp file PDF: " + (err && err.message ? err.message : "không đọc được PDF"));
+    }
+  };
+})();
+</script>
+
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("*").forEach(el => {
+    if (el.children.length === 0 && el.textContent && el.textContent.includes("Ban QLDA Phương Đông Trắc địa & GIS")) {
+      el.textContent = el.textContent.replace("Ban QLDA Phương Đông Trắc địa & GIS", "Phương Đông Trắc địa & GIS");
+    }
+  });
+});
 </script>
 
 </body>
