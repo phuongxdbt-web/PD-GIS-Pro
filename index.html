@@ -49,8 +49,6 @@
     #map {
       position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
       background: #0f172a;
-      transform: translateZ(0);
-      will-change: transform;
     }
     #map.precision-pointer-mode,
     #map.precision-pointer-mode .leaflet-interactive {
@@ -786,6 +784,23 @@
       margin-bottom: 10px;
       font-size: 12px;
       line-height: 1.5;
+    }
+
+
+    /* Tối ưu GPU Desktop: Tắt backdrop-filter blur gây nghẽn trình kết xuất phần mềm trên Windows */
+    @media (hover: hover) and (pointer: fine), (min-width: 768px) {
+      .glass-pill,
+      .bottom-hud,
+      #quickSelectedLayerBar,
+      .modal-backdrop,
+      #authGateModal {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.96) !important;
+      }
+      .modal-backdrop, #authGateModal {
+        background: rgba(2, 6, 23, 0.86) !important;
+      }
     }
 
   </style>
@@ -2292,12 +2307,22 @@ const CRS_CATALOG = {
   ]
 };
 
+const _proj4ConverterCache = new Map();
 function getProj4Def(lon0) {
   return `+proj=tmerc +lat_0=0 +lon_0=${lon0} +k=0.9999 +x_0=500000 +y_0=0 +ellps=WGS84 +towgs84=-191.90441429,-39.30318279,-111.45032835,0.00928836,-0.01975479,0.00427372,0.252906278 +units=m +no_defs`;
 }
+function getCachedProj4(lon0) {
+  const key = Number(lon0) || 108.5;
+  let conv = _proj4ConverterCache.get(key);
+  if (!conv) {
+    conv = proj4("EPSG:4326", getProj4Def(key));
+    _proj4ConverterCache.set(key, conv);
+  }
+  return conv;
+}
 
 function wgs84ToVn2000(lat, lon, lon0 = state.activeCrs.lon0) {
-  const [x, y] = proj4("EPSG:4326", getProj4Def(lon0), [lon, lat]);
+  const [x, y] = getCachedProj4(lon0).forward([lon, lat]);
   return { x, y };
 }
 
@@ -2340,7 +2365,7 @@ function normalizeVn2000Pair(v1, v2) {
 
 function vn2000ToWgs84(x, y, lon0 = state.activeCrs.lon0) {
   const { easting, northing } = normalizeVn2000Pair(x, y);
-  const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [easting, northing]);
+  const [lon, lat] = getCachedProj4(lon0).inverse([easting, northing]);
   return { lat, lon, easting, northing };
 }
 
@@ -2611,12 +2636,14 @@ const map = L.map("map", {
   attributionControl: false,
   preferCanvas: true,
   renderer: desktopVectorRenderer,
-  zoomSnap: 0.25,
-  zoomDelta: 0.5,
-  wheelPxPerZoomLevel: 90,
-  wheelDebounceTime: 25,
+  zoomSnap: 1,
+  zoomDelta: 1,
+  wheelPxPerZoomLevel: 60,
+  wheelDebounceTime: 40,
   inertia: true,
-  inertiaDeceleration: 2800,
+  inertiaDeceleration: 3000,
+  inertiaMaxSpeed: 1800,
+  zoomAnimation: true,
   fadeAnimation: false,
   markerZoomAnimation: false
 });
@@ -2639,20 +2666,28 @@ function getEffectiveElevationM() {
   return (latestGps.rawH || 0) + (Number(state.deltaH) || 0) - (Number(state.antennaH) || 0);
 }
 
-let _hudRafId = null;
-function scheduleCenterHudUpdate() {
-  if (_hudRafId) return;
-  _hudRafId = requestAnimationFrame(() => {
-    _hudRafId = null;
-    const c = map.getCenter();
-    const vn = wgs84ToVn2000(c.lat, c.lng);
-    document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
-    document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
-    document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
-  });
+let _hudLastTs = 0;
+let _hudTimer = null;
+function updateCenterHudNow() {
+  _hudLastTs = performance.now();
+  const c = map.getCenter();
+  const vn = wgs84ToVn2000(c.lat, c.lng);
+  document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
+  document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
+  document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
 }
-function updateCenterHud() { scheduleCenterHudUpdate(); }
-map.on("move zoom", scheduleCenterHudUpdate);
+function scheduleCenterHudUpdate() {
+  const now = performance.now();
+  if (now - _hudLastTs >= 90) {
+    updateCenterHudNow();
+  } else {
+    clearTimeout(_hudTimer);
+    _hudTimer = setTimeout(updateCenterHudNow, 95);
+  }
+}
+function updateCenterHud() { updateCenterHudNow(); }
+map.on("move", scheduleCenterHudUpdate);
+map.on("moveend zoomend", updateCenterHudNow);
 scheduleCenterHudUpdate();
 
 function locateUserNow(forceFly = false) {
@@ -2718,8 +2753,8 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
     userAccuracyCircle.setLatLng([latitude, longitude]).setRadius(Math.max(latestGps.acc, 3));
   }
 
-  if (flyToPos) {
-    map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
+  if (flyToPos && (latestGps.acc <= 150 || !hasInitialGpsJump)) {
+    map.setView([latitude, longitude], Math.max(map.getZoom(), 17), { animate: false });
   }
 
   if (isTrackingGps) {
@@ -3618,15 +3653,81 @@ function renderAllVectorFeatures() {
   scheduleRenderAllVectorFeatures();
 }
 
+function handleCanvasFeatureClick(e) {
+  if (drawMode || movingState) return;
+  const clickPt = map.latLngToContainerPoint(e.latlng);
+  const layerMap = new Map(state.layers.map(l => [l.id, l]));
+
+  // 1. Ưu tiên kiểm tra điểm mốc trong bán kính 14px
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "point") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    const pt = map.latLngToContainerPoint([f.lat, f.lon]);
+    if (clickPt.distanceTo(pt) <= 14) {
+      openFeatureDetailModal(f.id);
+      return;
+    }
+  }
+
+  // 2. Kiểm tra đoạn line trong bán kính 10px
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "segment") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    const a = map.latLngToContainerPoint(f.p1);
+    const b = map.latLngToContainerPoint(f.p2);
+    const proj = L.LineUtil.closestPointOnSegment(clickPt, a, b);
+    if (clickPt.distanceTo(proj) <= 10) {
+      L.popup()
+        .setLatLng(e.latlng)
+        .setContent(`
+          <div style="color:#0f172a;font-size:12.5px;min-width:225px;">
+            <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
+            <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
+              Kích thước đoạn: <strong style="font-size:13.5px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
+            </div>
+            <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
+            <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
+            <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
+            <div style="margin-top:6px;">
+              <button style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-weight:700;" onclick="openFeatureDetailModal('${f.id}')">Chi tiết / Sửa / Xóa</button>
+            </div>
+          </div>
+        `)
+        .openOn(map);
+      return;
+    }
+  }
+
+  // 3. Kiểm tra vùng polygon
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "polygon") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    if (L.latLngBounds(f.coords).contains(e.latlng)) {
+      openFeatureDetailModal(f.id);
+      return;
+    }
+  }
+}
+map.on("click", handleCanvasFeatureClick);
+
 function renderAllVectorFeaturesNow() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
   const globalOpacity = (state.layerOpacity ?? 100) / 100;
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
-  const viewBounds = map.getBounds().pad(0.25);
+  const viewBounds = map.getBounds().pad(0.2);
   const currentZoom = map.getZoom();
   let renderedLabelCount = 0;
-  const MAX_DOM_LABELS = 140;
+  const MAX_DOM_LABELS = 90;
+
+  // Gom nhóm các đoạn line cùng màu & độ rộng thành MultiPolyline trên Canvas để giảm 95% số đối tượng Leaflet
+  const batchSegments = new Map();
 
   for (let i = 0; i < state.features.length; i++) {
     const f = state.features[i];
@@ -3637,56 +3738,32 @@ function renderAllVectorFeaturesNow() {
 
     if (f.geomType === "point") {
       if (!viewBounds.contains([f.lat, f.lon])) continue;
-      const marker = L.circleMarker([f.lat, f.lon], {
+      L.circleMarker([f.lat, f.lon], {
         renderer: desktopVectorRenderer,
-        radius: 6, color: "#fff", weight: 2, fillColor: lyrCfg?.color || "#ef4444", fillOpacity: lyrOp, opacity: lyrOp
+        interactive: false,
+        radius: 5.5, color: "#fff", weight: 1.8, fillColor: lyrCfg?.color || "#ef4444", fillOpacity: lyrOp, opacity: lyrOp
       }).addTo(vectorLayerGroup);
-
-      marker.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        openFeatureDetailModal(f.id);
-      });
     } else if (f.geomType === "segment") {
-      const segBounds = L.latLngBounds([f.p1, f.p2]);
-      if (!viewBounds.intersects(segBounds)) continue;
+      const minLat = Math.min(f.p1[0], f.p2[0]);
+      const maxLat = Math.max(f.p1[0], f.p2[0]);
+      const minLon = Math.min(f.p1[1], f.p2[1]);
+      const maxLon = Math.max(f.p1[1], f.p2[1]);
+      if (maxLat < viewBounds.getSouth() || minLat > viewBounds.getNorth() || maxLon < viewBounds.getWest() || minLon > viewBounds.getEast()) continue;
 
       const strokeColor = lyrCfg?.color || f.color || "#3b82f6";
-      const strokeWidth = lyrCfg?.width || f.width || 3;
+      const strokeWidth = (lyrCfg?.width || f.width || 3) + 1;
       const lblSize = lyrCfg?.labelSize || 11;
+      const styleKey = `${strokeColor}|${strokeWidth}|${lyrOp.toFixed(2)}`;
 
-      const segLine = L.polyline([f.p1, f.p2], {
-        renderer: desktopVectorRenderer,
-        color: strokeColor,
-        weight: strokeWidth + 1,
-        opacity: lyrOp
-      }).addTo(vectorLayerGroup);
-
-      segLine.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        segLine.setStyle({ color: "#facc15", weight: strokeWidth + 3 });
-        setTimeout(() => segLine.setStyle({ color: strokeColor, weight: strokeWidth + 1 }), 2200);
-
-        L.popup()
-          .setLatLng(e.latlng)
-          .setContent(`
-            <div style="color:#0f172a;font-size:12.5px;min-width:225px;">
-              <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
-              <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
-                Kích thước đoạn: <strong style="font-size:13.5px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
-              </div>
-              <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
-              <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
-              <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
-              <div style="margin-top:6px;">
-                <button style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-weight:700;" onclick="openFeatureDetailModal('${f.id}')">Chi tiết / Sửa / Xóa</button>
-              </div>
-            </div>
-          `)
-          .openOn(map);
-      });
+      let bucket = batchSegments.get(styleKey);
+      if (!bucket) {
+        bucket = { color: strokeColor, weight: strokeWidth, opacity: lyrOp, coords: [] };
+        batchSegments.set(styleKey, bucket);
+      }
+      bucket.coords.push([f.p1, f.p2]);
 
       const allowSegLabel = state.showSegLabels !== false && (lyrCfg?.showSegLength !== false);
-      if (allowSegLabel && currentZoom >= 16 && f.lengthM >= 0.4 && renderedLabelCount < MAX_DOM_LABELS) {
+      if (allowSegLabel && currentZoom >= 17 && f.lengthM >= 0.4 && renderedLabelCount < MAX_DOM_LABELS) {
         const midLat = (f.p1[0] + f.p2[0]) / 2;
         const midLon = (f.p1[1] + f.p2[1]) / 2;
         if (viewBounds.contains([midLat, midLon])) {
@@ -3704,19 +3781,15 @@ function renderAllVectorFeaturesNow() {
       const polyBounds = L.latLngBounds(f.coords);
       if (!viewBounds.intersects(polyBounds)) continue;
 
-      const poly = L.polygon(f.coords, {
+      L.polygon(f.coords, {
         renderer: desktopVectorRenderer,
+        interactive: false,
         color: lyrCfg?.color || "#10b981",
         weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
         fillOpacity: 0.16 * lyrOp,
         opacity: lyrOp
       }).addTo(vectorLayerGroup);
-
-      poly.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        openFeatureDetailModal(f.id);
-      });
 
       if (currentZoom >= 16 && f.coords.length >= 3 && renderedLabelCount < MAX_DOM_LABELS) {
         const center = polyBounds.getCenter();
@@ -3730,6 +3803,16 @@ function renderAllVectorFeaturesNow() {
         }).addTo(labelLayerGroup);
       }
     }
+  }
+
+  for (const bucket of batchSegments.values()) {
+    L.polyline(bucket.coords, {
+      renderer: desktopVectorRenderer,
+      interactive: false,
+      color: bucket.color,
+      weight: bucket.weight,
+      opacity: bucket.opacity
+    }).addTo(vectorLayerGroup);
   }
 }
 map.on("zoomend moveend", scheduleRenderAllVectorFeatures);
@@ -4080,42 +4163,51 @@ function handleDeviceOrientation(e) {
   rawTargetHeading = heading;
 }
 
+let _compassListenersBound = false;
+function stopSmoothCompassLoop() {
+  if (compassAnimFrame) {
+    cancelAnimationFrame(compassAnimFrame);
+    compassAnimFrame = null;
+  }
+}
+
 function startSmoothCompassLoop() {
-  window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
-  window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+  if (!_compassListenersBound) {
+    _compassListenersBound = true;
+    window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
+    window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+  }
 
-  let _lastCompassTime = 0;
-  function tick(now) {
+  function tick() {
     const camOpen = document.getElementById("cameraModal")?.classList.contains("open");
-    // Trên máy tính (không mở Camera AR và không xoay la bàn), giảm tần suất xuống ~4fps để giải phóng 100% CPU/GPU cho bản đồ
-    const minInterval = camOpen ? 16 : 250;
-    if (now - _lastCompassTime >= minInterval) {
-      _lastCompassTime = now;
-      const currentMod = ((continuousHeading % 360) + 360) % 360;
-      let delta = rawTargetHeading - currentMod;
-      if (delta > 180) delta -= 360;
-      if (delta < -180) delta += 360;
+    if (!camOpen && !state.rotateCrosshair) {
+      compassAnimFrame = null;
+      return; // Dừng hẳn vòng lặp rAF trên máy tính khi không mở Camera AR
+    }
+    const currentMod = ((continuousHeading % 360) + 360) % 360;
+    let delta = rawTargetHeading - currentMod;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
 
-      if (Math.abs(delta) > 0.35) {
-        continuousHeading += delta * 0.14;
-      }
-      smoothedHeading = (((continuousHeading % 360) + 360) % 360);
+    if (Math.abs(delta) > 0.35) {
+      continuousHeading += delta * 0.14;
+    }
+    smoothedHeading = (((continuousHeading % 360) + 360) % 360);
 
-      if (camOpen) {
-        const dial = document.getElementById("compassDialSvg");
-        if (dial) dial.style.transform = `rotate(${-smoothedHeading.toFixed(2)}deg)`;
-        const azText = document.getElementById("camAzimuthText");
-        if (azText) azText.textContent = `${Math.round(smoothedHeading)}°`;
-        updateCameraHudValues();
-      }
+    if (camOpen) {
+      const dial = document.getElementById("compassDialSvg");
+      if (dial) dial.style.transform = `rotate(${-smoothedHeading.toFixed(2)}deg)`;
+      const azText = document.getElementById("camAzimuthText");
+      if (azText) azText.textContent = `${Math.round(smoothedHeading)}°`;
+      updateCameraHudValues();
+    }
 
-      const mapArrow = document.getElementById("mapCompassArrow");
-      if (mapArrow) mapArrow.style.transform = `rotate(${-smoothedHeading.toFixed(1)}deg)`;
+    const mapArrow = document.getElementById("mapCompassArrow");
+    if (mapArrow) mapArrow.style.transform = `rotate(${-smoothedHeading.toFixed(1)}deg)`;
 
-      if (state.rotateCrosshair) {
-        const ch = document.getElementById("mapCrosshair");
-        if (ch) ch.style.transform = `rotate(${smoothedHeading.toFixed(1)}deg)`;
-      }
+    if (state.rotateCrosshair) {
+      const ch = document.getElementById("mapCrosshair");
+      if (ch) ch.style.transform = `rotate(${smoothedHeading.toFixed(1)}deg)`;
     }
     compassAnimFrame = requestAnimationFrame(tick);
   }
@@ -4146,7 +4238,7 @@ function updateCameraHudValues() {
 }
 
 async function openSurveyCamera() {
-  document.getElementById("cameraModal").classList.add("open");
+  document.getElementById("cameraModal").classList.add("open"); startSmoothCompassLoop();
   document.getElementById("compassDialSvg").style.display = state.showCompassInCam !== false ? "block" : "none";
   if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
     try { await DeviceOrientationEvent.requestPermission(); } catch (e) {}
@@ -5519,7 +5611,7 @@ function toggleSegLblFromSettings(checked) {
 
 function toggleRotateCrosshair(checked) {
   state.rotateCrosshair = checked;
-  if (!checked) document.getElementById("mapCrosshair").style.transform = "none";
+  if (!checked) document.getElementById("mapCrosshair").style.transform = "none"; else startSmoothCompassLoop();
   saveAppState();
 }
 
