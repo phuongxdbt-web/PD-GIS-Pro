@@ -7709,41 +7709,6 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 })();
 </script>
-<script>
-function fmt3(v) {
-  const n = Number(v);
-  return isFinite(n) ? n.toFixed(3) : "0.000";
-}
 
-function saveEditedPointCoordsAndStyle() {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  if (!f || f.geomType !== "point") return;
-
-  const xVal = parseFloat(String(document.getElementById("editPtVnX")?.value || "").replace(/,/g, "."));
-  const yVal = parseFloat(String(document.getElementById("editPtVnY")?.value || "").replace(/,/g, "."));
-  const hVal = parseFloat(String(document.getElementById("editPtElevation")?.value || "").replace(/,/g, "."));
-  const styleVal = document.getElementById("editPtMarkerStyle")?.value || "dot";
-
-  if (isNaN(xVal) || isNaN(yVal)) {
-    showToast("Vui lòng nhập tọa độ X(E) và Y(N) hợp lệ.");
-    return;
-  }
-
-  const wgs = vn2000ToWgs84(xVal, yVal);
-  f.vnX = Number(xVal.toFixed(3));
-  f.vnY = Number(yVal.toFixed(3));
-  f.lat = wgs.lat;
-  f.lon = wgs.lon;
-  f.h = isNaN(hVal) ? 0.000 : Number(hVal.toFixed(3));
-  f.markerStyle = styleVal;
-  f.createdAt = new Date().toLocaleString("vi-VN");
-
-  saveAppState();
-  renderAllVectorFeatures();
-  map.setView([f.lat, f.lon], Math.max(map.getZoom(), 18));
-  openFeatureDetailModal(f.id);
-  showToast(`Đã lưu ${f.name}: X=${fmt3(f.vnX)}, Y=${fmt3(f.vnY)}, H=${fmt3(f.h)}`);
-}
-</script>
 </body>
 </html>
