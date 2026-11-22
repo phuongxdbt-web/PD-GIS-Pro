@@ -1398,28 +1398,15 @@
       <button class="close-x" onclick="closeModal('camNoteModal')">✕</button>
     </div>
     <div class="form-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <label class="form-label" style="margin:0;">🏗️ Dự án:</label>
-        <button type="button" class="mini-btn" style="padding:2px 8px;background:#0f766e;color:#fff;border:0;" onclick="quickAddProjectInline('noteProjectSelect')">+ Dự án mới</button>
-      </div>
+      <label class="form-label">Dự án / Hạng mục áp dụng:</label>
       <select id="noteProjectSelect" class="form-select"></select>
     </div>
-    <div class="grid-2 form-group">
-      <div>
-        <label class="form-label">🏛️ Tên công trình:</label>
-        <input type="text" id="camWorkNameInput" class="form-input" placeholder="VD: Hạ tầng kỹ thuật" />
-      </div>
-      <div>
-        <label class="form-label">🧩 Hạng mục:</label>
-        <input type="text" id="camCategoryNameInput" class="form-input" placeholder="VD: Tuyến D1 / Cọc KM0+500" />
-      </div>
-    </div>
     <div class="form-group">
-      <label class="form-label">📌 Đối tượng / Mốc khảo sát:</label>
+      <label class="form-label">Tên công việc / Mốc khảo sát:</label>
       <input type="text" id="workTitleInput" class="form-input" placeholder="VD: Kiểm tra tim tuyến D1 - Cọc KM0+500" />
     </div>
     <div class="form-group">
-      <label class="form-label">📝 Ghi chú chi tiết:</label>
+      <label class="form-label">Nội dung ghi chú chi tiết:</label>
       <textarea id="workNoteInput" class="form-textarea" placeholder="Nhập ghi chú nghiệm thu, cao độ thiết kế, tình trạng mặt bằng..."></textarea>
     </div>
     <button class="btn-primary" onclick="saveSurveyNote()">Lưu ghi chú vào phiên đo & Camera</button>
@@ -1893,7 +1880,7 @@
   </div>
 </div>
 
-<!-- Modal Đăng Nhập / Đổi Tài Khoản (Email hoặc Số điện thoại - Dữ liệu riêng từng người) -->
+<!-- Modal Đăng Nhập / Đổi Tài Khoản (Email hoặc Số điện thoại - Dữ liệu riêng từng tài khoản) -->
 <div id="authGateModal">
   <div class="auth-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -2249,6 +2236,8 @@ function loadInitialState() {
       base = Object.assign(base, snap);
     });
     if (!Array.isArray(base.trash)) base.trash = [];
+    if (!Array.isArray(base.imageOverlays)) base.imageOverlays = [];
+    if (!Array.isArray(base.serviceLayers)) base.serviceLayers = [];
     base.version = "1.2";
     return base;
   } catch (e) {
@@ -2321,9 +2310,12 @@ async function hydrateStateFromIdb() {
       if (bestCount >= curCount) {
         state = Object.assign(structuredClone(defaultState), best);
         if (!Array.isArray(state.trash)) state.trash = [];
+        if (!Array.isArray(state.imageOverlays)) state.imageOverlays = [];
+        if (!Array.isArray(state.serviceLayers)) state.serviceLayers = [];
         state.version = "1.2";
         renderProjectsUI();
         renderAllVectorFeatures();
+        renderExternalOverlaysAndServices();
         updateCenterHud();
         updateTrashBadge();
         syncQuickLayerBar();
@@ -2797,12 +2789,6 @@ function openAttributeFormForChoice(choice) {
   const sel = document.getElementById("attrProjectSelect");
   sel.innerHTML = state.projects.map(p => `<option value="${p.id}" ${p.id === state.activeProjectId ? "selected" : ""}>${p.name}</option>`).join("");
 
-  const activeProj = getActiveProject();
-  const wInp = document.getElementById("attrWorkName");
-  const cInp = document.getElementById("attrCategoryName");
-  if (wInp && !wInp.value) wInp.value = activeProj?.workName || "";
-  if (cInp && !cInp.value) cInp.value = activeProj?.categoryName || "";
-
   const labelMap = {
     line: "Tên tuyến đường *",
     polygon: "Tên vùng / Thửa đất *",
@@ -2810,9 +2796,8 @@ function openAttributeFormForChoice(choice) {
   };
   document.getElementById("attrPrimaryNameLabel").textContent = labelMap[choice] || "Tên đối tượng *";
   document.getElementById("attrObjectName").value =
-    activeProj?.defaultObjectName ||
-    (choice === "polygon" ? `Vùng khảo sát ${new Date().toLocaleTimeString("vi-VN")}` :
-    choice === "line" ? `Tuyến đo ${new Date().toLocaleTimeString("vi-VN")}` : "Mốc ĐM");
+    choice === "polygon" ? `Vùng khảo sát ${new Date().toLocaleTimeString("vi-VN")}` :
+    choice === "line" ? `Tuyến đo ${new Date().toLocaleTimeString("vi-VN")}` : "Mốc ĐM";
   document.getElementById("attrUpdatedAt").value = new Date().toLocaleString("vi-VN");
   document.getElementById("attrNote").value = state.surveyNote.content || "";
   openModal("geometryAttrModal");
@@ -3298,8 +3283,6 @@ function openFeatureDetailModal(featureId) {
   }
   html += `
     <div><b>Dự án:</b> ${f.project || "Chế độ chung"}</div>
-    ${f.workName ? `<div><b>Tên công trình:</b> ${f.workName}</div>` : ""}
-    ${f.categoryName ? `<div><b>Hạng mục:</b> ${f.categoryName}</div>` : ""}
     ${f.note ? `<div><b>Ghi chú:</b> ${f.note}</div>` : ""}
     <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Cập nhật: ${f.createdAt || ""}</div>
   `;
@@ -4542,20 +4525,13 @@ function deleteProjectScope(id) {
 function saveSurveyNote() {
   const projId = document.getElementById("noteProjectSelect").value;
   if (projId) state.activeProjectId = projId;
-  const workName = document.getElementById("camWorkNameInput")?.value.trim() || "";
-  const catName = document.getElementById("camCategoryNameInput")?.value.trim() || "";
   state.surveyNote.workTitle = document.getElementById("workTitleInput").value.trim();
   state.surveyNote.content = document.getElementById("workNoteInput").value.trim();
-  const activeProj = getActiveProject();
-  if (activeProj && activeProj.id !== "proj_0") {
-    if (workName) activeProj.workName = workName;
-    if (catName) activeProj.categoryName = catName;
-  }
   saveAppState();
   renderProjectsUI();
   updateCameraHudValues();
   closeModal("camNoteModal");
-  showToast("Đã cập nhật ghi chú dự án, công trình, hạng mục!");
+  showToast("Đã cập nhật ghi chú dự án, công việc!");
 }
 
 function openDeltaHModal() {
@@ -4825,7 +4801,7 @@ function renderLayersModal() {
           <button class="mini-btn" title="Phóng to tới lớp" onclick="state.selectedQuickLayerId='${l.id}'; flyToSelectedQuickLayer(); closeModal('layersModal');">🔍</button>
           <button class="mini-btn" title="Ẩn/Hiện lớp" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
           <button class="mini-btn" title="Kiểu dáng & Độ mờ" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
-          <button class="mini-btn" style="color:#f87171;" title="Chuyển vào thùng rác" onclick="openTrashConfirmDialog('Chuyển lớp &quot;${l.name.replace(/'/g, "&#39;")}&quot; vào Thùng rác?', () => deleteLayer('${l.id}'))">🗑️</button>
+          <button class="mini-btn" style="color:#f87171;" title="Chuyển vào thùng rác" onclick="deleteLayer('${l.id}')">🗑️</button>
         </div>
         ${childrenHtml}
       </div>
@@ -5215,36 +5191,17 @@ function renderSearchProjectOptions() {
 function filterSearchFeatures() {
   const q = (document.getElementById("searchFeatureInput")?.value || "").toLowerCase();
   const projFilter = document.getElementById("searchProjectFilter")?.value || "__ALL__";
-  const workFilter = (document.getElementById("searchWorkFilter")?.value || "").toLowerCase();
-  const catFilter = (document.getElementById("searchCategoryFilter")?.value || "").toLowerCase();
   const list = state.features.filter(f => {
-    const dimText = f.geomType === "segment"
-      ? `${(f.lengthM || 0).toFixed(2)} ${(f.lengthM || 0).toFixed(3)}`
-      : f.geomType === "polygon"
-      ? `${(f.areaM2 || 0).toFixed(2)} ${((f.areaM2 || 0) / 10000).toFixed(4)}`
-      : `${(f.vnX || 0).toFixed(2)} ${(f.vnY || 0).toFixed(2)}`;
-    const matchText =
-      (f.name || "").toLowerCase().includes(q) ||
-      (f.subName || "").toLowerCase().includes(q) ||
-      (f.workName || "").toLowerCase().includes(q) ||
-      (f.categoryName || "").toLowerCase().includes(q) ||
-      (f.note || "").toLowerCase().includes(q) ||
-      dimText.includes(q);
+    const matchText = (f.name || "").toLowerCase().includes(q) || (f.note || "").toLowerCase().includes(q);
     const matchProj = projFilter === "__ALL__" || f.project === projFilter;
-    const matchWork = !workFilter || (f.workName || "").toLowerCase().includes(workFilter);
-    const matchCat = !catFilter || (f.categoryName || "").toLowerCase().includes(catFilter);
-    return matchText && matchProj && matchWork && matchCat;
+    return matchText && matchProj;
   });
-  document.getElementById("searchResultsList").innerHTML = list.slice(0, 60).map(f => `
+  document.getElementById("searchResultsList").innerHTML = list.slice(0, 50).map(f => `
     <div class="list-card" style="cursor:pointer;" onclick="jumpToFeature('${f.id}')">
       <div style="font-weight:700;font-size:13px;">${f.name}</div>
-      <div style="font-size:11px;color:#38bdf8;">
-        ${f.project || "0. Chế độ chung cho tất cả dự án"}${f.workName ? " • CT: " + f.workName : ""}${f.categoryName ? " • HM: " + f.categoryName : ""}
-      </div>
-      <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">
+      <div style="font-size:11.5px;color:#94a3b8;">
         ${f.geomType === "segment" ? `Kích thước: ${formatLength(f.lengthM)}` : f.geomType === "point" ? `X=${f.vnX.toFixed(3)}, Y=${f.vnY.toFixed(3)}` : `Diện tích: ${formatArea(f.areaM2)}`}
       </div>
-      ${f.note ? `<div style="font-size:11px;color:#fbbf24;margin-top:2px;">Ghi chú: ${f.note}</div>` : ""}
     </div>
   `).join("") || `<div style="color:#94a3b8;font-size:12.5px;">Không tìm thấy đối tượng phù hợp.</div>`;
 }
