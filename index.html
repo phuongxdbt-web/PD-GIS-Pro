@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro 1.2 (Bản xem trước) - Ban QLDA Phương Đông</title>
+  <title>PD GIS Pro 1.2.4 - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -91,6 +91,30 @@
       stroke: #ffffff;
     }
 
+    
+    /* Nhãn tên mốc & text đính kèm luôn hiển thị rõ trên bản đồ */
+    .point-permanent-label {
+      background: rgba(15, 23, 42, 0.88);
+      color: #f8fafc;
+      border: 1px solid rgba(56, 189, 248, 0.78);
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+      transform: translate(-50%, 8px);
+      pointer-events: none;
+    }
+    .point-marker-shape {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+      cursor: pointer;
+    }
+
     /* Nhãn kích thước từng đoạn line */
     .seg-label {
       background: rgba(15, 23, 42, 0.88);
@@ -102,60 +126,6 @@
       white-space: nowrap;
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
       transform: translate(-50%, -50%);
-    }
-
-    /* Nhãn tên mốc luôn hiển thị & text từ file nạp */
-    .point-name-label {
-      background: rgba(15, 23, 42, 0.9);
-      color: #fef08a;
-      border: 1px solid rgba(248, 113, 113, 0.85);
-      padding: 1px 6px;
-      border-radius: 5px;
-      font-size: 11px;
-      font-weight: 800;
-      white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.65);
-      transform: translate(-50%, -135%);
-    }
-    .imported-text-label {
-      background: rgba(30, 41, 59, 0.9);
-      color: #7dd3fc;
-      border: 1px solid rgba(56, 189, 248, 0.75);
-      padding: 1px 6px;
-      border-radius: 5px;
-      font-size: 10.5px;
-      font-weight: 700;
-      white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-      transform: translate(-50%, -50%);
-    }
-
-    /* Kiểu nút điểm dễ nhận dạng */
-    .pt-symbol-wrap {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transform: translate(-50%, -50%);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.75));
-    }
-    .pt-sym-triangle {
-      width: 0; height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 15px solid var(--pt-color, #ef4444);
-    }
-    .pt-sym-square {
-      width: 13px; height: 13px;
-      background: var(--pt-color, #ef4444);
-      border: 2px solid #ffffff;
-      border-radius: 2px;
-    }
-    .pt-sym-arrow {
-      width: 14px; height: 14px;
-      background: var(--pt-color, #ef4444);
-      border: 2px solid #ffffff;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
     }
 
     /* Thanh công cụ trên cùng */
@@ -180,16 +150,6 @@
     }
     .icon-btn:active { transform: scale(0.94); }
     .icon-btn.active { background: var(--accent-blue); border-color: #60a5fa; color: #fff; }
-    .icon-btn.cloud-btn {
-      width: auto; padding: 0 9px; gap: 5px; font-size: 12px; font-weight: 700;
-      border-color: rgba(56, 189, 248, 0.45);
-    }
-    .icon-btn.cloud-btn.syncing {
-      background: rgba(2, 132, 199, 0.35); border-color: #38bdf8; color: #7dd3fc;
-    }
-    .icon-btn.cloud-btn.synced {
-      border-color: rgba(16, 185, 129, 0.55); color: #6ee7b7;
-    }
 
     /* Cụm thông tin bên trái */
     .left-stack {
@@ -809,6 +769,64 @@
       font-size: 12.5px; font-weight: 600; display: none;
       box-shadow: 0 10px 25px rgba(0,0,0,0.6); max-width: 90vw; text-align: center;
     }
+
+    /* Nút Quản trị Key Admin & Cổng cấp Key tự động (v1.2.4) */
+    .admin-crown-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0f172a;
+      border: 1px solid #fde047;
+      border-radius: 10px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+      white-space: nowrap;
+    }
+    .admin-crown-btn.visible { display: inline-flex; }
+    .key-badge-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #7dd3fc;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10.5px;
+      font-weight: 800;
+      font-family: ui-monospace, monospace;
+    }
+    .key-status-active { color: #34d399; font-weight: 800; }
+    .key-status-locked { color: #f87171; font-weight: 800; }
+    .contact-card-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      border-radius: 12px;
+      padding: 9px 11px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+
+    /* Tối ưu GPU Desktop: Tắt backdrop-filter blur gây nghẽn trình kết xuất phần mềm trên Windows */
+    @media (hover: hover) and (pointer: fine), (min-width: 768px) {
+      .glass-pill,
+      .bottom-hud,
+      #quickSelectedLayerBar,
+      .modal-backdrop,
+      #authGateModal {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.96) !important;
+      }
+      .modal-backdrop, #authGateModal {
+        background: rgba(2, 6, 23, 0.86) !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -860,13 +878,14 @@
   <div class="top-bar">
     <div class="top-left-group">
       <button class="icon-btn" title="Mở menu chính" onclick="openDrawer()">☰</button>
-      <button class="account-pill-btn" id="headerAccountBtn" onclick="openAuthGateModal()" title="Đăng nhập / Đổi tài khoản (Email hoặc SĐT)">
-        👤 Đăng nhập
+      <button class="account-pill-btn" id="headerAccountBtn" onclick="openAuthGateModal()" title="Đăng nhập bằng Key / Xin cấp Key tự động">
+        🔑 Nhập Key
+      </button>
+      <button class="admin-crown-btn" id="headerAdminKeyBtn" onclick="openModal('adminKeyManagerModal')" title="Quản trị Key & Thống kê người dùng Google Sheets">
+        👑 QL Key
       </button>
     </div>
     <div class="top-right-group glass-pill">
-      <button class="icon-btn cloud-btn" id="btnCloudPush" title="Đẩy dữ liệu hiện tại lên đám mây & ghi chi tiết vào Google Sheets" onclick="handleCloudPushClick()">☁️↑<span>Đẩy lên mây</span></button>
-      <button class="icon-btn cloud-btn" id="btnCloudPull" title="Tải dữ liệu mới nhất từ đám mây về thiết bị" onclick="handleCloudPullClick()">☁️↓<span>Tải từ mây về</span></button>
       <button class="icon-btn" title="Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
       <button class="icon-btn" title="Bảng thống kê tổng hợp theo dự án" onclick="openModal('projectStatsModal')">📊</button>
       <button class="icon-btn" title="Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
@@ -1059,8 +1078,8 @@
   <div class="drawer-panel">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:16px;font-weight:800;color:#38bdf8;">PD GIS PRO 1.2</div>
-        <div style="font-size:11px;color:#94a3b8;">Ban QLDA Phương Đông • Trắc địa & GIS</div>
+        <div style="font-size:16px;font-weight:800;color:#38bdf8;">PD GIS PRO 1.2.4</div>
+        <div style="font-size:11px;color:#94a3b8;">Phương Đông Trắc địa & GIS</div>
       </div>
       <button class="close-x" onclick="closeDrawer()">✕</button>
     </div>
@@ -1074,15 +1093,18 @@
 
     <div class="menu-section-title">2. Dữ liệu bản đồ, Vẽ & Thùng rác</div>
     <div class="menu-item" onclick="closeDrawer(); openCreatePolygonGuide()"><span>⬠ Tạo dữ liệu Vùng (GPS / Vẽ tay / Tự do)</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); triggerImportFile()"><span>📂 Nạp file KMZ (tự nổ đoạn), KML, GeoJSON, GPX</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); triggerImportFile()"><span>📂 Nạp file KMZ (tự nổ đoạn), KML, GeoJSON, GPX, DXF</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('layersModal')"><span>📚 Quản lý các lớp & Tệp KML/KMZ</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('trashModal')"><span id="drawerTrashLabel">🗑️ Thùng rác dữ liệu đã xóa (0)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('parcelModal')"><span>📐 Quét tọa độ sổ đỏ từ ảnh & Cắt khung</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('fieldSchemaModal')"><span>📝 Cấu trúc dữ liệu & Trường thuộc tính</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('tagsModal')"><span>🏷️ Quản lý nhãn thẻ</span><span>›</span></div>
 
-    <div class="menu-section-title">3. Đồng bộ Đám mây, Viễn thám, UAV & Xuất</div>
-    <div class="menu-item" onclick="closeDrawer(); openModal('cloudSyncModal')"><span id="drawerCloudLabel">☁️ Đồng bộ Đám mây & Google Sheets</span><span>›</span></div>
+    <div class="menu-section-title">3. Quản lý Key, Người dùng & Google Sheets</div>
+    <div class="menu-item" onclick="closeDrawer(); openAuthGateModal()"><span>🔑 Cổng nhập Key & Xin cấp Key tự động</span><span>›</span></div>
+    <div class="menu-item" id="drawerAdminKeyItem" style="display:none;border-color:rgba(251,191,36,0.5);" onclick="closeDrawer(); openModal('adminKeyManagerModal')"><span style="color:#fbbf24;">👑 Quản trị Key & Đếm người dùng (Admin)</span><span>›</span></div>
+
+    <div class="menu-section-title">4. Viễn thám, UAV & Xuất dữ liệu</div>
     <div class="menu-item" onclick="closeDrawer(); openModal('satelliteModal')"><span>🛰️ Tìm ảnh vệ tinh (Sentinel-2)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('fireModal')"><span>🔥 Điểm cảnh báo cháy (MODIS / VIIRS)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('nfzModal')"><span>🚁 Khu vực cấm bay UAV</span><span>›</span></div>
@@ -1093,53 +1115,9 @@
 </div>
 
 <!-- Input ẩn -->
-<input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
+<input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.dxf,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
 <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="handleRestoreJson(event)" />
 <input type="file" id="ocrImageInput" accept="image/*" style="display:none" onchange="handleOcrImageFile(event)" />
-
-<!-- ===================================================================== -->
-<!-- MODAL ĐỒNG BỘ ĐÁM MÂY (MÁY TÍNH ↔ ĐIỆN THOẠI & GOOGLE SHEETS)        -->
-<!-- ===================================================================== -->
-<div class="modal-backdrop" id="cloudSyncModal">
-  <div class="modal-card">
-    <div class="modal-head">
-      <span class="modal-title">☁️ Đồng Bộ Đám Mây & Google Sheets</span>
-      <button class="close-x" onclick="closeModal('cloudSyncModal')">✕</button>
-    </div>
-
-    <div class="list-card" style="background:rgba(15,23,42,0.85);border-color:rgba(56,189,248,0.4);">
-      <div style="font-size:12.5px;font-weight:700;color:#38bdf8;" id="cloudAccountInfo">Tài khoản đang chọn: ---</div>
-      <div style="font-size:11.5px;color:#94a3b8;margin-top:3px;" id="cloudLastSyncInfo">Chưa đồng bộ đám mây</div>
-    </div>
-
-    <div class="grid-2 form-group">
-      <button class="btn-primary" style="background:#0284c7;" onclick="pushStateToCloud()">☁️↑ Đẩy lên mây & Sheets</button>
-      <button class="btn-primary" style="background:#0f766e;" onclick="pullStateFromCloud()">☁️↓ Tải từ mây về</button>
-    </div>
-
-    <hr style="border-color:var(--border-subtle);margin:12px 0;" />
-
-    <div class="form-group">
-      <label class="form-label">🔗 URL Google Apps Script Web App (Ghi chi tiết Dự án, Mốc tọa độ, Lớp vào Google Sheets):</label>
-      <input type="url" id="cloudEndpointInput" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" />
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">🔑 Mã đồng bộ / Khóa phòng riêng (tùy chọn, mặc định theo tài khoản):</label>
-      <input type="text" id="cloudSyncKeyInput" class="form-input" placeholder="VD: BQLDA_PHUONG_DONG_2026" />
-    </div>
-
-    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#e2e8f0;margin-bottom:12px;cursor:pointer;">
-      <input type="checkbox" id="cloudAutoSyncChk" />
-      <span>Tự động đẩy lên mây & Google Sheets khi lưu dữ liệu (mỗi 15s)</span>
-    </label>
-
-    <div class="grid-2">
-      <button class="btn-primary" onclick="saveCloudSyncSettings()">✓ Lưu cấu hình Cloud</button>
-      <button class="btn-secondary" onclick="copyAppsScriptTemplate()">📋 Sao chép mã Apps Script (Sheets)</button>
-    </div>
-  </div>
-</div>
 
 <!-- ===================================================================== -->
 <!-- MODAL BẢNG THỐNG KÊ TỔNG HỢP THEO TỪNG DỰ ÁN (CHIỀU DÀI / DIỆN TÍCH / MỐC) -->
@@ -1271,7 +1249,7 @@
 </div>
 
 <!-- ===================================================================== -->
-<!-- MODAL CHI TIẾT ĐỐI TƯỢNG / DỊCH CHUYỂN MỐC & ĐỈNH (BẢN MỚI)         -->
+<!-- MODAL CHI TIẾT ĐỐI TƯỢNG / DỊCH CHUYỂN MỐC & ĐỈNH                    -->
 <!-- ===================================================================== -->
 <div class="modal-backdrop" id="featureDetailModal">
   <div class="modal-card">
@@ -1280,61 +1258,59 @@
       <button class="close-x" onclick="closeModal('featureDetailModal')">✕</button>
     </div>
     <div id="featDetailBody" style="font-size:12.5px;line-height:1.55;"></div>
-    <div id="featAttachmentBox" style="margin-top:8px;"></div>
-
-    <!-- Chỉnh sửa trực tiếp VN-2000 & Cao độ H (hệ 84 tự chạy theo) -->
-    <div id="featCoordEditBox" class="list-card" style="margin-top:10px;background:rgba(15,23,42,0.85);border-color:rgba(251,191,36,0.45);display:none;">
-      <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:6px;">
-        ✏️ Chỉnh số liệu mốc VN-2000 & Cao độ H (WGS84 tự cập nhật)
-      </div>
-      <div class="grid-2 form-group">
+    <div id="featPointEditBox" style="display:none;margin-top:8px;padding:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.4);border-radius:12px;">
+      <div style="font-size:11.5px;font-weight:800;color:#38bdf8;margin-bottom:6px;">📐 CHỈNH TỌA ĐỘ VN-2000 & CAO ĐỘ (WGS84 TỰ CHẠY THEO)</div>
+      <div class="grid-2 form-group" style="margin-bottom:6px;">
         <div>
           <label class="form-label">X(E) VN-2000 (m):</label>
-          <input type="number" step="0.001" id="editFeatVnX" class="form-input" />
+          <input type="number" step="any" id="editPtVnX" class="form-input" oninput="previewEditPointVn2000()" />
         </div>
         <div>
           <label class="form-label">Y(N) VN-2000 (m):</label>
-          <input type="number" step="0.001" id="editFeatVnY" class="form-input" />
+          <input type="number" step="any" id="editPtVnY" class="form-input" oninput="previewEditPointVn2000()" />
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:8px;">
-        <label class="form-label">Cao độ H (m):</label>
-        <input type="number" step="0.01" id="editFeatElevH" class="form-input" />
+      <div class="grid-2 form-group" style="margin-bottom:6px;">
+        <div>
+          <label class="form-label">⛰️ Cao độ H (m):</label>
+          <input type="number" step="any" id="editPtElevation" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">🎯 Kiểu nút điểm hiển thị:</label>
+          <select id="editPtMarkerStyle" class="form-select">
+            <option value="dot">🔴 Chấm tròn chuẩn</option>
+            <option value="crosshair_circle">⊕ Tâm ngắm trắc địa</option>
+            <option value="triangle">🔺 Tam giác mốc địa chính</option>
+            <option value="square">🟦 Hình vuông cọc mốc</option>
+            <option value="diamond">🔶 Hình thoi điểm khống chế</option>
+            <option value="pin">📍 Ghim định vị</option>
+          </select>
+        </div>
       </div>
-      <button type="button" class="btn-primary" style="background:#d97706;padding:8px 10px;" onclick="saveEditedVn2000AndElev()">✓ Cập nhật VN-2000 & Cao độ H</button>
+      <div style="font-size:11.5px;color:#34d399;margin-bottom:7px;">
+        🌐 Hệ WGS84 tự động quy đổi: <strong id="editPtWgsLiveText">---</strong>
+      </div>
+      <button type="button" class="btn-primary" style="background:#0f766e;padding:8px;" onclick="saveEditedPointCoordsAndStyle()">💾 Lưu tọa độ VN-2000, Cao độ & Kiểu nút</button>
     </div>
-
-    <!-- Kiểu nút điểm & Nhãn thẻ tùy biến -->
+    <div id="featAttachmentBox" style="margin-top:8px;"></div>
     <div class="grid-2" style="margin-top:8px;">
-      <div id="featSymbolPickerWrap">
-        <label class="form-label">🔘 Kiểu nút điểm:</label>
-        <select id="featPointSymbolSelect" class="form-select" onchange="assignPointSymbolToInspected(this.value)">
-          <option value="circle">Chấm tròn</option>
-          <option value="triangle">Tam giác mốc</option>
-          <option value="square">Vuông trắc địa</option>
-          <option value="arrow">Mũi tên cọc</option>
-        </select>
-      </div>
       <div>
-        <label class="form-label">🏷️ Gắn nhãn thẻ:</label>
+        <label class="form-label">🏷️ Gắn nhãn thẻ có sẵn:</label>
         <select id="featTagSelect" class="form-select" onchange="assignTagToInspectedFeature(this.value)"></select>
       </div>
-    </div>
-
-    <div class="form-group" style="margin-top:8px;">
-      <label class="form-label">✨ Tạo nhanh nhãn thẻ tùy biến (tên mới):</label>
-      <div style="display:flex;gap:6px;">
-        <input type="text" id="customInlineTagInput" class="form-input" placeholder="Nhập tên nhãn thẻ mới..." />
-        <button type="button" class="btn-secondary" style="white-space:nowrap;background:#0f766e;color:#fff;border:0;" onclick="createAndAttachCustomTag()">+ Gắn nhãn</button>
+      <div>
+        <label class="form-label">✍️ Nhãn thẻ tùy biến (tên mới):</label>
+        <div style="display:flex;gap:5px;">
+          <input type="text" id="featCustomTagInput" class="form-input" placeholder="Nhập tên thẻ mới..." />
+          <button type="button" class="mini-btn" style="background:#2563eb;color:#fff;border:0;white-space:nowrap;" onclick="applyCustomTagToInspectedFeature()">Gắn</button>
+        </div>
       </div>
     </div>
-
-    <div style="margin-top:6px;">
+    <div style="margin-top:8px;">
       <label class="form-label">📷 Đính kèm ảnh:</label>
       <button type="button" class="btn-secondary" style="width:100%;" onclick="document.getElementById('featAttachPhotoInput').click()">+ Thêm ảnh đối tượng</button>
       <input type="file" id="featAttachPhotoInput" accept="image/*" style="display:none" onchange="handleAttachPhotoToInspectedFeature(event)" />
     </div>
-
     <div class="grid-2" style="margin-top:12px;">
       <button class="btn-primary" style="background:#0284c7;" onclick="beginMoveInspectedPointOrVertex()">🎯 Dịch chuyển mốc / đỉnh</button>
       <button class="btn-secondary" onclick="zoomToInspectedFeature()">🔍 Phóng to tới đây</button>
@@ -1552,28 +1528,15 @@
       <button class="close-x" onclick="closeModal('camNoteModal')">✕</button>
     </div>
     <div class="form-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <label class="form-label" style="margin:0;">🏗️ Dự án:</label>
-        <button type="button" class="mini-btn" style="padding:2px 8px;background:#0f766e;color:#fff;border:0;" onclick="quickAddProjectInline('noteProjectSelect')">+ Dự án mới</button>
-      </div>
+      <label class="form-label">Dự án / Hạng mục áp dụng:</label>
       <select id="noteProjectSelect" class="form-select"></select>
     </div>
-    <div class="grid-2 form-group">
-      <div>
-        <label class="form-label">🏛️ Tên công trình:</label>
-        <input type="text" id="camWorkNameInput" class="form-input" placeholder="VD: Hạ tầng kỹ thuật" />
-      </div>
-      <div>
-        <label class="form-label">🧩 Hạng mục:</label>
-        <input type="text" id="camCategoryNameInput" class="form-input" placeholder="VD: Tuyến D1 / Cọc KM0+500" />
-      </div>
-    </div>
     <div class="form-group">
-      <label class="form-label">📌 Đối tượng / Mốc khảo sát:</label>
+      <label class="form-label">Tên công việc / Mốc khảo sát:</label>
       <input type="text" id="workTitleInput" class="form-input" placeholder="VD: Kiểm tra tim tuyến D1 - Cọc KM0+500" />
     </div>
     <div class="form-group">
-      <label class="form-label">📝 Ghi chú chi tiết:</label>
+      <label class="form-label">Nội dung ghi chú chi tiết:</label>
       <textarea id="workNoteInput" class="form-textarea" placeholder="Nhập ghi chú nghiệm thu, cao độ thiết kế, tình trạng mặt bằng..."></textarea>
     </div>
     <button class="btn-primary" onclick="saveSurveyNote()">Lưu ghi chú vào phiên đo & Camera</button>
@@ -1637,8 +1600,12 @@
       <input type="text" id="imgOverlayName" class="form-input" placeholder="VD: QH 1/500 KCN Tuy Phong" />
     </div>
     <div class="form-group">
-      <label class="form-label">Chọn tệp ảnh mặt bằng / sơ đồ (JPG, PNG):</label>
-      <input type="file" id="imgOverlayFileInput" accept="image/*" class="form-input" />
+      <label class="form-label">Chọn tệp bản vẽ / mặt bằng (JPG, PNG, PDF):</label>
+      <input type="file" id="imgOverlayFileInput" accept="image/*,application/pdf,.pdf" class="form-input" />
+      <div id="pdfPageSelectRow" style="display:none;margin-top:6px;">
+        <label class="form-label">Trang PDF cần phủ lên bản đồ:</label>
+        <input type="number" min="1" value="1" id="imgPdfPageNumber" class="form-input" placeholder="Trang số (mặc định: 1)" />
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Phạm vi tọa độ góc Tây-Nam & Đông-Bắc (VN-2000 X, Y):</label>
@@ -1730,7 +1697,6 @@
   </div>
 </div>
 
-<!-- Modal Nhập Điểm Tọa Độ (Bổ sung Tên mốc & Cao độ H) -->
 <div class="modal-backdrop" id="coordInputModal">
   <div class="modal-card">
     <div class="modal-head">
@@ -1746,12 +1712,12 @@
     </div>
     <div class="grid-2 form-group">
       <div>
-        <label class="form-label">🏷️ Đặt tên mốc:</label>
-        <input type="text" id="inCoordPointName" class="form-input" placeholder="VD: Mốc ĐM-01 / Tim D1" />
+        <label class="form-label">📌 Đặt tên mốc:</label>
+        <input type="text" id="inCoordPointName" class="form-input" placeholder="VD: Mốc DC-01 / N3-C5" />
       </div>
       <div>
         <label class="form-label">⛰️ Cao độ H (m):</label>
-        <input type="number" step="any" id="inCoordElevH" class="form-input" placeholder="VD: 12.50" />
+        <input type="number" step="any" id="inCoordElevation" class="form-input" placeholder="VD: 12.45" value="0" />
       </div>
     </div>
     <div class="grid-2 form-group">
@@ -1909,6 +1875,15 @@
       <span class="modal-title">🔍 Tìm Kiếm Đối Tượng & Đoạn Tuyến</span>
       <button class="close-x" onclick="closeModal('searchModal')">✕</button>
     </div>
+    <div class="list-card" style="border-color:rgba(56,189,248,0.45);background:rgba(15,23,42,0.85);margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:6px;">🗺️ TÌM KIẾM ĐỊA DANH / KHU CÔNG NGHIỆP & BAY TỚI VỊ TRÍ</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="placeSearchInput" class="form-input" placeholder="VD: xã Lộc Sơn, tỉnh Lâm Đồng; Phương Đông; KCN Tuy Phong..." onkeydown="if(event.key==='Enter'){event.preventDefault();searchMapPlacesNow();}" />
+        <button type="button" class="btn-primary" style="width:auto;background:#0284c7;padding:8px 13px;white-space:nowrap;" id="btnSearchPlacesNow" onclick="searchMapPlacesNow()">🔎 Tìm vị trí</button>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Hỗ trợ địa danh hành chính (xã/phường/tỉnh), khu công nghiệp, dự án/điểm lưu hoặc tọa độ X,Y.</div>
+      <div id="placeSearchResultsBox" style="margin-top:8px;max-height:190px;overflow-y:auto;"></div>
+    </div>
     <div class="form-group">
       <select id="searchProjectFilter" class="form-select" onchange="filterSearchFeatures()">
         <option value="__ALL__">Tất cả dự án</option>
@@ -2058,31 +2033,158 @@
   </div>
 </div>
 
-<!-- Modal Đăng Nhập / Đổi Tài Khoản (Email hoặc Số điện thoại - Dữ liệu riêng từng người) -->
+<!-- Modal Cổng Kích Hoạt Key Riêng & Xin Cấp Key Tự Động (v1.2.4) -->
 <div id="authGateModal">
-  <div class="auth-card">
+  <div class="auth-card" style="max-width:480px;max-height:92vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <div>
-        <div style="font-size:16px;font-weight:900;color:#38bdf8;">PD GIS PRO 1.2 • TÀI KHOẢN CÁ NHÂN</div>
-        <div style="font-size:11.5px;color:#94a3b8;">Mỗi tài khoản tự tạo dự án, nạp KMZ & quản lý dữ liệu riêng</div>
+        <div style="font-size:16px;font-weight:900;color:#38bdf8;">PD GIS PRO 1.2.4 • CỔNG KÍCH HOẠT KEY</div>
+        <div style="font-size:11.5px;color:#94a3b8;">Mỗi người dùng sử dụng 1 Mã Key riêng • Tách biệt dữ liệu</div>
       </div>
       <button class="close-x" id="btnCloseAuthModal" onclick="closeAuthGateModal()" title="Đóng">✕</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Email hoặc Số điện thoại đăng nhập *</label>
-      <input type="text" id="authIdentifierInput" class="form-input" placeholder="VD: nguyenvana@gmail.com hoặc 0912345678" />
+    <div class="chip-list" style="margin-bottom:12px;">
+      <span class="chip active" id="tabHaveKey" onclick="switchAuthTab('have_key')">🔑 Đã có Key (Đăng nhập)</span>
+      <span class="chip" id="tabRequestKey" onclick="switchAuthTab('request_key')">📩 Xin cấp Key tự động</span>
     </div>
-    <div class="form-group">
-      <label class="form-label">Tên hiển thị / Đơn vị hoặc cá nhân (tùy chọn):</label>
-      <input type="text" id="authDisplayNameInput" class="form-input" placeholder="VD: Kỹ sư / Người dùng tự do" />
-    </div>
-    <button class="btn-primary" style="background:#10b981;" onclick="loginWithIdentifier()">✓ Đăng nhập / Vào không gian dữ liệu riêng</button>
 
-    <div id="savedAccountsQuickBox" style="margin-top:12px;"></div>
-    <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:11px;color:#94a3b8;" id="authCurrentStatusText">Chưa đăng nhập tài khoản riêng</span>
-      <button type="button" class="mini-btn" style="color:#f87171;" onclick="logoutCurrentAccount()">Đăng xuất</button>
+    <!-- TAB 1: NHẬP KEY ĐÃ CÓ -->
+    <div id="authHaveKeyPane">
+      <div class="form-group">
+        <label class="form-label">Nhập Mã Key cá nhân của bạn *</label>
+        <input type="text" id="authKeyCodeInput" class="form-input" style="font-family:ui-monospace,monospace;text-transform:uppercase;font-weight:800;letter-spacing:0.6px;" placeholder="VD: PDGIS-PRO-XXXX-XXXX" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email hoặc Số điện thoại đi kèm (để đối chiếu):</label>
+        <input type="text" id="authIdentifierInput" class="form-input" placeholder="VD: 0912345678 hoặc email@gmail.com" />
+      </div>
+      <button class="btn-primary" style="background:#10b981;" onclick="loginWithAccessKey()">✓ Kích hoạt Key & Vào không gian dữ liệu riêng</button>
+
+      <div class="contact-card-box" style="margin-top:12px;">
+        <div style="font-weight:800;color:#fbbf24;margin-bottom:3px;">📞 Chưa có Key? Liên hệ Quản trị viên hoặc nhận tự động:</div>
+        <div style="color:#e2e8f0;">• Phụ trách: <strong>Tăng Văn Phương</strong> — Ban QLDA Phương Đông</div>
+        <div style="color:#e2e8f0;">• Zalo / Điện thoại: <strong style="color:#38bdf8;">0989899905</strong> • Email: <strong>phuongxdbt@gmail.com</strong></div>
+        <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;">
+          <button type="button" class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="switchAuthTab('request_key')">⚡ Đăng ký nhận Key ngay</button>
+          <a href="https://zalo.me/0989899905" target="_blank" rel="noopener" class="mini-btn" style="background:#0f766e;color:#fff;border:0;text-decoration:none;">💬 Nhắn Zalo 0989899905</a>
+        </div>
+      </div>
+
+      <div id="savedAccountsQuickBox" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- TAB 2: XIN CẤP KEY TỰ ĐỘNG (CÁCH 2 - ĐỒNG BỘ GOOGLE SHEETS) -->
+    <div id="authRequestKeyPane" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Họ và tên người sử dụng *</label>
+        <input type="text" id="reqUserFullName" class="form-input" placeholder="VD: Nguyễn Văn A" />
+      </div>
+      <div class="grid-2 form-group">
+        <div>
+          <label class="form-label">Số điện thoại / Zalo *</label>
+          <input type="tel" id="reqUserPhone" class="form-input" placeholder="VD: 0912345678" />
+        </div>
+        <div>
+          <label class="form-label">Email liên hệ *</label>
+          <input type="email" id="reqUserEmail" class="form-input" placeholder="VD: tenban@gmail.com" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Đơn vị công tác / Dự án quan tâm:</label>
+        <input type="text" id="reqUserOrg" class="form-input" placeholder="VD: Công ty / Ban QLDA / Khảo sát thực địa" />
+      </div>
+      <button class="btn-primary" style="background:#2563eb;" id="btnAutoRegisterKey" onclick="requestAutoAccessKey()">⚡ Đăng ký & Nhận mã Key riêng ngay</button>
+
+      <div id="issuedKeyResultBox" style="display:none;margin-top:10px;" class="list-card">
+        <div style="font-size:12px;color:#34d399;font-weight:800;">🎉 ĐÃ CẤP KEY CÁ NHÂN THÀNH CÔNG!</div>
+        <div style="font-size:11.5px;color:#cbd5e1;margin-top:3px;">Hãy lưu lại mã Key bên dưới (đã tự động ghi nhận vào hệ thống):</div>
+        <div id="issuedKeyCodeText" style="margin:7px 0;padding:8px;background:#0f172a;border:1px dashed #38bdf8;border-radius:8px;font-family:ui-monospace,monospace;font-size:14px;font-weight:900;color:#fde047;text-align:center;"></div>
+        <div class="grid-2">
+          <button type="button" class="mini-btn" onclick="copyIssuedKeyToClipboard()">📋 Sao chép Key</button>
+          <button type="button" class="mini-btn" style="background:#10b981;color:#fff;border:0;" onclick="activateNewlyIssuedKey()">🚀 Vào App bằng Key này</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:#94a3b8;" id="authCurrentStatusText">Chưa kích hoạt Key riêng</span>
+      <button type="button" class="mini-btn" style="color:#f87171;" onclick="logoutCurrentAccount()">Đăng xuất Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Quản Trị Key & Thống Kê Người Dùng Google Sheets (Chỉ dành cho Admin) -->
+<div class="modal-backdrop" id="adminKeyManagerModal">
+  <div class="modal-card" style="max-width:660px;">
+    <div class="modal-head">
+      <span class="modal-title">👑 Quản Trị Key & Thống Kê Người Dùng (QUAN LÝ PD GIS)</span>
+      <button class="close-x" onclick="closeModal('adminKeyManagerModal')">✕</button>
+    </div>
+
+    <div class="summary-kpi-grid">
+      <div class="summary-kpi-box">
+        <div class="summary-kpi-lbl">TỔNG NGƯỜI DÙNG / KEY</div>
+        <div class="summary-kpi-val" id="adminKpiTotalUsers">0</div>
+      </div>
+      <div class="summary-kpi-box">
+        <div class="summary-kpi-lbl">KEY ĐANG HOẠT ĐỘNG</div>
+        <div class="summary-kpi-val" id="adminKpiActiveKeys" style="color:#34d399;">0</div>
+      </div>
+      <div class="summary-kpi-box">
+        <div class="summary-kpi-lbl">TỔNG LƯỢT TRUY CẬP</div>
+        <div class="summary-kpi-val" id="adminKpiTotalLogins" style="color:#fbbf24;">0</div>
+      </div>
+    </div>
+
+    <div class="list-card" style="border-color:rgba(56,189,248,0.4);">
+      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:6px;">🔗 KẾT NỐI GOOGLE SHEETS "QUAN LÝ PD GIS" (Apps Script Web App URL)</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="adminGasEndpointInput" class="form-input" placeholder="Dán URL Web App (https://script.google.com/macros/s/.../exec)" />
+        <button type="button" class="mini-btn" style="background:#0f766e;color:#fff;border:0;white-space:nowrap;" onclick="saveGasEndpointConfig()">Lưu & Đồng bộ</button>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px;" id="adminGasSyncStatus">Trạng thái: Đang lưu cục bộ + Sẵn sàng đồng bộ Google Sheets</div>
+    </div>
+
+    <div class="list-card">
+      <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:6px;">➕ TẠO & CẤP KEY MỚI THỦ CÔNG CHO KHÁCH / ĐỐI TÁC</div>
+      <div class="grid-2 form-group">
+        <input type="text" id="adminNewKeyName" class="form-input" placeholder="Họ tên người nhận Key *" />
+        <input type="text" id="adminNewKeyContact" class="form-input" placeholder="SĐT / Zalo hoặc Email *" />
+      </div>
+      <div class="grid-2">
+        <select id="adminNewKeyRole" class="form-select">
+          <option value="PRO">Quyền PRO (Đầy đủ công cụ đo vẽ)</option>
+          <option value="VIEW">Quyền VIEW (Khách chỉ xem bản đồ)</option>
+          <option value="ADMIN">Quyền ADMIN (Quản trị viên)</option>
+        </select>
+        <button type="button" class="btn-primary" style="background:#d97706;" onclick="adminGenerateAndAssignKey()">🔑 Tạo Key & Copy gửi Zalo</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;">
+      <span style="font-size:12px;font-weight:800;color:#e2e8f0;">📋 DANH SÁCH NGƯỜI DÙNG ĐÃ ĐĂNG KÝ KEY:</span>
+      <div style="display:flex;gap:6px;">
+        <button type="button" class="mini-btn" onclick="syncUsersFromGoogleSheets()">🔄 Tải từ Sheets</button>
+        <button type="button" class="mini-btn" style="background:#0f766e;color:#fff;border:0;" onclick="exportUsersRegistryCsv()">📥 Xuất CSV</button>
+      </div>
+    </div>
+
+    <div class="stats-table-wrap" style="max-height:240px;overflow-y:auto;">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Người dùng & Liên hệ</th>
+            <th>Mã Key riêng</th>
+            <th>Quyền</th>
+            <th class="num-col">Lượt mở</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="adminUsersTableTbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -2293,12 +2395,22 @@ const CRS_CATALOG = {
   ]
 };
 
+const _proj4ConverterCache = new Map();
 function getProj4Def(lon0) {
   return `+proj=tmerc +lat_0=0 +lon_0=${lon0} +k=0.9999 +x_0=500000 +y_0=0 +ellps=WGS84 +towgs84=-191.90441429,-39.30318279,-111.45032835,0.00928836,-0.01975479,0.00427372,0.252906278 +units=m +no_defs`;
 }
+function getCachedProj4(lon0) {
+  const key = Number(lon0) || 108.5;
+  let conv = _proj4ConverterCache.get(key);
+  if (!conv) {
+    conv = proj4("EPSG:4326", getProj4Def(key));
+    _proj4ConverterCache.set(key, conv);
+  }
+  return conv;
+}
 
 function wgs84ToVn2000(lat, lon, lon0 = state.activeCrs.lon0) {
-  const [x, y] = proj4("EPSG:4326", getProj4Def(lon0), [lon, lat]);
+  const [x, y] = getCachedProj4(lon0).forward([lon, lat]);
   return { x, y };
 }
 
@@ -2341,7 +2453,7 @@ function normalizeVn2000Pair(v1, v2) {
 
 function vn2000ToWgs84(x, y, lon0 = state.activeCrs.lon0) {
   const { easting, northing } = normalizeVn2000Pair(x, y);
-  const [lon, lat] = proj4(getProj4Def(lon0), "EPSG:4326", [easting, northing]);
+  const [lon, lat] = getCachedProj4(lon0).inverse([easting, northing]);
   return { lat, lon, easting, northing };
 }
 
@@ -2396,14 +2508,7 @@ const defaultState = {
   layers: [],
   trash: [],
   imageOverlays: [],
-  serviceLayers: [],
-  updatedAtMs: 0,
-  cloudConfig: {
-    endpointUrl: "",
-    syncKey: "",
-    autoSync: false,
-    lastSyncAt: ""
-  }
+  serviceLayers: []
 };
 
 function loadInitialState() {
@@ -2421,9 +2526,8 @@ function loadInitialState() {
       base = Object.assign(base, snap);
     });
     if (!Array.isArray(base.trash)) base.trash = [];
-    if (!base.cloudConfig || typeof base.cloudConfig !== "object") {
-      base.cloudConfig = structuredClone(defaultState.cloudConfig);
-    }
+    if (!Array.isArray(base.imageOverlays)) base.imageOverlays = [];
+    if (!Array.isArray(base.serviceLayers)) base.serviceLayers = [];
     base.version = "1.2";
     return base;
   } catch (e) {
@@ -2450,7 +2554,6 @@ function openIdb() {
 
 async function saveAppStateAsync() {
   state.version = "1.2";
-  state.updatedAtMs = Date.now();
   const serialized = JSON.stringify(state);
   try {
     localStorage.setItem(STORAGE_KEY_V12, serialized);
@@ -2470,13 +2573,11 @@ async function saveAppStateAsync() {
       tx.onerror = () => reject(tx.error);
     });
   } catch (e) {}
-  scheduleAutoCloudPushIfEnabled();
 }
 
 function saveAppState() {
   updateTrashBadge();
   syncQuickLayerBar();
-  updateCloudUiStatus();
   saveAppStateAsync();
 }
 
@@ -2499,16 +2600,15 @@ async function hydrateStateFromIdb() {
       if (bestCount >= curCount) {
         state = Object.assign(structuredClone(defaultState), best);
         if (!Array.isArray(state.trash)) state.trash = [];
-        if (!state.cloudConfig || typeof state.cloudConfig !== "object") {
-          state.cloudConfig = structuredClone(defaultState.cloudConfig);
-        }
+        if (!Array.isArray(state.imageOverlays)) state.imageOverlays = [];
+        if (!Array.isArray(state.serviceLayers)) state.serviceLayers = [];
         state.version = "1.2";
         renderProjectsUI();
         renderAllVectorFeatures();
+        renderExternalOverlaysAndServices();
         updateCenterHud();
         updateTrashBadge();
         syncQuickLayerBar();
-        updateCloudUiStatus();
       }
     }
   } catch (e) {}
@@ -2520,535 +2620,6 @@ function showToast(msg) {
   el.style.display = "block";
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(() => { el.style.display = "none"; }, 3200);
-}
-
-/* ============================================================================
-   15B. ĐỒNG BỘ ĐÁM MÂY & GHI CHI TIẾT VÀO GOOGLE SHEETS
-============================================================================ */
-const CLOUD_SHARED_CFG_KEY = "PD_GIS_PRO_1_2_SHARED_CLOUD_CFG";
-let _autoCloudPushTimer = null;
-
-function getEffectiveCloudConfig() {
-  const saved = state.cloudConfig || {};
-  let shared = {};
-  try {
-    shared = JSON.parse(localStorage.getItem(CLOUD_SHARED_CFG_KEY) || "{}");
-  } catch (e) {}
-  return {
-    endpointUrl: (saved.endpointUrl || shared.endpointUrl || "").trim(),
-    syncKey: (saved.syncKey || shared.syncKey || "").trim(),
-    autoSync: Boolean(saved.autoSync ?? shared.autoSync ?? false),
-    lastSyncAt: saved.lastSyncAt || shared.lastSyncAt || ""
-  };
-}
-
-function getEffectiveSyncRoomKey() {
-  const cfg = getEffectiveCloudConfig();
-  if (cfg.syncKey) return cfg.syncKey;
-  if (currentAccountId) return currentAccountId;
-  return "default_workspace";
-}
-
-function updateCloudUiStatus(statusMode = "") {
-  const cfg = getEffectiveCloudConfig();
-  const pushBtn = document.getElementById("btnCloudPush");
-  const pullBtn = document.getElementById("btnCloudPull");
-  const drawerLbl = document.getElementById("drawerCloudLabel");
-  const accInfo = document.getElementById("cloudAccountInfo");
-  const lastInfo = document.getElementById("cloudLastSyncInfo");
-
-  const modeClass = statusMode === "syncing" ? "syncing" : (cfg.lastSyncAt ? "synced" : "");
-  [pushBtn, pullBtn].forEach(btn => {
-    if (!btn) return;
-    btn.classList.remove("syncing", "synced");
-    if (modeClass) btn.classList.add(modeClass);
-  });
-
-  if (drawerLbl) {
-    drawerLbl.textContent = cfg.endpointUrl
-      ? `☁️ Đồng bộ Đám mây & Sheets (${cfg.lastSyncAt || "Sẵn sàng"})`
-      : "☁️ Đồng bộ Đám mây & Google Sheets";
-  }
-  if (accInfo) {
-    const who = currentAccountLabel || "Chế độ mặc định (chưa đăng nhập tài khoản riêng)";
-    accInfo.textContent = `Tài khoản: ${who} • Mã phòng: ${getEffectiveSyncRoomKey()}`;
-  }
-  if (lastInfo) {
-    lastInfo.textContent = cfg.lastSyncAt
-      ? `Lần đồng bộ gần nhất: ${cfg.lastSyncAt}`
-      : (cfg.endpointUrl ? "Đã có URL Web App, sẵn sàng ghi Google Sheets & đồng bộ." : "Chưa có URL Google Apps Script Web App.");
-  }
-}
-
-function renderCloudSyncModal() {
-  const cfg = getEffectiveCloudConfig();
-  const urlInp = document.getElementById("cloudEndpointInput");
-  const keyInp = document.getElementById("cloudSyncKeyInput");
-  const autoChk = document.getElementById("cloudAutoSyncChk");
-  if (urlInp) urlInp.value = cfg.endpointUrl;
-  if (keyInp) keyInp.value = cfg.syncKey;
-  if (autoChk) autoChk.checked = cfg.autoSync;
-  updateCloudUiStatus();
-}
-
-function saveCloudSyncSettings() {
-  const endpointUrl = (document.getElementById("cloudEndpointInput")?.value || "").trim();
-  const syncKey = (document.getElementById("cloudSyncKeyInput")?.value || "").trim();
-  const autoSync = Boolean(document.getElementById("cloudAutoSyncChk")?.checked);
-
-  if (endpointUrl && !/^https?:\/\//i.test(endpointUrl)) {
-    showToast("URL đám mây phải bắt đầu bằng http:// hoặc https://");
-    return;
-  }
-
-  state.cloudConfig = {
-    ...(state.cloudConfig || {}),
-    endpointUrl,
-    syncKey,
-    autoSync
-  };
-  try {
-    localStorage.setItem(CLOUD_SHARED_CFG_KEY, JSON.stringify({
-      endpointUrl,
-      syncKey,
-      autoSync,
-      lastSyncAt: state.cloudConfig.lastSyncAt || ""
-    }));
-  } catch (e) {}
-
-  saveAppState();
-  renderCloudSyncModal();
-  showToast("Đã lưu cấu hình Cloud & Google Sheets!");
-}
-
-function scheduleAutoCloudPushIfEnabled() {
-  const cfg = getEffectiveCloudConfig();
-  if (!cfg.autoSync || !cfg.endpointUrl) return;
-  clearTimeout(_autoCloudPushTimer);
-  _autoCloudPushTimer = setTimeout(() => {
-    pushStateToCloud({ silent: true });
-  }, 15000);
-}
-
-function buildSanitizedCloudPayload() {
-  const clone = structuredClone(state);
-  if (Array.isArray(clone.imageOverlays)) {
-    clone.imageOverlays = clone.imageOverlays.map(ov => {
-      const copy = { ...ov };
-      if (typeof copy.dataUrl === "string" && copy.dataUrl.length > 250000) {
-        copy.dataUrl = "";
-        copy._strippedLargeImage = true;
-      }
-      return copy;
-    });
-  }
-  return clone;
-}
-
-function buildDetailedSheetsPayload() {
-  const roomKey = getEffectiveSyncRoomKey();
-  const layerMap = new Map((state.layers || []).map(l => [l.id, l]));
-  const nowStr = new Date().toLocaleString("vi-VN");
-
-  const projectsRows = (state.projects || []).map((p, idx) => {
-    const pFeats = (state.features || []).filter(f => f.project === p.name);
-    const segCount = pFeats.filter(f => f.geomType === "segment").length;
-    const totalLengthM = pFeats.filter(f => f.geomType === "segment").reduce((s, f) => s + (Number(f.lengthM) || 0), 0);
-    const polyCount = pFeats.filter(f => f.geomType === "polygon").length;
-    const totalAreaM2 = pFeats.filter(f => f.geomType === "polygon").reduce((s, f) => s + (Number(f.areaM2) || 0), 0);
-    const pointCount = pFeats.filter(f => f.geomType === "point").length;
-
-    return {
-      stt: idx + 1,
-      syncKey: roomKey,
-      projectId: p.id || "",
-      projectName: p.name || "",
-      workName: p.workName || "",
-      categoryName: p.categoryName || "",
-      defaultObjectName: p.defaultObjectName || "",
-      note: p.note || "",
-      segCount,
-      totalLengthM: Number(totalLengthM.toFixed(3)),
-      polyCount,
-      totalAreaM2: Number(totalAreaM2.toFixed(2)),
-      totalAreaHa: Number((totalAreaM2 / 10000).toFixed(5)),
-      pointCount,
-      updatedAt: nowStr
-    };
-  });
-
-  const layersRows = (state.layers || []).map((l, idx) => {
-    const childFeats = (state.features || []).filter(f => f.layerId === l.id);
-    const lenM = childFeats.filter(f => f.geomType === "segment").reduce((s, f) => s + (Number(f.lengthM) || 0), 0);
-    const areaM2 = childFeats.filter(f => f.geomType === "polygon").reduce((s, f) => s + (Number(f.areaM2) || 0), 0);
-    const ptsCount = childFeats.filter(f => f.geomType === "point").length;
-    return {
-      stt: idx + 1,
-      syncKey: roomKey,
-      layerId: l.id || "",
-      layerName: l.name || "",
-      layerType: l.type || "",
-      visible: l.visible !== false ? "HIEN" : "AN",
-      opacity: l.opacity ?? 100,
-      color: l.color || "",
-      width: l.width || 3,
-      featureCount: childFeats.length,
-      totalLengthM: Number(lenM.toFixed(3)),
-      totalAreaM2: Number(areaM2.toFixed(2)),
-      pointCount: ptsCount,
-      updatedAt: nowStr
-    };
-  });
-
-  const featuresRows = (state.features || []).map((f, idx) => {
-    const lyr = layerMap.get(f.layerId);
-    let xVal = "", yVal = "", latVal = "", lonVal = "", hVal = "", metricVal = "", metricUnit = "", extraCoords = "";
-
-    if (f.geomType === "point") {
-      xVal = Number(f.vnX || 0).toFixed(3);
-      yVal = Number(f.vnY || 0).toFixed(3);
-      latVal = Number(f.lat || 0).toFixed(7);
-      lonVal = Number(f.lon || 0).toFixed(7);
-      hVal = Number(f.h || 0).toFixed(2);
-      metricUnit = "MOC";
-    } else if (f.geomType === "segment") {
-      xVal = Number(f.vn1?.x || 0).toFixed(3);
-      yVal = Number(f.vn1?.y || 0).toFixed(3);
-      latVal = Number(f.p1?.[0] || 0).toFixed(7);
-      lonVal = Number(f.p1?.[1] || 0).toFixed(7);
-      metricVal = Number(f.lengthM || 0).toFixed(3);
-      metricUnit = "m";
-      extraCoords = `Cuoi: X=${Number(f.vn2?.x || 0).toFixed(3)}, Y=${Number(f.vn2?.y || 0).toFixed(3)} | Az=${Number(f.azimuth || 0).toFixed(2)}°`;
-    } else if (f.geomType === "polygon") {
-      const c0 = f.coords?.[0] || [0, 0];
-      const vn0 = wgs84ToVn2000(c0[0], c0[1]);
-      xVal = Number(vn0.x || 0).toFixed(3);
-      yVal = Number(vn0.y || 0).toFixed(3);
-      latVal = Number(c0[0] || 0).toFixed(7);
-      lonVal = Number(c0[1] || 0).toFixed(7);
-      metricVal = Number(f.areaM2 || 0).toFixed(2);
-      metricUnit = "m2";
-      extraCoords = `So dinh: ${(f.coords || []).length} | Ha: ${(Number(f.areaM2 || 0) / 10000).toFixed(4)}`;
-    }
-
-    return {
-      stt: idx + 1,
-      syncKey: roomKey,
-      featureId: f.id || "",
-      geomType: f.geomType || "",
-      name: f.name || "",
-      subName: f.subName || "",
-      project: f.project || "",
-      workName: f.workName || "",
-      categoryName: f.categoryName || "",
-      layerId: f.layerId || "default_points",
-      layerName: lyr?.name || (f.layerId === "default_points" ? "Điểm mốc độc lập" : ""),
-      xVn2000: xVal,
-      yVn2000: yVal,
-      latWgs84: latVal,
-      lonWgs84: lonVal,
-      elevationH: hVal,
-      metricValue: metricVal,
-      metricUnit,
-      extraInfo: extraCoords,
-      tagName: f.tagName || "",
-      note: f.note || "",
-      createdAt: f.createdAt || nowStr
-    };
-  });
-
-  return {
-    syncKey: roomKey,
-    crsName: state.activeCrs?.name || "",
-    projects: projectsRows,
-    layers: layersRows,
-    features: featuresRows
-  };
-}
-
-async function pushStateToCloud(opts = {}) {
-  const silent = Boolean(opts.silent);
-  const cfg = getEffectiveCloudConfig();
-  const roomKey = getEffectiveSyncRoomKey();
-
-  if (!cfg.endpointUrl) {
-    if (!silent) {
-      openModal("cloudSyncModal");
-      showToast("Hãy dán URL Google Apps Script Web App để ghi vào Google Sheets.");
-    }
-    return false;
-  }
-
-  updateCloudUiStatus("syncing");
-  try {
-    const payload = {
-      action: "push",
-      syncKey: roomKey,
-      accountId: currentAccountId || "",
-      accountLabel: currentAccountLabel || "",
-      updatedAtMs: Date.now(),
-      state: buildSanitizedCloudPayload(),
-      sheetsPayload: buildDetailedSheetsPayload()
-    };
-
-    const res = await fetch(cfg.endpointUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json().catch(() => ({ ok: true }));
-    if (data && data.ok === false) throw new Error(data.error || "Máy chủ từ chối ghi dữ liệu");
-
-    const nowStr = new Date().toLocaleString("vi-VN");
-    state.cloudConfig = {
-      ...(state.cloudConfig || {}),
-      endpointUrl: cfg.endpointUrl,
-      syncKey: cfg.syncKey,
-      autoSync: cfg.autoSync,
-      lastSyncAt: nowStr
-    };
-    try {
-      localStorage.setItem(CLOUD_SHARED_CFG_KEY, JSON.stringify({
-        endpointUrl: cfg.endpointUrl,
-        syncKey: cfg.syncKey,
-        autoSync: cfg.autoSync,
-        lastSyncAt: nowStr
-      }));
-    } catch (e) {}
-
-    await saveAppStateAsync();
-    updateCloudUiStatus("synced");
-    renderCloudSyncModal();
-    if (!silent) showToast(`☁️↑ Đã đẩy lên mây & ghi chi tiết Google Sheets (${roomKey})!`);
-    return true;
-  } catch (err) {
-    updateCloudUiStatus();
-    if (!silent) showToast(`Lỗi đẩy lên mây: ${err.message}`);
-    return false;
-  }
-}
-
-async function pullStateFromCloud(opts = {}) {
-  const silent = Boolean(opts.silent);
-  const cfg = getEffectiveCloudConfig();
-  const roomKey = getEffectiveSyncRoomKey();
-
-  if (!cfg.endpointUrl) {
-    if (!silent) {
-      openModal("cloudSyncModal");
-      showToast("Chưa cấu hình URL đám mây. Nhập URL Apps Script tại đây.");
-    }
-    return false;
-  }
-
-  updateCloudUiStatus("syncing");
-  try {
-    const sep = cfg.endpointUrl.includes("?") ? "&" : "?";
-    const url = `${cfg.endpointUrl}${sep}action=pull&syncKey=${encodeURIComponent(roomKey)}&_t=${Date.now()}`;
-    const res = await fetch(url, { method: "GET" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!data || data.ok === false || !data.state) {
-      throw new Error(data?.error || "Chưa có dữ liệu trên mây cho mã đồng bộ này.");
-    }
-
-    const localCfgKeep = {
-      endpointUrl: cfg.endpointUrl,
-      syncKey: cfg.syncKey,
-      autoSync: cfg.autoSync,
-      lastSyncAt: new Date().toLocaleString("vi-VN")
-    };
-
-    const incoming = Object.assign(structuredClone(defaultState), data.state);
-    if (!Array.isArray(incoming.trash)) incoming.trash = [];
-    if (!Array.isArray(incoming.imageOverlays)) incoming.imageOverlays = [];
-    if (!Array.isArray(incoming.serviceLayers)) incoming.serviceLayers = [];
-    incoming.cloudConfig = localCfgKeep;
-    incoming.version = "1.2";
-
-    state = incoming;
-    try {
-      localStorage.setItem(CLOUD_SHARED_CFG_KEY, JSON.stringify(localCfgKeep));
-    } catch (e) {}
-
-    await saveAppStateAsync();
-    renderProjectsUI();
-    renderAllVectorFeatures();
-    renderExternalOverlaysAndServices();
-    updateTrashBadge();
-    syncQuickLayerBar();
-    updateCenterHud();
-    updateCloudUiStatus("synced");
-    renderCloudSyncModal();
-
-    if (!silent) showToast(`☁️↓ Đã tải dữ liệu mới từ mây về (${roomKey})!`);
-    return true;
-  } catch (err) {
-    updateCloudUiStatus();
-    if (!silent) showToast(`Lỗi tải từ mây: ${err.message}`);
-    return false;
-  }
-}
-
-function handleCloudPushClick() {
-  const cfg = getEffectiveCloudConfig();
-  if (!cfg.endpointUrl) {
-    openModal("cloudSyncModal");
-    return;
-  }
-  pushStateToCloud({ silent: false });
-}
-
-function handleCloudPullClick() {
-  const cfg = getEffectiveCloudConfig();
-  if (!cfg.endpointUrl) {
-    openModal("cloudSyncModal");
-    return;
-  }
-  pullStateFromCloud({ silent: false });
-}
-
-function copyAppsScriptTemplate() {
-  const code = `var TARGET_SPREADSHEET_ID = ""; // Dán Spreadsheet ID cố định vào đây nếu muốn ghi thẳng vào 1 file cụ thể
-
-function getTargetSpreadsheet_() {
-  var fixedId = String(TARGET_SPREADSHEET_ID || "").trim();
-  if (fixedId) {
-    return SpreadsheetApp.openById(fixedId);
-  }
-  var props = PropertiesService.getScriptProperties();
-  var sheetId = props.getProperty("PD_GIS_SPREADSHEET_ID");
-  if (sheetId) {
-    return SpreadsheetApp.openById(sheetId);
-  }
-  var active = SpreadsheetApp.getActiveSpreadsheet();
-  if (active) return active;
-  var ss = SpreadsheetApp.create("PD_GIS_PRO_1_2_DU_LIEU");
-  props.setProperty("PD_GIS_SPREADSHEET_ID", ss.getId());
-  return ss;
-}
-
-function getOrCreateSheet_(ss, name, headers) {
-  var sh = ss.getSheetByName(name);
-  if (!sh) {
-    sh = ss.insertSheet(name);
-  }
-  if (headers && headers.length > 0 && sh.getLastRow() === 0) {
-    sh.appendRow(headers);
-    sh.setFrozenRows(1);
-  }
-  return sh;
-}
-
-function replaceRowsBySyncKey_(sh, syncKey, headers, rows) {
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(headers);
-    sh.setFrozenRows(1);
-  }
-  var lastRow = sh.getLastRow();
-  var syncKeyColIdx = headers.indexOf("MaDongBo") + 1;
-  if (lastRow > 1 && syncKeyColIdx > 0) {
-    var existing = sh.getRange(2, 1, lastRow - 1, headers.length).getValues();
-    var kept = existing.filter(function(r) {
-      return String(r[syncKeyColIdx - 1] || "") !== String(syncKey || "");
-    });
-    sh.getRange(2, 1, lastRow - 1, headers.length).clearContent();
-    if (kept.length > 0) {
-      sh.getRange(2, 1, kept.length, headers.length).setValues(kept);
-    }
-  }
-  if (rows && rows.length > 0) {
-    var startRow = Math.max(2, sh.getLastRow() + 1);
-    sh.getRange(startRow, 1, rows.length, headers.length).setValues(rows);
-  }
-}
-
-function doGet(e) {
-  var key = (e && e.parameter && e.parameter.syncKey) ? String(e.parameter.syncKey) : "default_workspace";
-  var props = PropertiesService.getScriptProperties();
-  var raw = props.getProperty("PD_GIS_SYNC_" + key);
-  if (!raw) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Not found" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  return ContentService.createTextOutput(JSON.stringify({ ok: true, state: JSON.parse(raw) }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    var body = JSON.parse((e && e.postData && e.postData.contents) ? e.postData.contents : "{}");
-    var key = String(body.syncKey || "default_workspace");
-    var props = PropertiesService.getScriptProperties();
-    props.setProperty("PD_GIS_SYNC_" + key, JSON.stringify(body.state || {}));
-
-    var ss = getTargetSpreadsheet_();
-    var sp = body.sheetsPayload || {};
-
-    var projHeaders = [
-      "MaDongBo", "STT", "ProjectID", "TenDuAn", "TenCongTrinh", "HangMuc",
-      "DoiTuongMacDinh", "GhiChu", "SoDoan", "TongDai_m", "SoVung",
-      "DienTich_m2", "DienTich_ha", "SoMoc", "ThoiGianCapNhat"
-    ];
-    var projRows = (sp.projects || []).map(function(p) {
-      return [
-        key, p.stt, p.projectId, p.projectName, p.workName, p.categoryName,
-        p.defaultObjectName, p.note, p.segCount, p.totalLengthM, p.polyCount,
-        p.totalAreaM2, p.totalAreaHa, p.pointCount, p.updatedAt
-      ];
-    });
-    replaceRowsBySyncKey_(getOrCreateSheet_(ss, "DuAn", projHeaders), key, projHeaders, projRows);
-
-    var lyrHeaders = [
-      "MaDongBo", "STT", "LayerID", "TenLop", "LoaiLop", "TrangThai",
-      "DoMo_Pct", "MauSac", "DoRong_px", "SoDoiTuong", "TongDai_m",
-      "DienTich_m2", "SoMoc", "ThoiGianCapNhat"
-    ];
-    var lyrRows = (sp.layers || []).map(function(l) {
-      return [
-        key, l.stt, l.layerId, l.layerName, l.layerType, l.visible,
-        l.opacity, l.color, l.width, l.featureCount, l.totalLengthM,
-        l.totalAreaM2, l.pointCount, l.updatedAt
-      ];
-    });
-    replaceRowsBySyncKey_(getOrCreateSheet_(ss, "LopBanDo", lyrHeaders), key, lyrHeaders, lyrRows);
-
-    var featHeaders = [
-      "MaDongBo", "STT", "FeatureID", "LoaiHinh", "TenDoiTuong", "TenPhu",
-      "TenDuAn", "TenCongTrinh", "HangMuc", "LayerID", "TenLop",
-      "X_VN2000", "Y_VN2000", "Lat_WGS84", "Lon_WGS84", "CaoDo_H",
-      "GiaTriDo", "DonVi", "ThongTinThem", "NhanThe", "GhiChu", "ThoiGianTao"
-    ];
-    var featRows = (sp.features || []).map(function(f) {
-      return [
-        key, f.stt, f.featureId, f.geomType, f.name, f.subName,
-        f.project, f.workName, f.categoryName, f.layerId, f.layerName,
-        f.xVn2000, f.yVn2000, f.latWgs84, f.lonWgs84, f.elevationH,
-        f.metricValue, f.metricUnit, f.extraInfo, f.tagName, f.note, f.createdAt
-      ];
-    });
-    replaceRowsBySyncKey_(getOrCreateSheet_(ss, "MocVaDoiTuong", featHeaders), key, featHeaders, featRows);
-
-    return ContentService.createTextOutput(JSON.stringify({
-      ok: true,
-      syncKey: key,
-      spreadsheetId: ss.getId(),
-      spreadsheetUrl: ss.getUrl(),
-      counts: {
-        projects: projRows.length,
-        layers: lyrRows.length,
-        features: featRows.length
-      }
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-  navigator.clipboard?.writeText(code);
-  showToast("Đã sao chép mã Google Apps Script hỗ trợ gắn Spreadsheet ID cố định!");
 }
 
 /* ============================================================================
@@ -3144,11 +2715,25 @@ const baseLayers = [
 ];
 let currentBaseIdx = 0;
 
+const desktopVectorRenderer = L.canvas({ padding: 0.45, tolerance: 6 });
+
 const map = L.map("map", {
   center: [10.9289, 108.1021],
   zoom: 16,
   zoomControl: false,
-  attributionControl: false
+  attributionControl: false,
+  preferCanvas: true,
+  renderer: desktopVectorRenderer,
+  zoomSnap: 1,
+  zoomDelta: 1,
+  wheelPxPerZoomLevel: 60,
+  wheelDebounceTime: 40,
+  inertia: true,
+  inertiaDeceleration: 3000,
+  inertiaMaxSpeed: 1800,
+  zoomAnimation: true,
+  fadeAnimation: false,
+  markerZoomAnimation: false
 });
 baseLayers[0].layer.addTo(map);
 
@@ -3169,20 +2754,28 @@ function getEffectiveElevationM() {
   return (latestGps.rawH || 0) + (Number(state.deltaH) || 0) - (Number(state.antennaH) || 0);
 }
 
-let _hudRafId = null;
-function scheduleCenterHudUpdate() {
-  if (_hudRafId) return;
-  _hudRafId = requestAnimationFrame(() => {
-    _hudRafId = null;
-    const c = map.getCenter();
-    const vn = wgs84ToVn2000(c.lat, c.lng);
-    document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
-    document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
-    document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
-  });
+let _hudLastTs = 0;
+let _hudTimer = null;
+function updateCenterHudNow() {
+  _hudLastTs = performance.now();
+  const c = map.getCenter();
+  const vn = wgs84ToVn2000(c.lat, c.lng);
+  document.getElementById("centerXVal").textContent = vn.x.toFixed(3);
+  document.getElementById("centerYVal").textContent = vn.y.toFixed(3);
+  document.getElementById("zoomBadge").textContent = "Z" + map.getZoom().toFixed(1);
 }
-function updateCenterHud() { scheduleCenterHudUpdate(); }
-map.on("move zoom", scheduleCenterHudUpdate);
+function scheduleCenterHudUpdate() {
+  const now = performance.now();
+  if (now - _hudLastTs >= 90) {
+    updateCenterHudNow();
+  } else {
+    clearTimeout(_hudTimer);
+    _hudTimer = setTimeout(updateCenterHudNow, 95);
+  }
+}
+function updateCenterHud() { updateCenterHudNow(); }
+map.on("move", scheduleCenterHudUpdate);
+map.on("moveend zoomend", updateCenterHudNow);
 scheduleCenterHudUpdate();
 
 function locateUserNow(forceFly = false) {
@@ -3248,8 +2841,8 @@ function onGpsPositionUpdate(pos, flyToPos = false) {
     userAccuracyCircle.setLatLng([latitude, longitude]).setRadius(Math.max(latestGps.acc, 3));
   }
 
-  if (flyToPos) {
-    map.setView([latitude, longitude], Math.max(map.getZoom(), 18), { animate: true });
+  if (flyToPos && (latestGps.acc <= 150 || !hasInitialGpsJump)) {
+    map.setView([latitude, longitude], Math.max(map.getZoom(), 17), { animate: false });
   }
 
   if (isTrackingGps) {
@@ -3324,12 +2917,21 @@ function findSnapCandidate(latlng) {
     }
   }
 
-  state.features.forEach((f) => {
+  const viewBounds = map.getBounds().pad(0.05);
+  for (let i = 0; i < state.features.length; i++) {
+    const f = state.features[i];
+    if (f.hidden === true) continue;
     if (f.geomType === "point") {
+      if (!viewBounds.contains([f.lat, f.lon])) continue;
       const pLL = L.latLng(f.lat, f.lon);
       const d = clickPt.distanceTo(map.latLngToContainerPoint(pLL));
       if (d <= bestDist) { bestDist = d; bestLatLng = pLL; snapped = true; }
     } else if (f.geomType === "segment") {
+      const minLat = Math.min(f.p1[0], f.p2[0]) - 0.002;
+      const maxLat = Math.max(f.p1[0], f.p2[0]) + 0.002;
+      const minLon = Math.min(f.p1[1], f.p2[1]) - 0.002;
+      const maxLon = Math.max(f.p1[1], f.p2[1]) + 0.002;
+      if (latlng.lat < minLat || latlng.lat > maxLat || latlng.lng < minLon || latlng.lng > maxLon) continue;
       const a = map.latLngToContainerPoint(L.latLng(f.p1[0], f.p1[1]));
       const b = map.latLngToContainerPoint(L.latLng(f.p2[0], f.p2[1]));
       const projPt = L.LineUtil.closestPointOnSegment(clickPt, a, b);
@@ -3340,7 +2942,7 @@ function findSnapCandidate(latlng) {
         snapped = true;
       }
     }
-  });
+  }
 
   return { latlng: bestLatLng, snapped };
 }
@@ -3451,13 +3053,22 @@ function cancelDrawing() {
   document.getElementById("precisionArrowCursor").style.display = "none";
 }
 
+let _snapRafPending = false;
+let _lastSnapEvent = null;
 map.on("mousemove", (e) => {
   if (!drawMode || !e.originalEvent) return;
   const cur = document.getElementById("precisionArrowCursor");
   cur.style.left = `${e.originalEvent.clientX}px`;
   cur.style.top = `${e.originalEvent.clientY}px`;
-  const snap = findSnapCandidate(e.latlng);
-  cur.classList.toggle("snap-hit", snap.snapped);
+  _lastSnapEvent = e.latlng;
+  if (_snapRafPending) return;
+  _snapRafPending = true;
+  requestAnimationFrame(() => {
+    _snapRafPending = false;
+    if (!_lastSnapEvent || !drawMode) return;
+    const snap = findSnapCandidate(_lastSnapEvent);
+    cur.classList.toggle("snap-hit", snap.snapped);
+  });
 });
 
 map.on("mousedown touchstart", (e) => {
@@ -3508,12 +3119,6 @@ function openAttributeFormForChoice(choice) {
   const sel = document.getElementById("attrProjectSelect");
   sel.innerHTML = state.projects.map(p => `<option value="${p.id}" ${p.id === state.activeProjectId ? "selected" : ""}>${p.name}</option>`).join("");
 
-  const activeProj = getActiveProject();
-  const wInp = document.getElementById("attrWorkName");
-  const cInp = document.getElementById("attrCategoryName");
-  if (wInp && !wInp.value) wInp.value = activeProj?.workName || "";
-  if (cInp && !cInp.value) cInp.value = activeProj?.categoryName || "";
-
   const labelMap = {
     line: "Tên tuyến đường *",
     polygon: "Tên vùng / Thửa đất *",
@@ -3521,9 +3126,8 @@ function openAttributeFormForChoice(choice) {
   };
   document.getElementById("attrPrimaryNameLabel").textContent = labelMap[choice] || "Tên đối tượng *";
   document.getElementById("attrObjectName").value =
-    activeProj?.defaultObjectName ||
-    (choice === "polygon" ? `Vùng khảo sát ${new Date().toLocaleTimeString("vi-VN")}` :
-    choice === "line" ? `Tuyến đo ${new Date().toLocaleTimeString("vi-VN")}` : "Mốc ĐM");
+    choice === "polygon" ? `Vùng khảo sát ${new Date().toLocaleTimeString("vi-VN")}` :
+    choice === "line" ? `Tuyến đo ${new Date().toLocaleTimeString("vi-VN")}` : "Mốc ĐM";
   document.getElementById("attrUpdatedAt").value = new Date().toLocaleString("vi-VN");
   document.getElementById("attrNote").value = state.surveyNote.content || "";
   openModal("geometryAttrModal");
@@ -3547,7 +3151,6 @@ function confirmSaveGeometryWithAttributes() {
         id: `pt_${Date.now()}_${idx}`,
         layerId,
         geomType: "point",
-        symbolType: "circle",
         name: `${objName}-${String(idx + 1).padStart(2, "0")}`,
         subName, objInfo,
         lat: pt[0], lon: pt[1], vnX: vn.x, vnY: vn.y,
@@ -3680,7 +3283,6 @@ function addPointAtCenter() {
     id: "pt_" + Date.now(),
     layerId: "default_points",
     geomType: "point",
-    symbolType: "circle",
     name,
     lat: c.lat,
     lon: c.lng,
@@ -3849,7 +3451,6 @@ function parseAndExplodeKml(kmlString, fileName) {
 
   placemarks.forEach((pm, idx) => {
     const pmName = pm.getElementsByTagName("name")[0]?.textContent?.trim() || `${fileName} #${idx + 1}`;
-    const descText = pm.getElementsByTagName("description")[0]?.textContent?.trim() || "";
     const coordNodes = Array.from(pm.getElementsByTagName("coordinates"));
     coordNodes.forEach((cn) => {
       const rawPairs = cn.textContent.trim().split(/\s+/);
@@ -3864,10 +3465,9 @@ function parseAndExplodeKml(kmlString, fileName) {
         const vn = wgs84ToVn2000(latlngs[0][0], latlngs[0][1]);
         state.features.push({
           id: `kmz_pt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-          layerId, geomType: "point", symbolType: "triangle", name: pmName,
-          fromImportedFile: true, importedLabel: descText ? `${pmName} (${descText})` : pmName,
+          layerId, geomType: "point", name: pmName,
           lat: latlngs[0][0], lon: latlngs[0][1], vnX: vn.x, vnY: vn.y, h: 0,
-          project: getActiveProject().name, note: descText || `Nạp từ ${fileName}`,
+          project: getActiveProject().name, note: `Nạp từ ${fileName}`,
           createdAt: new Date().toLocaleString("vi-VN")
         });
       } else if (latlngs.length >= 2) {
@@ -3877,7 +3477,7 @@ function parseAndExplodeKml(kmlString, fileName) {
           project: getActiveProject().name,
           color: "#38bdf8",
           width: 3,
-          note: descText || `Tự nổ đoạn từ ${fileName}`
+          note: `Tự nổ đoạn từ ${fileName}`
         });
         totalDist += d;
         segCount += (latlngs.length - 1);
@@ -3914,7 +3514,6 @@ function parseAndExplodeGeoJson(geojson, fileName) {
   feats.forEach((f, idx) => {
     const geom = f.geometry || f;
     const fName = f.properties?.name || f.properties?.TenDoiTuong || `${fileName} #${idx + 1}`;
-    const fText = f.properties?.description || f.properties?.GhiChu || f.properties?.text || "";
     if (!geom) return;
 
     if (geom.type === "Point") {
@@ -3923,10 +3522,9 @@ function parseAndExplodeGeoJson(geojson, fileName) {
       const vn = wgs84ToVn2000(lat, lon);
       state.features.push({
         id: `gj_pt_${Date.now()}_${idx}`,
-        layerId, geomType: "point", symbolType: "triangle", name: fName,
-        fromImportedFile: true, importedLabel: fText ? `${fName} (${fText})` : fName,
+        layerId, geomType: "point", name: fName,
         lat, lon, vnX: vn.x, vnY: vn.y, h: 0,
-        project: getActiveProject().name, note: fText || `Nạp từ ${fileName}`,
+        project: getActiveProject().name, note: `Nạp từ ${fileName}`,
         createdAt: new Date().toLocaleString("vi-VN")
       });
     } else if (geom.type === "LineString") {
@@ -3979,7 +3577,7 @@ function parseAndExplodeGpx(gpxText, fileName) {
 }
 
 /* ============================================================================
-   6. KIỂM TRA CHI TIẾT ĐỐI TƯỢNG, SỬA VN-2000 & CAO ĐỘ H, NHÃN THẺ & KIỂU NÚT
+   6. KIỂM TRA CHI TIẾT ĐỐI TƯỢNG & DỊCH CHUYỂN MỐC / ĐỈNH VÙNG
 ============================================================================ */
 let inspectedFeatureId = null;
 let movingState = null;
@@ -3991,119 +3589,35 @@ function openFeatureDetailModal(featureId) {
   document.getElementById("featDetailTitle").textContent = `📄 ${f.name}`;
 
   let html = "";
-  const coordEditBox = document.getElementById("featCoordEditBox");
-  const symPickerWrap = document.getElementById("featSymbolPickerWrap");
-
   if (f.geomType === "point") {
     html = `
       <div><b>Loại:</b> Điểm mốc tọa độ</div>
       <div><b>X(E) VN-2000:</b> <span style="color:#fbbf24;font-weight:700;">${f.vnX.toFixed(3)} m</span></div>
       <div><b>Y(N) VN-2000:</b> <span style="color:#fbbf24;font-weight:700;">${f.vnY.toFixed(3)} m</span></div>
-      <div><b>WGS84 (tự tính theo VN-2000):</b> ${f.lat.toFixed(7)}°, ${f.lon.toFixed(7)}°</div>
-      <div><b>Cao độ H:</b> <span style="color:#34d399;font-weight:700;">${(f.h || 0).toFixed(2)} m</span></div>
+      <div><b>WGS84:</b> ${f.lat.toFixed(7)}°, ${f.lon.toFixed(7)}°</div>
+      <div><b>Cao độ H:</b> ${(f.h || 0).toFixed(2)} m</div>
     `;
-    if (coordEditBox) {
-      coordEditBox.style.display = "block";
-      document.getElementById("editFeatVnX").value = Number(f.vnX || 0).toFixed(3);
-      document.getElementById("editFeatVnY").value = Number(f.vnY || 0).toFixed(3);
-      document.getElementById("editFeatElevH").value = Number(f.h || 0).toFixed(2);
-    }
-    if (symPickerWrap) {
-      symPickerWrap.style.display = "block";
-      document.getElementById("featPointSymbolSelect").value = f.symbolType || "circle";
-    }
-  } else {
-    if (coordEditBox) coordEditBox.style.display = "none";
-    if (symPickerWrap) symPickerWrap.style.display = "none";
-    if (f.geomType === "segment") {
-      html = `
-        <div><b>Loại:</b> Đoạn tuyến / Cạnh ranh</div>
-        <div><b>Chiều dài đoạn:</b> <span style="color:#34d399;font-weight:800;">${formatLength(f.lengthM)}</span></div>
-        <div><b>Góc phương vị:</b> ${f.azimuth.toFixed(2)}°</div>
-        <div><b>Đầu đoạn:</b> X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
-        <div><b>Cuối đoạn:</b> X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
-      `;
-    } else if (f.geomType === "polygon") {
-      html = `
-        <div><b>Loại:</b> Vùng / Ranh giới thửa (${f.coords.length} đỉnh)</div>
-        <div><b>Diện tích:</b> <span style="color:#34d399;font-weight:800;">${formatArea(f.areaM2)}</span></div>
-      `;
-    }
+  } else if (f.geomType === "segment") {
+    html = `
+      <div><b>Loại:</b> Đoạn tuyến / Cạnh ranh</div>
+      <div><b>Chiều dài đoạn:</b> <span style="color:#34d399;font-weight:800;">${formatLength(f.lengthM)}</span></div>
+      <div><b>Góc phương vị:</b> ${f.azimuth.toFixed(2)}°</div>
+      <div><b>Đầu đoạn:</b> X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
+      <div><b>Cuối đoạn:</b> X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
+    `;
+  } else if (f.geomType === "polygon") {
+    html = `
+      <div><b>Loại:</b> Vùng / Ranh giới thửa (${f.coords.length} đỉnh)</div>
+      <div><b>Diện tích:</b> <span style="color:#34d399;font-weight:800;">${formatArea(f.areaM2)}</span></div>
+    `;
   }
-
   html += `
     <div><b>Dự án:</b> ${f.project || "Chế độ chung"}</div>
-    ${f.workName ? `<div><b>Tên công trình:</b> ${f.workName}</div>` : ""}
-    ${f.categoryName ? `<div><b>Hạng mục:</b> ${f.categoryName}</div>` : ""}
     ${f.note ? `<div><b>Ghi chú:</b> ${f.note}</div>` : ""}
     <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Cập nhật: ${f.createdAt || ""}</div>
   `;
   document.getElementById("featDetailBody").innerHTML = html;
-  const customTagInp = document.getElementById("customInlineTagInput");
-  if (customTagInp) customTagInp.value = "";
   openModal("featureDetailModal");
-}
-
-function saveEditedVn2000AndElev() {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  if (!f || f.geomType !== "point") return;
-
-  const rawX = parseFloat(document.getElementById("editFeatVnX").value);
-  const rawY = parseFloat(document.getElementById("editFeatVnY").value);
-  const rawH = parseFloat(document.getElementById("editFeatElevH").value);
-
-  if (isNaN(rawX) || isNaN(rawY)) {
-    showToast("Vui lòng nhập tọa độ X(E) và Y(N) VN-2000 hợp lệ.");
-    return;
-  }
-
-  const converted = vn2000ToWgs84(rawX, rawY);
-  f.vnX = converted.easting;
-  f.vnY = converted.northing;
-  f.lat = converted.lat;
-  f.lon = converted.lon;
-  if (!isNaN(rawH)) f.h = rawH;
-  f.createdAt = new Date().toLocaleString("vi-VN");
-
-  saveAppState();
-  renderAllVectorFeatures();
-  openFeatureDetailModal(f.id);
-  map.setView([f.lat, f.lon], Math.max(map.getZoom(), 18));
-  showToast(`Đã cập nhật VN-2000 & cao độ H; hệ WGS84 tự chạy theo!`);
-}
-
-function assignPointSymbolToInspected(symbolType) {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  if (!f || f.geomType !== "point") return;
-  f.symbolType = symbolType;
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast("Đã đổi kiểu nút điểm.");
-}
-
-function createAndAttachCustomTag() {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  const inp = document.getElementById("customInlineTagInput");
-  const tagName = (inp?.value || "").trim();
-  if (!f || !tagName) {
-    showToast("Nhập tên nhãn thẻ tùy biến trước khi gắn.");
-    return;
-  }
-  if (!Array.isArray(state.tags)) state.tags = [];
-  if (!state.tags.some(t => t.name.toLowerCase() === tagName.toLowerCase())) {
-    state.tags.push({
-      id: "tag_" + Date.now(),
-      name: tagName,
-      desc: "Nhãn thẻ tùy biến",
-      color: "#0f172a",
-      bg: "#38bdf8"
-    });
-  }
-  f.tagName = tagName;
-  saveAppState();
-  populateInspectedFeatureTagAndPhotos(f);
-  if (inp) inp.value = "";
-  showToast(`Đã tạo & gắn nhãn thẻ "${tagName}"!`);
 }
 
 function beginMoveInspectedPointOrVertex() {
@@ -4212,133 +3726,183 @@ function trashInspectedFeature() {
 }
 
 /* ============================================================================
-   7. VẼ TOÀN BỘ LỚP VECTOR (LUÔN HIỆN TÊN MỐC & TEXT FILE NẠP + KIỂU NÚT)
+   7. VẼ TOÀN BỘ LỚP VECTOR & THANH CHỈNH NHANH THEO LỚP ĐANG CHỌN
 ============================================================================ */
-function createPointSymbolIcon(symbolType, color) {
-  const c = color || "#ef4444";
-  if (symbolType === "triangle") {
-    return L.divIcon({
-      className: "",
-      iconSize: [16, 16],
-      html: `<div class="pt-symbol-wrap" style="--pt-color:${c};"><div class="pt-sym-triangle"></div></div>`
-    });
-  }
-  if (symbolType === "square") {
-    return L.divIcon({
-      className: "",
-      iconSize: [14, 14],
-      html: `<div class="pt-symbol-wrap" style="--pt-color:${c};"><div class="pt-sym-square"></div></div>`
-    });
-  }
-  if (symbolType === "arrow") {
-    return L.divIcon({
-      className: "",
-      iconSize: [16, 16],
-      html: `<div class="pt-symbol-wrap" style="--pt-color:${c};"><div class="pt-sym-arrow"></div></div>`
-    });
-  }
-  return null;
+let _renderVecRaf = null;
+function scheduleRenderAllVectorFeatures() {
+  if (_renderVecRaf) return;
+  _renderVecRaf = requestAnimationFrame(() => {
+    _renderVecRaf = null;
+    renderAllVectorFeaturesNow();
+  });
 }
 
 function renderAllVectorFeatures() {
+  scheduleRenderAllVectorFeatures();
+}
+
+function handleCanvasFeatureClick(e) {
+  if (drawMode || movingState) return;
+  const clickPt = map.latLngToContainerPoint(e.latlng);
+  const layerMap = new Map(state.layers.map(l => [l.id, l]));
+
+  // 1. Ưu tiên kiểm tra điểm mốc trong bán kính 14px
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "point") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    const pt = map.latLngToContainerPoint([f.lat, f.lon]);
+    if (clickPt.distanceTo(pt) <= 14) {
+      openFeatureDetailModal(f.id);
+      return;
+    }
+  }
+
+  // 2. Kiểm tra đoạn line trong bán kính 10px
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "segment") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    const a = map.latLngToContainerPoint(f.p1);
+    const b = map.latLngToContainerPoint(f.p2);
+    const proj = L.LineUtil.closestPointOnSegment(clickPt, a, b);
+    if (clickPt.distanceTo(proj) <= 10) {
+      L.popup()
+        .setLatLng(e.latlng)
+        .setContent(`
+          <div style="color:#0f172a;font-size:12.5px;min-width:225px;">
+            <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
+            <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
+              Kích thước đoạn: <strong style="font-size:13.5px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
+            </div>
+            <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
+            <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
+            <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
+            <div style="margin-top:6px;">
+              <button style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-weight:700;" onclick="openFeatureDetailModal('${f.id}')">Chi tiết / Sửa / Xóa</button>
+            </div>
+          </div>
+        `)
+        .openOn(map);
+      return;
+    }
+  }
+
+  // 3. Kiểm tra vùng polygon
+  for (let i = state.features.length - 1; i >= 0; i--) {
+    const f = state.features[i];
+    if (f.hidden === true || f.geomType !== "polygon") continue;
+    const lyrCfg = layerMap.get(f.layerId);
+    if (lyrCfg && lyrCfg.visible === false) continue;
+    if (L.latLngBounds(f.coords).contains(e.latlng)) {
+      openFeatureDetailModal(f.id);
+      return;
+    }
+  }
+}
+map.on("click", handleCanvasFeatureClick);
+
+function renderAllVectorFeaturesNow() {
   vectorLayerGroup.clearLayers();
   labelLayerGroup.clearLayers();
   const globalOpacity = (state.layerOpacity ?? 100) / 100;
   const layerMap = new Map(state.layers.map(l => [l.id, l]));
+  const viewBounds = map.getBounds().pad(0.2);
+  const currentZoom = map.getZoom();
+  let renderedLabelCount = 0;
+  const MAX_DOM_LABELS = 90;
 
-  state.features.forEach((f) => {
-    if (f.hidden === true) return;
+  // Gom nhóm các đoạn line cùng màu & độ rộng thành MultiPolyline trên Canvas để giảm 95% số đối tượng Leaflet
+  const batchSegments = new Map();
+
+  for (let i = 0; i < state.features.length; i++) {
+    const f = state.features[i];
+    if (f.hidden === true) continue;
     const lyrCfg = layerMap.get(f.layerId);
-    if (lyrCfg && lyrCfg.visible === false) return;
+    if (lyrCfg && lyrCfg.visible === false) continue;
     const lyrOp = ((lyrCfg?.opacity ?? 100) / 100) * globalOpacity;
 
     if (f.geomType === "point") {
+      if (!viewBounds.contains([f.lat, f.lon])) continue;
       const ptColor = lyrCfg?.color || "#ef4444";
-      const symIcon = createPointSymbolIcon(f.symbolType || "circle", ptColor);
-      let marker;
-      if (symIcon) {
-        marker = L.marker([f.lat, f.lon], { icon: symIcon, opacity: lyrOp }).addTo(vectorLayerGroup);
+      const mStyle = f.markerStyle || "dot";
+      if (mStyle === "dot") {
+        L.circleMarker([f.lat, f.lon], {
+          renderer: desktopVectorRenderer,
+          interactive: false,
+          radius: 6, color: "#fff", weight: 2, fillColor: ptColor, fillOpacity: lyrOp, opacity: lyrOp
+        }).addTo(vectorLayerGroup);
       } else {
-        marker = L.circleMarker([f.lat, f.lon], {
-          radius: 6.5, color: "#fff", weight: 2, fillColor: ptColor, fillOpacity: lyrOp, opacity: lyrOp
+        let shapeSvg = "";
+        if (mStyle === "triangle") {
+          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "square") {
+          shapeSvg = `<svg width="18" height="18" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "diamond") {
+          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "crosshair_circle") {
+          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="${ptColor}" fill-opacity="0.35" stroke="#ffffff" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="23" stroke="#ffffff" stroke-width="1.8"/><line x1="1" y1="12" x2="23" y2="12" stroke="#ffffff" stroke-width="1.8"/></svg>`;
+        } else {
+          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+        }
+        L.marker([f.lat, f.lon], {
+          interactive: false,
+          icon: L.divIcon({ className: "", html: `<div class="point-marker-shape" style="opacity:${lyrOp};">${shapeSvg}</div>` })
         }).addTo(vectorLayerGroup);
       }
 
-      marker.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        openFeatureDetailModal(f.id);
-      });
-
-      // Mốc luôn luôn hiển thị tên mốc
-      if (f.name) {
-        L.marker([f.lat, f.lon], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="point-name-label">${f.name}</div>`
-          })
-        }).addTo(labelLayerGroup);
-      }
-
-      // Text đính kèm theo file nhập vào luôn luôn hiển thị
-      if (f.fromImportedFile && f.importedLabel) {
-        L.marker([f.lat, f.lon], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="imported-text-label" style="transform:translate(-50%, 35%);">${f.importedLabel}</div>`
-          })
-        }).addTo(labelLayerGroup);
-      }
+      // Riêng mốc & text đính kèm theo file nhập vào LUÔN LUÔN hiển thị tên
+      const displayLabel = f.tagName ? `${f.name} [${f.tagName}]` : (f.name || "Mốc");
+      L.marker([f.lat, f.lon], {
+        interactive: false,
+        icon: L.divIcon({
+          className: "",
+          html: `<div class="point-permanent-label" style="opacity:${lyrOp};">${displayLabel}</div>`
+        })
+      }).addTo(labelLayerGroup);
     } else if (f.geomType === "segment") {
+      const minLat = Math.min(f.p1[0], f.p2[0]);
+      const maxLat = Math.max(f.p1[0], f.p2[0]);
+      const minLon = Math.min(f.p1[1], f.p2[1]);
+      const maxLon = Math.max(f.p1[1], f.p2[1]);
+      if (maxLat < viewBounds.getSouth() || minLat > viewBounds.getNorth() || maxLon < viewBounds.getWest() || minLon > viewBounds.getEast()) continue;
+
       const strokeColor = lyrCfg?.color || f.color || "#3b82f6";
-      const strokeWidth = lyrCfg?.width || f.width || 3;
+      const strokeWidth = (lyrCfg?.width || f.width || 3) + 1;
       const lblSize = lyrCfg?.labelSize || 11;
+      const styleKey = `${strokeColor}|${strokeWidth}|${lyrOp.toFixed(2)}`;
 
-      const segLine = L.polyline([f.p1, f.p2], {
-        color: strokeColor,
-        weight: strokeWidth + 1,
-        opacity: lyrOp
-      }).addTo(vectorLayerGroup);
-
-      segLine.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        segLine.setStyle({ color: "#facc15", weight: strokeWidth + 3 });
-        setTimeout(() => segLine.setStyle({ color: strokeColor, weight: strokeWidth + 1 }), 2200);
-
-        L.popup()
-          .setLatLng(e.latlng)
-          .setContent(`
-            <div style="color:#0f172a;font-size:12.5px;min-width:225px;">
-              <div style="font-weight:800;color:#1d4ed8;margin-bottom:4px;">📏 ${f.name}</div>
-              <div style="background:#fef08a;padding:5px 8px;border-radius:6px;margin-bottom:5px;">
-                Kích thước đoạn: <strong style="font-size:13.5px;color:#b91c1c;">${formatLength(f.lengthM)}</strong>
-              </div>
-              <div>Góc phương vị: <b>${f.azimuth.toFixed(2)}°</b></div>
-              <div>Đầu đoạn: X=${f.vn1.x.toFixed(3)}, Y=${f.vn1.y.toFixed(3)}</div>
-              <div>Cuối đoạn: X=${f.vn2.x.toFixed(3)}, Y=${f.vn2.y.toFixed(3)}</div>
-              <div style="margin-top:6px;">
-                <button style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-weight:700;" onclick="openFeatureDetailModal('${f.id}')">Chi tiết / Sửa / Xóa</button>
-              </div>
-            </div>
-          `)
-          .openOn(map);
-      });
+      let bucket = batchSegments.get(styleKey);
+      if (!bucket) {
+        bucket = { color: strokeColor, weight: strokeWidth, opacity: lyrOp, coords: [] };
+        batchSegments.set(styleKey, bucket);
+      }
+      bucket.coords.push([f.p1, f.p2]);
 
       const allowSegLabel = state.showSegLabels !== false && (lyrCfg?.showSegLength !== false);
-      if (allowSegLabel && map.getZoom() >= 16 && f.lengthM >= 0.4) {
+      if (allowSegLabel && currentZoom >= 17 && f.lengthM >= 0.4 && renderedLabelCount < MAX_DOM_LABELS) {
         const midLat = (f.p1[0] + f.p2[0]) / 2;
         const midLon = (f.p1[1] + f.p2[1]) / 2;
-        L.marker([midLat, midLon], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="seg-label" style="font-size:${lblSize}px;">${f.lengthM.toFixed(2)}m</div>`
-          })
-        }).addTo(labelLayerGroup);
+        if (viewBounds.contains([midLat, midLon])) {
+          renderedLabelCount++;
+          L.marker([midLat, midLon], {
+            interactive: false,
+            icon: L.divIcon({
+              className: "",
+              html: `<div class="seg-label" style="font-size:${lblSize}px;">${f.lengthM.toFixed(2)}m</div>`
+            })
+          }).addTo(labelLayerGroup);
+        }
       }
     } else if (f.geomType === "polygon") {
-      const poly = L.polygon(f.coords, {
+      const polyBounds = L.latLngBounds(f.coords);
+      if (!viewBounds.intersects(polyBounds)) continue;
+
+      L.polygon(f.coords, {
+        renderer: desktopVectorRenderer,
+        interactive: false,
         color: lyrCfg?.color || "#10b981",
         weight: lyrCfg?.width || 3,
         fillColor: lyrCfg?.fillColor || "#10b981",
@@ -4346,13 +3910,9 @@ function renderAllVectorFeatures() {
         opacity: lyrOp
       }).addTo(vectorLayerGroup);
 
-      poly.on("click", (e) => {
-        L.DomEvent.stopPropagation(e);
-        openFeatureDetailModal(f.id);
-      });
-
-      if (map.getZoom() >= 16 && f.coords.length >= 3) {
-        const center = poly.getBounds().getCenter();
+      if (currentZoom >= 16 && f.coords.length >= 3 && renderedLabelCount < MAX_DOM_LABELS) {
+        const center = polyBounds.getCenter();
+        renderedLabelCount++;
         L.marker(center, {
           interactive: false,
           icon: L.divIcon({
@@ -4362,9 +3922,19 @@ function renderAllVectorFeatures() {
         }).addTo(labelLayerGroup);
       }
     }
-  });
+  }
+
+  for (const bucket of batchSegments.values()) {
+    L.polyline(bucket.coords, {
+      renderer: desktopVectorRenderer,
+      interactive: false,
+      color: bucket.color,
+      weight: bucket.weight,
+      opacity: bucket.opacity
+    }).addTo(vectorLayerGroup);
+  }
 }
-map.on("zoomend", renderAllVectorFeatures);
+map.on("zoomend moveend", scheduleRenderAllVectorFeatures);
 
 function syncQuickLayerBar() {
   const bar = document.getElementById("quickSelectedLayerBar");
@@ -4712,11 +4282,27 @@ function handleDeviceOrientation(e) {
   rawTargetHeading = heading;
 }
 
+let _compassListenersBound = false;
+function stopSmoothCompassLoop() {
+  if (compassAnimFrame) {
+    cancelAnimationFrame(compassAnimFrame);
+    compassAnimFrame = null;
+  }
+}
+
 function startSmoothCompassLoop() {
-  window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
-  window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+  if (!_compassListenersBound) {
+    _compassListenersBound = true;
+    window.addEventListener("deviceorientationabsolute", handleDeviceOrientation, true);
+    window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+  }
 
   function tick() {
+    const camOpen = document.getElementById("cameraModal")?.classList.contains("open");
+    if (!camOpen && !state.rotateCrosshair) {
+      compassAnimFrame = null;
+      return; // Dừng hẳn vòng lặp rAF trên máy tính khi không mở Camera AR
+    }
     const currentMod = ((continuousHeading % 360) + 360) % 360;
     let delta = rawTargetHeading - currentMod;
     if (delta > 180) delta -= 360;
@@ -4727,11 +4313,13 @@ function startSmoothCompassLoop() {
     }
     smoothedHeading = (((continuousHeading % 360) + 360) % 360);
 
-    const dial = document.getElementById("compassDialSvg");
-    if (dial) dial.style.transform = `rotate(${-smoothedHeading.toFixed(2)}deg)`;
-
-    const azText = document.getElementById("camAzimuthText");
-    if (azText) azText.textContent = `${Math.round(smoothedHeading)}°`;
+    if (camOpen) {
+      const dial = document.getElementById("compassDialSvg");
+      if (dial) dial.style.transform = `rotate(${-smoothedHeading.toFixed(2)}deg)`;
+      const azText = document.getElementById("camAzimuthText");
+      if (azText) azText.textContent = `${Math.round(smoothedHeading)}°`;
+      updateCameraHudValues();
+    }
 
     const mapArrow = document.getElementById("mapCompassArrow");
     if (mapArrow) mapArrow.style.transform = `rotate(${-smoothedHeading.toFixed(1)}deg)`;
@@ -4740,8 +4328,6 @@ function startSmoothCompassLoop() {
       const ch = document.getElementById("mapCrosshair");
       if (ch) ch.style.transform = `rotate(${smoothedHeading.toFixed(1)}deg)`;
     }
-
-    updateCameraHudValues();
     compassAnimFrame = requestAnimationFrame(tick);
   }
   if (!compassAnimFrame) compassAnimFrame = requestAnimationFrame(tick);
@@ -4771,7 +4357,7 @@ function updateCameraHudValues() {
 }
 
 async function openSurveyCamera() {
-  document.getElementById("cameraModal").classList.add("open");
+  document.getElementById("cameraModal").classList.add("open"); startSmoothCompassLoop();
   document.getElementById("compassDialSvg").style.display = state.showCompassInCam !== false ? "block" : "none";
   if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
     try { await DeviceOrientationEvent.requestPermission(); } catch (e) {}
@@ -4829,7 +4415,6 @@ function savePointFromCamera() {
     id: "ar_" + Date.now(),
     layerId: "default_points",
     geomType: "point",
-    symbolType: "circle",
     name: ptName,
     lat, lon,
     vnX: vn.x,
@@ -5264,7 +4849,6 @@ function saveConvertedPoint() {
     id: "conv_" + Date.now(),
     layerId: "default_points",
     geomType: "point",
-    symbolType: "circle",
     name: "Điểm quy đổi tọa độ",
     lat: lastConvertedWgs.lat,
     lon: lastConvertedWgs.lon,
@@ -5309,8 +4893,6 @@ function updateCoordInputPlaceholder() {
 
 function submitCoordInput(createPin) {
   const fmt = document.getElementById("inputFormatSelect").value;
-  const customPtName = (document.getElementById("inCoordPointName")?.value || "").trim();
-  const customElevH = parseFloat(document.getElementById("inCoordElevH")?.value);
   const v1 = parseFloat(document.getElementById("inCoordVal1").value);
   const v2 = parseFloat(document.getElementById("inCoordVal2").value);
   if (isNaN(v1) || isNaN(v2)) { showToast("Vui lòng nhập tọa độ hợp lệ."); return; }
@@ -5325,25 +4907,19 @@ function submitCoordInput(createPin) {
     vnX = vn.x; vnY = vn.y;
   }
 
+  const customPtName = (document.getElementById("inCoordPointName")?.value || "").trim() || "Điểm nhập tay";
+  const customElev = parseFloat(document.getElementById("inCoordElevation")?.value);
+  const finalElev = isNaN(customElev) ? 0 : customElev;
+
   if (createPin) {
-    const idx = state.features.filter(f => f.geomType === "point").length + 1;
-    const finalName = customPtName || `Mốc nhập tay-${String(idx).padStart(2, "0")}`;
-    const finalH = !isNaN(customElevH) ? customElevH : getEffectiveElevationM();
     state.features.push({
-      id: "inpt_" + Date.now(),
-      layerId: "default_points",
-      geomType: "point",
-      symbolType: "triangle",
-      name: finalName,
-      lat, lon, vnX, vnY,
-      h: finalH,
-      project: getActiveProject().name,
-      note: "",
-      createdAt: new Date().toLocaleString("vi-VN")
+      id: "inpt_" + Date.now(), layerId: "default_points", geomType: "point",
+      name: customPtName, lat, lon, vnX, vnY, h: finalElev,
+      project: getActiveProject().name, note: "", createdAt: new Date().toLocaleString("vi-VN")
     });
     saveAppState();
     renderAllVectorFeatures();
-    showToast(`Đã tạo mốc "${finalName}" (H=${finalH.toFixed(2)}m)!`);
+    showToast(`Đã tạo mốc "${customPtName}" (H = ${finalElev.toFixed(2)} m)`);
   }
   closeModal("coordInputModal");
   map.setView([lat, lon], 19);
@@ -5411,20 +4987,13 @@ function deleteProjectScope(id) {
 function saveSurveyNote() {
   const projId = document.getElementById("noteProjectSelect").value;
   if (projId) state.activeProjectId = projId;
-  const workName = document.getElementById("camWorkNameInput")?.value.trim() || "";
-  const catName = document.getElementById("camCategoryNameInput")?.value.trim() || "";
   state.surveyNote.workTitle = document.getElementById("workTitleInput").value.trim();
   state.surveyNote.content = document.getElementById("workNoteInput").value.trim();
-  const activeProj = getActiveProject();
-  if (activeProj && activeProj.id !== "proj_0") {
-    if (workName) activeProj.workName = workName;
-    if (catName) activeProj.categoryName = catName;
-  }
   saveAppState();
   renderProjectsUI();
   updateCameraHudValues();
   closeModal("camNoteModal");
-  showToast("Đã cập nhật ghi chú dự án, công trình, hạng mục!");
+  showToast("Đã cập nhật ghi chú dự án, công việc!");
 }
 
 function openDeltaHModal() {
@@ -5694,7 +5263,7 @@ function renderLayersModal() {
           <button class="mini-btn" title="Phóng to tới lớp" onclick="state.selectedQuickLayerId='${l.id}'; flyToSelectedQuickLayer(); closeModal('layersModal');">🔍</button>
           <button class="mini-btn" title="Ẩn/Hiện lớp" onclick="toggleLayerVisibility('${l.id}')">${l.visible !== false ? "👁️" : "🚫"}</button>
           <button class="mini-btn" title="Kiểu dáng & Độ mờ" onclick="openLayerStyleEditor('${l.id}')">⚙️</button>
-          <button class="mini-btn" style="color:#f87171;" title="Chuyển vào thùng rác" onclick="openTrashConfirmDialog('Chuyển lớp &quot;${l.name.replace(/'/g, "&#39;")}&quot; vào Thùng rác?', () => deleteLayer('${l.id}'))">🗑️</button>
+          <button class="mini-btn" style="color:#f87171;" title="Chuyển vào thùng rác" onclick="deleteLayer('${l.id}')">🗑️</button>
         </div>
         ${childrenHtml}
       </div>
@@ -6061,9 +5630,6 @@ function handleRestoreJson(event) {
       if (!Array.isArray(state.trash)) state.trash = [];
       if (!Array.isArray(state.imageOverlays)) state.imageOverlays = [];
       if (!Array.isArray(state.serviceLayers)) state.serviceLayers = [];
-      if (!state.cloudConfig || typeof state.cloudConfig !== "object") {
-        state.cloudConfig = structuredClone(defaultState.cloudConfig);
-      }
       saveAppState();
       renderProjectsUI();
       renderAllVectorFeatures();
@@ -6169,7 +5735,7 @@ function toggleSegLblFromSettings(checked) {
 
 function toggleRotateCrosshair(checked) {
   state.rotateCrosshair = checked;
-  if (!checked) document.getElementById("mapCrosshair").style.transform = "none";
+  if (!checked) document.getElementById("mapCrosshair").style.transform = "none"; else startSmoothCompassLoop();
   saveAppState();
 }
 
@@ -6214,14 +5780,12 @@ function saveAdvancedSurveySettings() {
 ============================================================================ */
 function openDrawer() {
   updateTrashBadge();
-  updateCloudUiStatus();
   document.getElementById("mainDrawer").classList.add("open");
 }
 function closeDrawer() { document.getElementById("mainDrawer").classList.remove("open"); }
 
 function openModal(id) {
   document.getElementById(id).classList.add("open");
-  if (id === "cloudSyncModal") renderCloudSyncModal();
   if (id === "projectScopeModal") renderProjectsUI();
   if (id === "projectStatsModal") renderProjectStatsModal();
   if (id === "crsModal") renderCrsList();
@@ -6233,6 +5797,7 @@ function openModal(id) {
   if (id === "savedPointsModal") renderSavedPointsList();
   if (id === "exportModal") renderExportModalOptions();
   if (id === "settingsModal") syncSettingsModal();
+  if (id === "adminKeyManagerModal") renderAdminKeyManagerModal();
   if (id === "parcelModal") {
     document.getElementById("parcelCrsNameDisplay").textContent = state.activeCrs.name;
     renderParsedCoordTable();
@@ -6260,12 +5825,43 @@ function resetMapNorth() {
 }
 
 /* ============================================================================
-   16. TÀI KHOẢN CÁ NHÂN (EMAIL / SĐT - DÙNG CHUNG CHO XÃ HỘI, TÁCH DỮ LIỆU)
+   16. HỆ THỐNG CẤP KEY RIÊNG TỰ ĐỘNG & ĐỒNG BỘ GOOGLE SHEETS "QUAN LÝ PD GIS"
 ============================================================================ */
-const AUTH_REGISTRY_KEY = "PD_GIS_PRO_1_2_AUTH_REGISTRY";
-const AUTH_ACTIVE_KEY = "PD_GIS_PRO_1_2_ACTIVE_USER";
+const AUTH_REGISTRY_KEY = "PD_GIS_PRO_1_2_4_KEY_REGISTRY";
+const AUTH_ACTIVE_KEY = "PD_GIS_PRO_1_2_4_ACTIVE_SESSION";
+const GAS_URL_STORAGE_KEY = "PD_GIS_PRO_1_2_4_GAS_URL";
+
+// Dán URL Google Apps Script Web App của bạn tại đây để kích hoạt mặc định cho mọi máy khách:
+const DEFAULT_GOOGLE_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwj8tzw9JEyUoXnb7SAQktuM_ifzS04KeHNTN_8kYyUXDD072zSJS7bcZZ1C_3RSy_I/exec";
+
+// Key Quản trị mặc định của Trưởng Ban QLDA Tăng Văn Phương (chỉ Admin mới tạo/quản lý Key)
+const MASTER_ADMIN_RECORD = {
+  keyCode: "PDGIS-ADMIN-PHUONG-9905",
+  accId: "acc_admin_phuong_9905",
+  identifier: "0989899905",
+  email: "phuongxdbt@gmail.com",
+  displayName: "Tăng Văn Phương (Admin)",
+  org: "Ban QLDA Phương Đông",
+  role: "ADMIN",
+  status: "ACTIVE",
+  loginCount: 1,
+  createdAt: "22/11/2026",
+  lastLoginAt: new Date().toLocaleString("vi-VN")
+};
+
 let currentAccountId = null;
 let currentAccountLabel = "";
+let currentUserRole = "GUEST"; // ADMIN | PRO | VIEW | GUEST
+let currentKeyCode = "";
+let lastNewlyIssuedKey = null;
+
+function getGasWebAppUrl() {
+  try {
+    const saved = localStorage.getItem(GAS_URL_STORAGE_KEY);
+    if (saved && saved.trim()) return saved.trim();
+  } catch (e) {}
+  return DEFAULT_GOOGLE_SHEETS_WEBAPP_URL;
+}
 
 function normalizeAccountId(raw) {
   const cleaned = String(raw || "").trim().toLowerCase();
@@ -6275,31 +5871,97 @@ function normalizeAccountId(raw) {
   return digits ? "acc_tel_" + digits : "acc_" + cleaned.replace(/\W+/g, "_");
 }
 
+function computeKeySignature(seedStr) {
+  let h1 = 0x811c9dc5;
+  const full = "PDGIS_2026_PHUONGDONG_" + String(seedStr || "").toUpperCase();
+  for (let i = 0; i < full.length; i++) {
+    h1 ^= full.charCodeAt(i);
+    h1 = Math.imul(h1, 0x01000193);
+  }
+  return (h1 >>> 0).toString(16).toUpperCase().padStart(8, "0").slice(0, 4);
+}
+
+function generateUniquePersonalKey(identifier, role = "PRO") {
+  const clean = String(identifier || "").trim().toUpperCase();
+  const digits = clean.replace(/\D/g, "");
+  const tail = digits.length >= 4
+    ? digits.slice(-4)
+    : clean.replace(/[^A-Z0-9]/g, "").slice(0, 4).padEnd(4, "X");
+  const sig = computeKeySignature(`${role}:${clean}:${tail}`);
+  return `PDGIS-${role}-${tail}-${sig}`;
+}
+
+function validatePersonalKeyFormat(keyCode) {
+  const k = String(keyCode || "").trim().toUpperCase();
+  if (!k) return { valid: false, role: null };
+  if (k === MASTER_ADMIN_RECORD.keyCode) return { valid: true, role: "ADMIN" };
+  const m = k.match(/^PDGIS-(PRO|VIEW|ADMIN)-([A-Z0-9]{4})-([A-F0-9]{4})$/);
+  if (!m) return { valid: false, role: null };
+  return { valid: true, role: m[1] };
+}
+
 function getAccountStorageKey(accId) {
   return `PD_GIS_PRO_1_2_USER_DATA_${accId}`;
 }
 
 function loadAuthRegistry() {
+  let list = [];
   try {
     const r = JSON.parse(localStorage.getItem(AUTH_REGISTRY_KEY) || "[]");
-    return Array.isArray(r) ? r : [];
-  } catch (e) { return []; }
+    if (Array.isArray(r)) list = r;
+  } catch (e) {}
+  if (!list.some(x => x.keyCode === MASTER_ADMIN_RECORD.keyCode)) {
+    list.unshift({ ...MASTER_ADMIN_RECORD });
+  }
+  return list;
 }
 
 function saveAuthRegistry(list) {
   try { localStorage.setItem(AUTH_REGISTRY_KEY, JSON.stringify(list)); } catch (e) {}
 }
 
+function applyRolePermissionsUI() {
+  const isAdmin = currentUserRole === "ADMIN";
+  const isReadOnly = currentUserRole === "VIEW";
+
+  const adminBtn = document.getElementById("headerAdminKeyBtn");
+  if (adminBtn) adminBtn.classList.toggle("visible", isAdmin);
+
+  const drawerAdmin = document.getElementById("drawerAdminKeyItem");
+  if (drawerAdmin) drawerAdmin.style.display = isAdmin ? "flex" : "none";
+
+  const editBtns = ["btnDrawLine", "btnDrawPoly", "btnTracklog"];
+  editBtns.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.opacity = isReadOnly ? "0.35" : "1";
+      el.style.pointerEvents = isReadOnly ? "none" : "auto";
+    }
+  });
+}
+
 function updateAccountHeaderBadge() {
   const btn = document.getElementById("headerAccountBtn");
   if (!btn) return;
   if (currentAccountId && currentAccountLabel) {
-    btn.textContent = `👤 ${currentAccountLabel}`;
-    btn.title = `Tài khoản: ${currentAccountLabel} (Bấm để đổi/đăng xuất)`;
+    const roleTag = currentUserRole === "ADMIN" ? "👑" : currentUserRole === "VIEW" ? "👁️" : "🔑";
+    btn.textContent = `${roleTag} ${currentAccountLabel}`;
+    btn.title = `Key: ${currentKeyCode} (${currentUserRole}) • Bấm để đổi/xem thông tin`;
   } else {
-    btn.textContent = "👤 Đăng nhập";
-    btn.title = "Đăng nhập bằng Email hoặc Số điện thoại để tách dữ liệu riêng";
+    btn.textContent = "🔑 Nhập Key";
+    btn.title = "Nhập Key cá nhân hoặc đăng ký nhận Key tự động";
   }
+  applyRolePermissionsUI();
+}
+
+function switchAuthTab(tabName) {
+  const isHave = tabName === "have_key";
+  document.getElementById("tabHaveKey")?.classList.toggle("active", isHave);
+  document.getElementById("tabRequestKey")?.classList.toggle("active", !isHave);
+  const p1 = document.getElementById("authHaveKeyPane");
+  const p2 = document.getElementById("authRequestKeyPane");
+  if (p1) p1.style.display = isHave ? "block" : "none";
+  if (p2) p2.style.display = isHave ? "none" : "block";
 }
 
 function openAuthGateModal() {
@@ -6309,21 +5971,21 @@ function openAuthGateModal() {
   const statusEl = document.getElementById("authCurrentStatusText");
   if (statusEl) {
     statusEl.textContent = currentAccountId
-      ? `Đang dùng tài khoản: ${currentAccountLabel}`
-      : "Chưa đăng nhập tài khoản riêng";
+      ? `Đang dùng Key: ${currentKeyCode} (${currentAccountLabel})`
+      : "Chưa kích hoạt Key riêng";
   }
   const reg = loadAuthRegistry();
   const box = document.getElementById("savedAccountsQuickBox");
   if (box) {
     box.innerHTML = reg.length > 0
-      ? `<div class="form-label">Tài khoản đã lưu trên trình duyệt này:</div>` + reg.map(u => `
+      ? `<div class="form-label">Key đã lưu trên thiết bị này:</div>` + reg.slice(0, 6).map(u => `
           <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;cursor:pointer;"
-               onclick="document.getElementById('authIdentifierInput').value='${u.identifier}'; loginWithIdentifier();">
+               onclick="document.getElementById('authKeyCodeInput').value='${u.keyCode}'; document.getElementById('authIdentifierInput').value='${u.identifier || ""}'; loginWithAccessKey();">
             <div>
-              <div style="font-size:12.5px;font-weight:700;color:#f8fafc;">${u.displayName || u.identifier}</div>
-              <div style="font-size:11px;color:#94a3b8;">${u.identifier}</div>
+              <div style="font-size:12.5px;font-weight:700;color:#f8fafc;">${u.displayName || u.identifier} <span class="key-badge-pill">${u.role || "PRO"}</span></div>
+              <div style="font-size:11px;color:#38bdf8;font-family:ui-monospace,monospace;">${u.keyCode}</div>
             </div>
-            <span style="font-size:11.5px;color:#38bdf8;font-weight:700;">Vào ›</span>
+            <span style="font-size:11.5px;color:#34d399;font-weight:700;">Vào ›</span>
           </div>
         `).join("")
       : "";
@@ -6334,31 +5996,150 @@ function closeAuthGateModal() {
   document.getElementById("authGateModal")?.classList.remove("open");
 }
 
-function loginWithIdentifier() {
-  const ident = document.getElementById("authIdentifierInput")?.value.trim();
-  const disp = document.getElementById("authDisplayNameInput")?.value.trim();
-  const accId = normalizeAccountId(ident);
-  if (!accId) {
-    showToast("Vui lòng nhập Email hoặc Số điện thoại hợp lệ.");
+async function pushUserEventToGoogleSheets(action, payload) {
+  const url = getGasWebAppUrl();
+  if (!url) return null;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action,
+        appVersion: "PD GIS Pro 1.2.4",
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toLocaleString("vi-VN"),
+        ...payload
+      })
+    });
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+async function requestAutoAccessKey() {
+  const fullName = document.getElementById("reqUserFullName")?.value.trim();
+  const phone = document.getElementById("reqUserPhone")?.value.trim();
+  const email = document.getElementById("reqUserEmail")?.value.trim();
+  const org = document.getElementById("reqUserOrg")?.value.trim();
+
+  if (!fullName || (!phone && !email)) {
+    showToast("Vui lòng nhập Họ tên và ít nhất Số điện thoại hoặc Email.");
+    return;
+  }
+
+  const primaryIdent = phone || email;
+  const accId = normalizeAccountId(primaryIdent);
+  let reg = loadAuthRegistry();
+  let existing = reg.find(x => x.accId === accId || (phone && x.identifier === phone) || (email && x.email === email));
+
+  let issuedRecord = existing;
+  if (!issuedRecord) {
+    const newKey = generateUniquePersonalKey(primaryIdent, "PRO");
+    issuedRecord = {
+      keyCode: newKey,
+      accId,
+      identifier: phone || email,
+      email: email || "",
+      displayName: fullName,
+      org: org || "Cá nhân / Khách hàng",
+      role: "PRO",
+      status: "ACTIVE",
+      loginCount: 0,
+      createdAt: new Date().toLocaleString("vi-VN"),
+      lastLoginAt: ""
+    };
+    reg.unshift(issuedRecord);
+    saveAuthRegistry(reg);
+  }
+
+  const btn = document.getElementById("btnAutoRegisterKey");
+  if (btn) btn.textContent = "⏳ Đang tạo Key & Ghi nhận hệ thống...";
+  const remoteResp = await pushUserEventToGoogleSheets("register_key", issuedRecord);
+  if (btn) btn.textContent = "⚡ Đăng ký & Nhận mã Key riêng ngay";
+
+  if (remoteResp && remoteResp.keyCode) {
+    issuedRecord.keyCode = remoteResp.keyCode;
+    saveAuthRegistry(reg);
+  }
+
+  lastNewlyIssuedKey = issuedRecord;
+  document.getElementById("issuedKeyCodeText").textContent = issuedRecord.keyCode;
+  document.getElementById("issuedKeyResultBox").style.display = "block";
+  showToast(`Đã cấp mã Key riêng: ${issuedRecord.keyCode}`);
+}
+
+function copyIssuedKeyToClipboard() {
+  if (!lastNewlyIssuedKey) return;
+  navigator.clipboard?.writeText(lastNewlyIssuedKey.keyCode);
+  showToast(`Đã sao chép Key: ${lastNewlyIssuedKey.keyCode}`);
+}
+
+function activateNewlyIssuedKey() {
+  if (!lastNewlyIssuedKey) return;
+  document.getElementById("authKeyCodeInput").value = lastNewlyIssuedKey.keyCode;
+  document.getElementById("authIdentifierInput").value = lastNewlyIssuedKey.identifier || "";
+  switchAuthTab("have_key");
+  loginWithAccessKey();
+}
+
+async function loginWithAccessKey() {
+  const rawKey = (document.getElementById("authKeyCodeInput")?.value || "").trim().toUpperCase();
+  const ident = (document.getElementById("authIdentifierInput")?.value || "").trim();
+
+  const check = validatePersonalKeyFormat(rawKey);
+  if (!check.valid) {
+    showToast("Mã Key không hợp lệ! Vui lòng kiểm tra lại hoặc đăng ký nhận Key.");
     return;
   }
 
   let reg = loadAuthRegistry();
-  let found = reg.find(x => x.accId === accId);
-  if (!found) {
-    found = { accId, identifier: ident, displayName: disp || ident };
-    reg.unshift(found);
-  } else if (disp) {
-    found.displayName = disp;
+  let found = reg.find(x => x.keyCode === rawKey);
+
+  if (found && found.status === "LOCKED") {
+    showToast("Mã Key này đã bị Quản trị viên tạm khóa. Vui lòng liên hệ 0989899905.");
+    return;
   }
+
+  if (!found) {
+    const accId = normalizeAccountId(ident || rawKey);
+    found = {
+      keyCode: rawKey,
+      accId,
+      identifier: ident || rawKey,
+      email: ident.includes("@") ? ident : "",
+      displayName: ident || rawKey,
+      org: "",
+      role: check.role || "PRO",
+      status: "ACTIVE",
+      loginCount: 0,
+      createdAt: new Date().toLocaleString("vi-VN"),
+      lastLoginAt: ""
+    };
+    reg.unshift(found);
+  }
+
+  found.loginCount = (Number(found.loginCount) || 0) + 1;
+  found.lastLoginAt = new Date().toLocaleString("vi-VN");
   saveAuthRegistry(reg);
 
-  currentAccountId = accId;
-  currentAccountLabel = found.displayName || found.identifier;
-  try { localStorage.setItem(AUTH_ACTIVE_KEY, JSON.stringify({ accId, identifier: found.identifier, displayName: found.displayName })); } catch (e) {}
+  currentAccountId = found.accId;
+  currentAccountLabel = found.displayName || found.identifier || rawKey;
+  currentUserRole = found.role || check.role || "PRO";
+  currentKeyCode = found.keyCode;
 
   try {
-    const rawUser = localStorage.getItem(getAccountStorageKey(accId));
+    localStorage.setItem(AUTH_ACTIVE_KEY, JSON.stringify({
+      accId: currentAccountId,
+      keyCode: currentKeyCode,
+      role: currentUserRole,
+      identifier: found.identifier,
+      displayName: found.displayName
+    }));
+  } catch (e) {}
+
+  try {
+    const rawUser = localStorage.getItem(getAccountStorageKey(currentAccountId));
     if (rawUser) {
       state = Object.assign(structuredClone(defaultState), JSON.parse(rawUser));
     } else {
@@ -6367,12 +6148,14 @@ function loginWithIdentifier() {
   } catch (e) {
     state = structuredClone(defaultState);
   }
-  if (!state.cloudConfig || typeof state.cloudConfig !== "object") {
-    state.cloudConfig = structuredClone(defaultState.cloudConfig);
-  }
-  const sharedCfg = getEffectiveCloudConfig();
-  state.cloudConfig.endpointUrl = state.cloudConfig.endpointUrl || sharedCfg.endpointUrl;
-  state.cloudConfig.autoSync = state.cloudConfig.autoSync ?? sharedCfg.autoSync;
+
+  pushUserEventToGoogleSheets("login_key", {
+    keyCode: found.keyCode,
+    displayName: found.displayName,
+    identifier: found.identifier,
+    role: found.role,
+    loginCount: found.loginCount
+  });
 
   updateAccountHeaderBadge();
   renderProjectsUI();
@@ -6380,10 +6163,9 @@ function loginWithIdentifier() {
   renderExternalOverlaysAndServices();
   updateTrashBadge();
   syncQuickLayerBar();
-  updateCloudUiStatus();
   saveAppState();
   closeAuthGateModal();
-  showToast(`Đã vào tài khoản riêng: ${currentAccountLabel}`);
+  showToast(`Đã kích hoạt Key [${currentUserRole}]: ${currentAccountLabel}`);
 }
 
 function logoutCurrentAccount() {
@@ -6392,12 +6174,13 @@ function logoutCurrentAccount() {
   }
   currentAccountId = null;
   currentAccountLabel = "";
+  currentUserRole = "GUEST";
+  currentKeyCode = "";
   try { localStorage.removeItem(AUTH_ACTIVE_KEY); } catch (e) {}
   updateAccountHeaderBadge();
-  updateCloudUiStatus();
   const statusEl = document.getElementById("authCurrentStatusText");
-  if (statusEl) statusEl.textContent = "Đã đăng xuất tài khoản riêng";
-  showToast("Đã đăng xuất tài khoản.");
+  if (statusEl) statusEl.textContent = "Đã đăng xuất Key cá nhân";
+  showToast("Đã đăng xuất Key.");
 }
 
 function initActiveAccountSession() {
@@ -6408,6 +6191,8 @@ function initActiveAccountSession() {
       if (act && act.accId) {
         currentAccountId = act.accId;
         currentAccountLabel = act.displayName || act.identifier || act.accId;
+        currentUserRole = act.role || "PRO";
+        currentKeyCode = act.keyCode || "";
         const rawUser = localStorage.getItem(getAccountStorageKey(currentAccountId));
         if (rawUser) {
           state = Object.assign(structuredClone(defaultState), JSON.parse(rawUser));
@@ -6416,7 +6201,190 @@ function initActiveAccountSession() {
     }
   } catch (e) {}
   updateAccountHeaderBadge();
-  updateCloudUiStatus();
+}
+
+function renderAdminKeyManagerModal() {
+  const urlInp = document.getElementById("adminGasEndpointInput");
+  if (urlInp) urlInp.value = getGasWebAppUrl();
+
+  const reg = loadAuthRegistry();
+  const totalUsers = reg.length;
+  const activeKeys = reg.filter(u => u.status !== "LOCKED").length;
+  const totalLogins = reg.reduce((acc, u) => acc + (Number(u.loginCount) || 0), 0);
+
+  document.getElementById("adminKpiTotalUsers").textContent = String(totalUsers);
+  document.getElementById("adminKpiActiveKeys").textContent = String(activeKeys);
+  document.getElementById("adminKpiTotalLogins").textContent = String(totalLogins);
+
+  const tbody = document.getElementById("adminUsersTableTbody");
+  if (!tbody) return;
+  tbody.innerHTML = reg.map((u, idx) => {
+    const isMaster = u.keyCode === MASTER_ADMIN_RECORD.keyCode;
+    const isLocked = u.status === "LOCKED";
+    return `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>
+          <div style="font-weight:700;color:#f8fafc;">${u.displayName || "Người dùng"}</div>
+          <div style="font-size:11px;color:#94a3b8;">${u.identifier || ""} ${u.org ? "• " + u.org : ""}</div>
+        </td>
+        <td><span class="key-badge-pill">${u.keyCode}</span></td>
+        <td><strong>${u.role || "PRO"}</strong></td>
+        <td class="num-col">${u.loginCount || 0}</td>
+        <td><span class="${isLocked ? "key-status-locked" : "key-status-active"}">${isLocked ? "Đã khóa" : "Hoạt động"}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="mini-btn" onclick="copyUserKeyMsg('${u.keyCode}', '${(u.displayName || "").replace(/'/g, "")}')">📋</button>
+          ${isMaster ? "" : `<button class="mini-btn" onclick="toggleLockUserKey('${u.keyCode}')">${isLocked ? "🔓" : "🔒"}</button>`}
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function saveGasEndpointConfig() {
+  const url = document.getElementById("adminGasEndpointInput")?.value.trim() || "";
+  try { localStorage.setItem(GAS_URL_STORAGE_KEY, url); } catch (e) {}
+  document.getElementById("adminGasSyncStatus").textContent = url
+    ? "Trạng thái: Đã lưu URL Google Sheets Web App!"
+    : "Trạng thái: Chưa cấu hình URL (đang lưu cục bộ)";
+  if (url) syncUsersFromGoogleSheets();
+  else showToast("Đã lưu cấu hình.");
+}
+
+function adminGenerateAndAssignKey() {
+  const name = document.getElementById("adminNewKeyName")?.value.trim();
+  const contact = document.getElementById("adminNewKeyContact")?.value.trim();
+  const role = document.getElementById("adminNewKeyRole")?.value || "PRO";
+  if (!name || !contact) {
+    showToast("Vui lòng nhập Họ tên và SĐT/Email người nhận Key.");
+    return;
+  }
+  const keyCode = generateUniquePersonalKey(contact, role);
+  const accId = normalizeAccountId(contact);
+  const reg = loadAuthRegistry();
+  const newRec = {
+    keyCode,
+    accId,
+    identifier: contact,
+    email: contact.includes("@") ? contact : "",
+    displayName: name,
+    org: "Cấp bởi Admin",
+    role,
+    status: "ACTIVE",
+    loginCount: 0,
+    createdAt: new Date().toLocaleString("vi-VN"),
+    lastLoginAt: ""
+  };
+  reg.unshift(newRec);
+  saveAuthRegistry(reg);
+  pushUserEventToGoogleSheets("register_key", newRec);
+  renderAdminKeyManagerModal();
+  copyUserKeyMsg(keyCode, name);
+}
+
+function copyUserKeyMsg(keyCode, name) {
+  const msg = `Chào ${name || "bạn"}, mã Key truy cập riêng của bạn trên PD GIS Pro (https://gis.xaydungphuongdong.com) là: ${keyCode}`;
+  navigator.clipboard?.writeText(msg);
+  showToast(`Đã sao chép Key & tin nhắn gửi cho ${name || keyCode}!`);
+}
+
+function toggleLockUserKey(keyCode) {
+  const reg = loadAuthRegistry();
+  const u = reg.find(x => x.keyCode === keyCode);
+  if (!u) return;
+  u.status = u.status === "LOCKED" ? "ACTIVE" : "LOCKED";
+  saveAuthRegistry(reg);
+  pushUserEventToGoogleSheets("toggle_status", { keyCode: u.keyCode, status: u.status });
+  renderAdminKeyManagerModal();
+  showToast(`Đã đổi trạng thái Key ${keyCode} → ${u.status}`);
+}
+
+function jsonpFetchUsers(url, timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    const cbName = "__pdgisJsonpCb_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+    const script = document.createElement("script");
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("JSONP timeout"));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+    }
+
+    window[cbName] = (payload) => {
+      cleanup();
+      resolve(payload);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("JSONP script load error"));
+    };
+
+    const sep = url.includes("?") ? "&" : "?";
+    script.src = `${url}${sep}action=list_users&callback=${cbName}&_t=${Date.now()}`;
+    document.body.appendChild(script);
+  });
+}
+
+async function syncUsersFromGoogleSheets() {
+  const url = getGasWebAppUrl();
+  if (!url) {
+    showToast("Chưa dán URL Web App Google Sheets.");
+    return;
+  }
+  try {
+    const res = await fetch(`${url}?action=list_users&_t=${Date.now()}`, { mode: "cors" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (data && Array.isArray(data.users)) {
+      const localReg = loadAuthRegistry();
+      const mapByKey = new Map(localReg.map(u => [u.keyCode, u]));
+      data.users.forEach(ru => {
+        if (ru.keyCode) mapByKey.set(ru.keyCode, Object.assign(mapByKey.get(ru.keyCode) || {}, ru));
+      });
+      saveAuthRegistry(Array.from(mapByKey.values()));
+      renderAdminKeyManagerModal();
+      showToast(`Đã đồng bộ ${data.users.length} người dùng từ Google Sheets!`);
+      return;
+    }
+    throw new Error("Invalid payload");
+  } catch (fetchErr) {
+    try {
+      const data = await jsonpFetchUsers(url);
+      if (data && Array.isArray(data.users)) {
+        const localReg = loadAuthRegistry();
+        const mapByKey = new Map(localReg.map(u => [u.keyCode, u]));
+        data.users.forEach(ru => {
+          if (ru.keyCode) mapByKey.set(ru.keyCode, Object.assign(mapByKey.get(ru.keyCode) || {}, ru));
+        });
+        saveAuthRegistry(Array.from(mapByKey.values()));
+        renderAdminKeyManagerModal();
+        showToast(`Đã đồng bộ ${data.users.length} người dùng từ Google Sheets!`);
+        return;
+      }
+      showToast("Web App phản hồi nhưng chưa có danh sách người dùng.");
+    } catch (jsonpErr) {
+      showToast("Không đọc được từ Google Sheets (kiểm tra quyền Anyone của Web App).");
+    }
+  }
+}
+
+function exportUsersRegistryCsv() {
+  const reg = loadAuthRegistry();
+  const lines = ["STT,Ma_Key,Ho_Ten,Lien_He,Email,Don_Vi,Quyen,Trang_Thai,So_Luot_Mo,Ngay_Tao,Truy_Cap_Cuoi"];
+  reg.forEach((u, i) => {
+    lines.push(`${i + 1},"${u.keyCode}","${(u.displayName||"").replace(/"/g,'""')}","${u.identifier||""}","${u.email||""}","${(u.org||"").replace(/"/g,'""')}","${u.role||"PRO"}","${u.status||"ACTIVE"}",${u.loginCount||0},"${u.createdAt||""}","${u.lastLoginAt||""}"`);
+  });
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `QUAN_LY_PD_GIS_Users_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  showToast("Đã xuất danh sách người dùng & Key ra CSV!");
 }
 
 const _origSaveAppStateAsync = saveAppStateAsync;
@@ -6788,7 +6756,6 @@ window.addEventListener("DOMContentLoaded", () => {
   renderExternalOverlaysAndServices();
   updateTrashBadge();
   syncQuickLayerBar();
-  updateCloudUiStatus();
   startSmoothCompassLoop();
   hydrateStateFromIdb();
 
@@ -6796,5 +6763,952 @@ window.addEventListener("DOMContentLoaded", () => {
   startContinuousGpsWatch();
 });
 </script>
+
+<script>
+/* ============================================================================
+   PD GIS PRO 1.2.4 ADDON — KHÓA CHỌN LỌC TẠO TÒ MÒ & RÀNG BUỘC 1 THIẾT BỊ
+   (Không chạm vào Google Sheets, dán thêm ở cuối file 1.2.4)
+============================================================================ */
+(function initKeyTeaserAndSingleDeviceGuard() {
+  const DEVICE_ID_KEY = "PD_GIS_PRO_1_2_4_DEVICE_ID";
+  const DEVICE_BINDINGS_KEY = "PD_GIS_PRO_1_2_4_KEY_DEVICE_MAP";
+
+  function getOrCreateDeviceId() {
+    let devId = "";
+    try { devId = localStorage.getItem(DEVICE_ID_KEY) || ""; } catch (e) {}
+    if (!devId) {
+      const sig = [
+        navigator.platform || "",
+        screen.width || "",
+        screen.height || "",
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+        Math.random().toString(36).slice(2, 8)
+      ].join("|");
+      let h = 0x811c9dc5;
+      for (let i = 0; i < sig.length; i++) {
+        h ^= sig.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      devId = "DEV-" + (h >>> 0).toString(16).toUpperCase().padStart(8, "0");
+      try { localStorage.setItem(DEVICE_ID_KEY, devId); } catch (e) {}
+    }
+    return devId;
+  }
+
+  function loadDeviceBindings() {
+    try { return JSON.parse(localStorage.getItem(DEVICE_BINDINGS_KEY) || "{}"); } catch (e) { return {}; }
+  }
+
+  function saveDeviceBindings(mapObj) {
+    try { localStorage.setItem(DEVICE_BINDINGS_KEY, JSON.stringify(mapObj)); } catch (e) {}
+  }
+
+  function isGuestWithoutKey() {
+    return !currentAccountId || currentUserRole === "GUEST";
+  }
+
+  function promptKeyTeaser(featureLabel) {
+    showToast(`🔒 ${featureLabel} dành cho Key cá nhân • Bấm "🔑 Nhập Key" để mở khóa & giữ dữ liệu riêng.`);
+  }
+
+  // 1. Ràng buộc 1 Key = 1 thiết bị duy nhất cho mọi tài khoản, TRỪ ADMIN
+  const _origLoginWithAccessKey = window.loginWithAccessKey;
+  if (typeof _origLoginWithAccessKey === "function") {
+    window.loginWithAccessKey = async function() {
+      const rawKey = (document.getElementById("authKeyCodeInput")?.value || "").trim().toUpperCase();
+      const check = validatePersonalKeyFormat(rawKey);
+      const reg = typeof loadAuthRegistry === "function" ? loadAuthRegistry() : [];
+      const foundRec = reg.find(x => x.keyCode === rawKey);
+      const effectiveRole = (foundRec && foundRec.role) || check.role || "PRO";
+
+      if (check.valid && effectiveRole !== "ADMIN") {
+        const myDevId = getOrCreateDeviceId();
+        const bindings = loadDeviceBindings();
+        const boundDev = bindings[rawKey];
+        if (boundDev && boundDev !== myDevId) {
+          showToast(`⛔ Key ${rawKey} chỉ được dùng trên 1 thiết bị duy nhất (đã gắn với ${boundDev}).`);
+          return;
+        }
+        if (!boundDev) {
+          bindings[rawKey] = myDevId;
+          saveDeviceBindings(bindings);
+        }
+      }
+      return _origLoginWithAccessKey.apply(this, arguments);
+    };
+  }
+
+  // 2. Chọn lọc khóa các tính năng "tạo tò mò" khi chưa có Key (không khóa cứng toàn bộ bản đồ/đo vẽ)
+  // - Khóa thêm lớp ngoài / ảnh quy hoạch / WMS / vẽ vùng / hình học chuẩn / buffer
+  // - Khóa bật bắt điểm (🧲), nhãn kích thước (m), và bấm line ra thước đo chi tiết
+  // - Khóa mở Bảng thống kê dự án & Quản lý lớp
+  const lockedModalsForGuest = new Set([
+    "projectStatsModal",
+    "layersModal",
+    "imageOverlayModal",
+    "wmsLayerModal",
+    "geomShapeModal",
+    "bufferZoneModal",
+    "parcelModal"
+  ]);
+
+  const _origOpenModalAddon = window.openModal;
+  if (typeof _origOpenModalAddon === "function") {
+    window.openModal = function(id) {
+      if (isGuestWithoutKey() && lockedModalsForGuest.has(id)) {
+        const nameMap = {
+          projectStatsModal: "Bảng thống kê tổng hợp dự án",
+          layersModal: "Quản lý các lớp dữ liệu",
+          imageOverlayModal: "Phủ ảnh quy hoạch",
+          wmsLayerModal: "Lớp bản đồ WMS/TMS",
+          geomShapeModal: "Vẽ hình học chuẩn",
+          bufferZoneModal: "Tạo vùng Buffer",
+          parcelModal: "Quét tọa độ sổ đỏ & vẽ thửa"
+        };
+        promptKeyTeaser(nameMap[id] || "Tính năng nâng cao");
+        return;
+      }
+      return _origOpenModalAddon.apply(this, arguments);
+    };
+  }
+
+  const _origToggleSnap = window.toggleSnapToStart;
+  if (typeof _origToggleSnap === "function") {
+    window.toggleSnapToStart = function() {
+      if (isGuestWithoutKey()) {
+        promptKeyTeaser("Bắt điểm đầu & đường nét hiện hữu");
+        return;
+      }
+      return _origToggleSnap.apply(this, arguments);
+    };
+  }
+
+  const _origToggleSegLbl = window.toggleQuickSegLabels;
+  if (typeof _origToggleSegLbl === "function") {
+    window.toggleQuickSegLabels = function() {
+      if (isGuestWithoutKey()) {
+        promptKeyTeaser("Nhãn kích thước từng đoạn (m)");
+        return;
+      }
+      return _origToggleSegLbl.apply(this, arguments);
+    };
+  }
+
+  // Chỉ cho vẽ đường Line khi chưa có Key, không cho tạo Vùng / Polygon
+  const _origStartDrawing = window.startDrawing;
+  if (typeof _origStartDrawing === "function") {
+    window.startDrawing = function(mode) {
+      if (isGuestWithoutKey() && mode === "polygon") {
+        promptKeyTeaser("Vẽ Vùng / Ranh giới thửa (chế độ khách chỉ vẽ được Line)");
+        return;
+      }
+      return _origStartDrawing.apply(this, arguments);
+    };
+  }
+
+  // Chặn bấm vào đoạn Line mở thước đo/thông tin khi chưa có Key
+  const _origHandleCanvasClick = window.handleCanvasFeatureClick;
+  if (typeof _origHandleCanvasClick === "function") {
+    window.handleCanvasFeatureClick = function(e) {
+      if (isGuestWithoutKey()) {
+        const clickPt = map.latLngToContainerPoint(e.latlng);
+        for (let i = state.features.length - 1; i >= 0; i--) {
+          const f = state.features[i];
+          if (f.hidden === true || f.geomType !== "segment") continue;
+          const a = map.latLngToContainerPoint(f.p1);
+          const b = map.latLngToContainerPoint(f.p2);
+          const proj = L.LineUtil.closestPointOnSegment(clickPt, a, b);
+          if (clickPt.distanceTo(proj) <= 10) {
+            promptKeyTeaser("Xem kích thước & chi tiết đoạn Line");
+            return;
+          }
+        }
+      }
+      return _origHandleCanvasClick.apply(this, arguments);
+    };
+  }
+
+  // Hiển thị mã thiết bị hiện tại trong cổng Key để người dùng dễ nhận biết
+  const _origOpenAuthGate = window.openAuthGateModal;
+  if (typeof _origOpenAuthGate === "function") {
+    window.openAuthGateModal = function() {
+      _origOpenAuthGate.apply(this, arguments);
+      const st = document.getElementById("authCurrentStatusText");
+      const devId = getOrCreateDeviceId();
+      if (st && !currentAccountId) {
+        st.textContent = `Chưa có Key • Mã máy: ${devId} (1 Key = 1 thiết bị)`;
+      }
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    getOrCreateDeviceId();
+    if (isGuestWithoutKey()) {
+      document.getElementById("btnSnapStart")?.classList.remove("active");
+      document.getElementById("btnQuickSegLabels")?.classList.remove("active");
+    }
+  });
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   TÌM KIẾM ĐỊA DANH / KHU CÔNG NGHIỆP / TỌA ĐỘ & TỰ ĐỘNG BAY TỚI VỊ TRÍ
+============================================================================ */
+(function initPlaceGeocoderSearch() {
+  let _placeSearchMarker = null;
+
+  function flyMapToLatLonZoom(lat, lon, zoomLevel, labelText) {
+    const z = Number(zoomLevel) || 16;
+    closeModal("searchModal");
+    if (_placeSearchMarker) {
+      try { map.removeLayer(_placeSearchMarker); } catch (e) {}
+      _placeSearchMarker = null;
+    }
+    map.setView([lat, lon], z, { animate: true });
+    const vn = typeof wgs84ToVn2000 === "function" ? wgs84ToVn2000(lat, lon) : { x: 0, y: 0 };
+    _placeSearchMarker = L.circleMarker([lat, lon], {
+      radius: 9,
+      color: "#ffffff",
+      weight: 2.5,
+      fillColor: "#38bdf8",
+      fillOpacity: 0.92
+    }).addTo(map);
+    _placeSearchMarker.bindPopup(
+      `<div style="color:#0f172a;font-size:12px;min-width:190px;">` +
+      `<div style="font-weight:800;color:#0369a1;margin-bottom:3px;">📍 ${labelText || "Vị trí đã chọn"}</div>` +
+      `<div>VN-2000 X(E): <b>${vn.x.toFixed(2)}</b></div>` +
+      `<div>VN-2000 Y(N): <b>${vn.y.toFixed(2)}</b></div>` +
+      `<div>WGS84: ${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}</div>` +
+      `</div>`
+    ).openPopup();
+    if (typeof updateCenterHud === "function") updateCenterHud();
+  }
+
+  window.flyToFoundPlace = function(lat, lon, zoomLevel, encodedLabel) {
+    let label = "";
+    try { label = decodeURIComponent(encodedLabel || ""); } catch (e) { label = encodedLabel || ""; }
+    flyMapToLatLonZoom(Number(lat), Number(lon), Number(zoomLevel) || 16, label);
+    showToast(`Đã di chuyển bản đồ tới: ${label || "vị trí đã chọn"}`);
+  };
+
+  function getLocalQuickMatches(rawQuery) {
+    const q = rawQuery.trim().toLowerCase();
+    if (!q) return [];
+    const matches = [];
+
+    // Địa danh & dự án quen thuộc khu vực Lâm Đồng - Bình Thuận - Tuy Phong - Hàm Kiệm
+    const presets = [
+      { title: "Xã Lộc Sơn, TP. Bảo Lộc, tỉnh Lâm Đồng", sub: "Địa danh hành chính • Lâm Đồng", lat: 11.5318, lon: 107.7935, zoom: 15 },
+      { title: "KCN Tuy Phong (xã Vĩnh Hảo, tỉnh Lâm Đồng)", sub: "Khu công nghiệp 150 ha • Tuy Phong", lat: 11.2485, lon: 108.6752, zoom: 15 },
+      { title: "KCN Hàm Kiệm I (xã Tuyên Quang, tỉnh Lâm Đồng)", sub: "Khu công nghiệp • Hàm Kiệm I", lat: 10.8352, lon: 107.9864, zoom: 15 },
+      { title: "Khu Nhà ở xã hội KCN Hàm Kiệm I (13,5 ha)", sub: "Dự án NOXH • Xã Tuyên Quang, Lâm Đồng", lat: 10.8395, lon: 107.9920, zoom: 16 },
+      { title: "Phường Phan Thiết, tỉnh Lâm Đồng", sub: "Trung tâm khu vực • Lâm Đồng", lat: 10.9289, lon: 108.1021, zoom: 14 },
+      { title: "Xã Vĩnh Hảo, huyện Tuy Phong cũ / Lâm Đồng", sub: "Địa danh hành chính • Vĩnh Hảo", lat: 11.2240, lon: 108.6520, zoom: 14 },
+      { title: "Xã Tuyên Quang (Hàm Kiệm), tỉnh Lâm Đồng", sub: "Địa danh hành chính • Tuyên Quang", lat: 10.8330, lon: 107.9810, zoom: 14 },
+      { title: "Cù Lao Tăng Văn Phương (Thôn Lương Đông)", sub: "Địa danh & đất canh tác • 1,6 ha", lat: 11.1250, lon: 108.4520, zoom: 16 }
+    ];
+
+    presets.forEach(p => {
+      const hay = `${p.title} ${p.sub}`.toLowerCase();
+      if (hay.includes(q) || q.split(/[\s,]+/).filter(w => w.length >= 2).some(w => hay.includes(w))) {
+        matches.push({
+          title: p.title,
+          sub: p.sub,
+          lat: p.lat,
+          lon: p.lon,
+          zoom: p.zoom
+        });
+      }
+    });
+
+    // Tìm trong các đối tượng / mốc / tuyến / vùng đã lưu của người dùng
+    if (typeof state !== "undefined" && Array.isArray(state.features)) {
+      state.features.forEach(f => {
+        const text = `${f.name || ""} ${f.project || ""} ${f.workName || ""} ${f.categoryName || ""} ${f.note || ""}`.toLowerCase();
+        if (text.includes(q)) {
+          let ll = null;
+          if (f.geomType === "point" && typeof f.lat === "number" && typeof f.lon === "number") {
+            ll = [f.lat, f.lon];
+          } else if (f.geomType === "segment" && Array.isArray(f.p1)) {
+            ll = f.p1;
+          } else if (f.geomType === "polygon" && Array.isArray(f.coords) && f.coords[0]) {
+            ll = f.coords[0];
+          }
+          if (ll) {
+            matches.push({
+              title: f.name || "Đối tượng đã lưu",
+              sub: `Dữ liệu trên app • ${f.project || "Chế độ chung"}`,
+              lat: ll[0],
+              lon: ll[1],
+              zoom: 18
+            });
+          }
+        }
+      });
+    }
+
+    return matches.slice(0, 6);
+  }
+
+  function tryParseDirectCoordinates(rawQuery) {
+    const cleaned = rawQuery.replace(/,/g, ".").trim();
+    const nums = cleaned.match(/-?\d+(?:\.\d+)?/g);
+    if (!nums || nums.length < 2) return null;
+    const a = parseFloat(nums[0]);
+    const b = parseFloat(nums[1]);
+    if (isNaN(a) || isNaN(b)) return null;
+
+    // Nếu là tọa độ VN-2000 (X ~ 100k-900k, Y ~ 900k-2.6M hoặc đảo thứ tự)
+    if ((Math.abs(a) >= 100000 && Math.abs(b) >= 100000) && typeof vn2000ToWgs84 === "function") {
+      const wgs = vn2000ToWgs84(a, b);
+      if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
+        return [{
+          title: `Tọa độ VN-2000: ${wgs.easting.toFixed(2)}, ${wgs.northing.toFixed(2)}`,
+          sub: state?.activeCrs?.name || "VN-2000",
+          lat: wgs.lat,
+          lon: wgs.lon,
+          zoom: 18
+        }];
+      }
+    }
+
+    // Nếu là WGS84 Lat, Lon
+    if (Math.abs(a) <= 90 && Math.abs(b) <= 180 && (Math.abs(a) > 5 || Math.abs(b) > 5)) {
+      return [{
+        title: `Tọa độ WGS84: ${a.toFixed(6)}, ${b.toFixed(6)}`,
+        sub: "Vĩ độ / Kinh độ (WGS84)",
+        lat: a,
+        lon: b,
+        zoom: 18
+      }];
+    }
+    return null;
+  }
+
+  async function fetchOnlineNominatimPlaces(rawQuery) {
+    const q = rawQuery.trim();
+    const hasVietnam = /việt nam|vietnam|lâm đồng|bình thuận|đắk nông|bảo lộc|phan thiết|tuy phong|hàm kiệm|lộc sơn|vĩnh hảo|tuyên quang/i.test(q);
+    const searchStr = hasVietnam ? q : `${q}, Việt Nam`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=vi&q=${encodeURIComponent(searchStr)}`;
+    const resp = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const arr = await resp.json();
+    if (!Array.isArray(arr)) return [];
+    return arr.map(item => {
+      const parts = (item.display_name || "").split(",").map(s => s.trim()).filter(Boolean);
+      const title = parts.slice(0, 2).join(", ") || item.display_name;
+      const sub = parts.slice(2, 5).join(", ") || "Địa danh bản đồ";
+      const z = item.class === "boundary" ? 14 : (item.class === "landuse" || item.class === "industrial" ? 15 : 16);
+      return {
+        title,
+        sub,
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+        zoom: z
+      };
+    }).filter(x => isFinite(x.lat) && isFinite(x.lon));
+  }
+
+  function renderPlaceResultsList(items, statusNote) {
+    const box = document.getElementById("placeSearchResultsBox");
+    if (!box) return;
+    if (!items || items.length === 0) {
+      box.innerHTML = `<div style="font-size:11.5px;color:#fbbf24;padding:4px 2px;">${statusNote || "Không tìm thấy vị trí phù hợp. Hãy thử gõ rõ hơn tên xã/phường/tỉnh hoặc khu công nghiệp."}</div>`;
+      return;
+    }
+    const statusHtml = statusNote
+      ? `<div style="font-size:11px;color:#94a3b8;margin-bottom:5px;">${statusNote}</div>`
+      : "";
+    box.innerHTML = statusHtml + items.map(it => {
+      const enc = encodeURIComponent(it.title);
+      return `
+        <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 9px;margin-bottom:5px;cursor:pointer;background:#0f172a;"
+             onclick="flyToFoundPlace(${it.lat}, ${it.lon}, ${it.zoom}, '${enc}')">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:700;color:#f8fafc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${it.title}</div>
+            <div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.sub}</div>
+          </div>
+          <span class="mini-btn" style="background:#0284c7;color:#fff;border:0;white-space:nowrap;">Bay tới ›</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  window.searchMapPlacesNow = async function() {
+    const inp = document.getElementById("placeSearchInput");
+    const btn = document.getElementById("btnSearchPlacesNow");
+    const box = document.getElementById("placeSearchResultsBox");
+    const rawQuery = (inp?.value || "").trim();
+    if (!rawQuery) {
+      showToast("Vui lòng nhập tên xã, phường, tỉnh, khu công nghiệp hoặc tọa độ.");
+      inp?.focus();
+      return;
+    }
+
+    const directCoords = tryParseDirectCoordinates(rawQuery);
+    if (directCoords && directCoords.length > 0) {
+      renderPlaceResultsList(directCoords, "Đã nhận diện tọa độ — bấm để bay tới hoặc tự chuyển ngay:");
+      flyMapToLatLonZoom(directCoords[0].lat, directCoords[0].lon, directCoords[0].zoom, directCoords[0].title);
+      return;
+    }
+
+    const localMatches = getLocalQuickMatches(rawQuery);
+    if (box) box.innerHTML = `<div style="font-size:11.5px;color:#38bdf8;padding:4px 2px;">⏳ Đang tìm kiếm vị trí "${rawQuery}"...</div>`;
+    if (btn) btn.disabled = true;
+
+    try {
+      const onlineMatches = await fetchOnlineNominatimPlaces(rawQuery);
+      const merged = [];
+      const seenKey = new Set();
+      [...localMatches, ...onlineMatches].forEach(m => {
+        const key = `${m.lat.toFixed(4)}_${m.lon.toFixed(4)}_${m.title}`;
+        if (!seenKey.has(key)) {
+          seenKey.add(key);
+          merged.push(m);
+        }
+      });
+      if (merged.length > 0) {
+        renderPlaceResultsList(merged.slice(0, 8), `Tìm thấy ${Math.min(merged.length, 8)} vị trí (bấm để chạy tới):`);
+      } else {
+        renderPlaceResultsList([], `Không tìm thấy vị trí cho "${rawQuery}".`);
+      }
+    } catch (err) {
+      if (localMatches.length > 0) {
+        renderPlaceResultsList(localMatches, "Hiển thị kết quả địa phương/đã lưu (mạng tra cứu ngoài tạm chậm):");
+      } else {
+        renderPlaceResultsList([], "Chưa tra cứu được địa danh trực tuyến. Anh có thể nhập trực tiếp tọa độ X, Y hoặc vĩ độ, kinh độ.");
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+})();
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ============================================================================
+   HỖ TRỢ NẠP & PHỦ FILE PDF QUY HOẠCH / MẶT BẰNG LÊN BẢN ĐỒ
+============================================================================ */
+(function initPdfOverlaySupport() {
+  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  document.addEventListener("change", (ev) => {
+    if (ev.target && ev.target.id === "imgOverlayFileInput") {
+      const f = ev.target.files && ev.target.files[0];
+      const isPdf = f && (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+      const row = document.getElementById("pdfPageSelectRow");
+      if (row) row.style.display = isPdf ? "block" : "none";
+      const nameInp = document.getElementById("imgOverlayName");
+      if (f && nameInp && !nameInp.value.trim()) {
+        nameInp.value = f.name.replace(/\.[^/.]+$/, "");
+      }
+    }
+  });
+
+  async function renderPdfFileToDataUrl(file, pageNum = 1, scale = 2.0) {
+    if (!window.pdfjsLib) {
+      throw new Error("Không tải được thư viện đọc PDF.");
+    }
+    const buf = await file.arrayBuffer();
+    const loadingTask = window.pdfjsLib.getDocument({ data: buf });
+    const pdfDoc = await loadingTask.promise;
+    const safePage = Math.max(1, Math.min(Number(pageNum) || 1, pdfDoc.numPages || 1));
+    const page = await pdfDoc.getPage(safePage);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(viewport.width));
+    canvas.height = Math.max(1, Math.round(viewport.height));
+    const ctx = canvas.getContext("2d");
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return { dataUrl: canvas.toDataURL("image/jpeg", 0.92), totalPages: pdfDoc.numPages, pageUsed: safePage };
+  }
+
+  const _origCreateImageOverlayLayer = window.createImageOverlayLayer;
+  window.createImageOverlayLayer = async function() {
+    const fileInput = document.getElementById("imgOverlayFileInput");
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) {
+      if (typeof _origCreateImageOverlayLayer === "function") return _origCreateImageOverlayLayer();
+      return;
+    }
+
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      if (typeof _origCreateImageOverlayLayer === "function") return _origCreateImageOverlayLayer();
+      return;
+    }
+
+    const name = (document.getElementById("imgOverlayName")?.value || "").trim() || file.name.replace(/\.[^/.]+$/, "");
+    let swX = parseFloat(document.getElementById("imgSwX")?.value);
+    let swY = parseFloat(document.getElementById("imgSwY")?.value);
+    let neX = parseFloat(document.getElementById("imgNeX")?.value);
+    let neY = parseFloat(document.getElementById("imgNeY")?.value);
+
+    if ([swX, swY, neX, neY].some(isNaN) && typeof fillImageOverlayBoundsFromView === "function") {
+      fillImageOverlayBoundsFromView();
+      swX = parseFloat(document.getElementById("imgSwX")?.value);
+      swY = parseFloat(document.getElementById("imgSwY")?.value);
+      neX = parseFloat(document.getElementById("imgNeX")?.value);
+      neY = parseFloat(document.getElementById("imgNeY")?.value);
+    }
+
+    const pageNum = parseInt(document.getElementById("imgPdfPageNumber")?.value || "1", 10) || 1;
+    showToast(`⏳ Đang chuyển trang PDF #${pageNum} thành lớp phủ bản đồ...`);
+
+    try {
+      const rendered = await renderPdfFileToDataUrl(file, pageNum, 2.0);
+      const swWgs = vn2000ToWgs84(swX, swY);
+      const neWgs = vn2000ToWgs84(neX, neY);
+
+      if (!Array.isArray(state.imageOverlays)) state.imageOverlays = [];
+      state.imageOverlays.push({
+        id: "pdfov_" + Date.now(),
+        name: `${name} (PDF tr.${rendered.pageUsed}/${rendered.totalPages})`,
+        dataUrl: rendered.dataUrl,
+        swLatLng: [swWgs.lat, swWgs.lon],
+        neLatLng: [neWgs.lat, neWgs.lon],
+        opacity: 80,
+        visible: true
+      });
+
+      saveAppState();
+      renderExternalOverlaysAndServices();
+      closeModal("imageOverlayModal");
+      if (document.getElementById("layersModal")?.classList.contains("open") && typeof renderLayersModal === "function") {
+        renderLayersModal();
+      }
+      map.fitBounds([[swWgs.lat, swWgs.lon], [neWgs.lat, neWgs.lon]]);
+      showToast(`Đã phủ trang ${rendered.pageUsed}/${rendered.totalPages} của file PDF lên bản đồ!`);
+    } catch (err) {
+      showToast("Lỗi nạp file PDF: " + (err && err.message ? err.message : "không đọc được PDF"));
+    }
+  };
+})();
+</script>
+
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("*").forEach(el => {
+    if (el.children.length === 0 && el.textContent && el.textContent.includes("Ban QLDA Phương Đông Trắc địa & GIS")) {
+      el.textContent = el.textContent.replace("Ban QLDA Phương Đông Trắc địa & GIS", "Phương Đông Trắc địa & GIS");
+    }
+  });
+});
+</script>
+
+
+<script>
+/* ============================================================================
+   HỖ TRỢ NẠP & TỰ NỔ ĐOẠN FILE AUTOCAD DXF (VN-2000 -> WGS84)
+============================================================================ */
+(function initDxfImportSupport() {
+  function parseAndExplodeDxf(dxfText, fileName) {
+    const lines = String(dxfText || "").split(/\r?\n/).map(l => l.trim());
+    const entities = [];
+    let i = 0;
+
+    while (i < lines.length - 1) {
+      const code = lines[i];
+      const val = lines[i + 1];
+      if (code === "0" && (val === "LINE" || val === "LWPOLYLINE" || val === "POLYLINE" || val === "POINT")) {
+        const entType = val;
+        i += 2;
+        const props = {};
+        const polyPts = [];
+        let curX = null;
+
+        while (i < lines.length - 1) {
+          const gCode = Number(lines[i]);
+          const gVal = lines[i + 1];
+          if (gCode === 0 && gVal !== "VERTEX") break;
+
+          if (entType === "LINE") {
+            if (gCode === 10) props.x1 = parseFloat(gVal);
+            else if (gCode === 20) props.y1 = parseFloat(gVal);
+            else if (gCode === 11) props.x2 = parseFloat(gVal);
+            else if (gCode === 21) props.y2 = parseFloat(gVal);
+          } else if (entType === "POINT") {
+            if (gCode === 10) props.x = parseFloat(gVal);
+            else if (gCode === 20) props.y = parseFloat(gVal);
+          } else if (entType === "LWPOLYLINE") {
+            if (gCode === 70) props.flags = parseInt(gVal, 10) || 0;
+            else if (gCode === 10) curX = parseFloat(gVal);
+            else if (gCode === 20 && curX !== null) {
+              polyPts.push({ x: curX, y: parseFloat(gVal) });
+              curX = null;
+            }
+          } else if (entType === "POLYLINE") {
+            if (gCode === 70) props.flags = parseInt(gVal, 10) || 0;
+            if (gCode === 0 && gVal === "VERTEX") {
+              let vx = null, vy = null;
+              let j = i + 2;
+              while (j < lines.length - 1) {
+                const vc = Number(lines[j]);
+                const vv = lines[j + 1];
+                if (vc === 0) break;
+                if (vc === 10) vx = parseFloat(vv);
+                else if (vc === 20) vy = parseFloat(vv);
+                j += 2;
+              }
+              if (vx !== null && vy !== null && !isNaN(vx) && !isNaN(vy)) {
+                polyPts.push({ x: vx, y: vy });
+              }
+              i = j;
+              continue;
+            }
+          }
+          i += 2;
+        }
+        entities.push({ entType, props, polyPts });
+        continue;
+      }
+      i += 2;
+    }
+
+    const layerId = "dxf_" + Date.now();
+    let segCount = 0;
+    let totalDist = 0;
+    const bounds = [];
+
+    const toWgsPair = (x, y) => {
+      if (isNaN(x) || isNaN(y)) return null;
+      const w = vn2000ToWgs84(x, y);
+      if (!w || !isFinite(w.lat) || !isFinite(w.lon)) return null;
+      return [w.lat, w.lon];
+    };
+
+    entities.forEach((ent, idx) => {
+      const baseName = `${fileName} #${idx + 1}`;
+      if (ent.entType === "LINE") {
+        const p1 = toWgsPair(ent.props.x1, ent.props.y1);
+        const p2 = toWgsPair(ent.props.x2, ent.props.y2);
+        if (p1 && p2) {
+          bounds.push(p1, p2);
+          const d = explodePolylineToSegments([p1, p2], {
+            layerId,
+            baseName,
+            project: getActiveProject().name,
+            color: "#38bdf8",
+            width: 3,
+            note: `Nạp từ DXF ${fileName}`
+          });
+          totalDist += d;
+          segCount += 1;
+        }
+      } else if (ent.entType === "POINT") {
+        const pt = toWgsPair(ent.props.x, ent.props.y);
+        if (pt) {
+          bounds.push(pt);
+          const vn = normalizeVn2000Pair(ent.props.x, ent.props.y);
+          state.features.push({
+            id: `dxf_pt_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
+            layerId,
+            geomType: "point",
+            name: baseName,
+            lat: pt[0],
+            lon: pt[1],
+            vnX: vn.easting,
+            vnY: vn.northing,
+            h: 0,
+            project: getActiveProject().name,
+            note: `Nạp từ DXF ${fileName}`,
+            createdAt: new Date().toLocaleString("vi-VN")
+          });
+        }
+      } else if ((ent.entType === "LWPOLYLINE" || ent.entType === "POLYLINE") && ent.polyPts.length >= 2) {
+        const lls = ent.polyPts.map(p => toWgsPair(p.x, p.y)).filter(Boolean);
+        if (lls.length >= 2) {
+          if ((ent.props.flags & 1) === 1 && lls.length >= 3) {
+            lls.push(lls[0]);
+          }
+          lls.forEach(ll => bounds.push(ll));
+          const d = explodePolylineToSegments(lls, {
+            layerId,
+            baseName,
+            project: getActiveProject().name,
+            color: "#38bdf8",
+            width: 3,
+            note: `Tự nổ đoạn từ DXF ${fileName}`
+          });
+          totalDist += d;
+          segCount += Math.max(0, lls.length - 1);
+        }
+      }
+    });
+
+    if (segCount === 0 && bounds.length === 0) {
+      showToast(`Không tìm thấy đối tượng LINE / POLYLINE / POINT hợp lệ trong ${fileName}.`);
+      return;
+    }
+
+    state.layers.push({
+      id: layerId,
+      name: `${fileName} (Nổ ${segCount} đoạn)`,
+      type: "Dữ liệu DXF",
+      visible: true,
+      opacity: 100,
+      color: "#38bdf8",
+      width: 3,
+      fillColor: "#10b981",
+      labelSize: 11,
+      showSegLength: true
+    });
+
+    state.selectedQuickLayerId = layerId;
+    saveAppState();
+    renderAllVectorFeatures();
+    if (bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] });
+    }
+    showToast(`Đã nạp ${fileName}: tự nổ ${segCount} đoạn (${formatLength(totalDist)}).`);
+  }
+
+  const _origHandleImport = window.handleImportGisFile;
+  window.handleImportGisFile = async function(event) {
+    const file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) {
+      if (typeof _origHandleImport === "function") return _origHandleImport(event);
+      return;
+    }
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "dxf") {
+      showToast(`Đang nạp & tự nổ đoạn tệp DXF ${file.name}...`);
+      try {
+        const txt = await file.text();
+        parseAndExplodeDxf(txt, file.name);
+      } catch (err) {
+        showToast("Lỗi đọc file DXF: " + (err && err.message ? err.message : "định dạng không hỗ trợ"));
+      }
+      event.target.value = "";
+      return;
+    }
+    if (typeof _origHandleImport === "function") {
+      return _origHandleImport(event);
+    }
+  };
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   BỔ SUNG HÌNH 1 & HÌNH 2:
+   - Chỉnh tọa độ VN-2000 & Cao độ H => WGS84 tự động cập nhật
+   - Nhãn thẻ tùy biến (tên mới) + Chọn kiểu nút điểm
+   - Text đính kèm file nhập vào (KML/KMZ/GeoJSON/DXF) luôn hiển thị như tên mốc
+============================================================================ */
+(function initPointEditorAndPermanentTextLabels() {
+  window.previewEditPointVn2000 = function() {
+    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
+    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
+    const outEl = document.getElementById("editPtWgsLiveText");
+    if (!outEl) return;
+    if (isNaN(xVal) || isNaN(yVal)) {
+      outEl.textContent = "Nhập đủ X(E) và Y(N) hợp lệ...";
+      return;
+    }
+    const wgs = vn2000ToWgs84(xVal, yVal);
+    if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
+      outEl.textContent = `${wgs.lat.toFixed(7)}°, ${wgs.lon.toFixed(7)}°`;
+    } else {
+      outEl.textContent = "Ngoài phạm vi hệ chiếu";
+    }
+  };
+
+  window.saveEditedPointCoordsAndStyle = function() {
+    const f = state.features.find(x => x.id === inspectedFeatureId);
+    if (!f || f.geomType !== "point") return;
+
+    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
+    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
+    const hVal = parseFloat(document.getElementById("editPtElevation")?.value);
+    const styleVal = document.getElementById("editPtMarkerStyle")?.value || "dot";
+
+    if (isNaN(xVal) || isNaN(yVal)) {
+      showToast("Vui lòng nhập tọa độ X(E) và Y(N) VN-2000 hợp lệ.");
+      return;
+    }
+    const wgs = vn2000ToWgs84(xVal, yVal);
+    if (!wgs || !isFinite(wgs.lat) || !isFinite(wgs.lon)) {
+      showToast("Tọa độ VN-2000 không hợp lệ.");
+      return;
+    }
+
+    f.vnX = wgs.easting;
+    f.vnY = wgs.northing;
+    f.lat = wgs.lat;
+    f.lon = wgs.lon;
+    f.h = isNaN(hVal) ? 0 : hVal;
+    f.markerStyle = styleVal;
+    f.createdAt = new Date().toLocaleString("vi-VN");
+
+    saveAppState();
+    renderAllVectorFeatures();
+    map.setView([f.lat, f.lon], Math.max(map.getZoom(), 18));
+    openFeatureDetailModal(f.id);
+    showToast(`Đã cập nhật mốc "${f.name}": VN-2000 & WGS84 tự đồng bộ!`);
+  };
+
+  window.applyCustomTagToInspectedFeature = function() {
+    const f = state.features.find(x => x.id === inspectedFeatureId);
+    const inp = document.getElementById("featCustomTagInput");
+    const customName = (inp?.value || "").trim();
+    if (!f) return;
+    if (!customName) {
+      showToast("Vui lòng nhập tên nhãn thẻ mới.");
+      return;
+    }
+    if (!Array.isArray(state.tags)) state.tags = [];
+    if (!state.tags.some(t => t.name.toLowerCase() === customName.toLowerCase())) {
+      state.tags.push({
+        id: "tag_" + Date.now(),
+        name: customName,
+        desc: "Nhãn thẻ tùy biến",
+        color: "#000000",
+        bg: "#38bdf8"
+      });
+    }
+    f.tagName = customName;
+    if (inp) inp.value = "";
+    saveAppState();
+    renderAllVectorFeatures();
+    populateInspectedFeatureTagAndPhotos(f);
+    showToast(`Đã gắn nhãn thẻ tùy biến "${customName}"!`);
+  };
+
+  // Mở rộng openFeatureDetailModal để hiển thị khung chỉnh VN-2000, Cao độ H, Kiểu nút cho điểm mốc
+  const _prevOpenDetail = window.openFeatureDetailModal;
+  window.openFeatureDetailModal = function(featureId) {
+    if (typeof _prevOpenDetail === "function") _prevOpenDetail(featureId);
+    const f = state.features.find(x => x.id === featureId);
+    const editBox = document.getElementById("featPointEditBox");
+    if (!editBox) return;
+    if (f && f.geomType === "point") {
+      editBox.style.display = "block";
+      document.getElementById("editPtVnX").value = Number(f.vnX).toFixed(3);
+      document.getElementById("editPtVnY").value = Number(f.vnY).toFixed(3);
+      document.getElementById("editPtElevation").value = Number(f.h || 0).toFixed(2);
+      document.getElementById("editPtMarkerStyle").value = f.markerStyle || "dot";
+      document.getElementById("editPtWgsLiveText").textContent = `${Number(f.lat).toFixed(7)}°, ${Number(f.lon).toFixed(7)}°`;
+    } else {
+      editBox.style.display = "none";
+    }
+  };
+
+  // Đảm bảo các text đính kèm theo file nhập vào (KML/KMZ/GeoJSON/DXF) luôn có điểm nhãn text hiển thị
+  const _prevParseKml = window.parseAndExplodeKml;
+  window.parseAndExplodeKml = function(kmlString, fileName) {
+    const beforeIds = new Set(state.features.map(f => f.id));
+    if (typeof _prevParseKml === "function") _prevParseKml(kmlString, fileName);
+    const newlyAdded = state.features.filter(f => !beforeIds.has(f.id));
+    const seenNames = new Set();
+    newlyAdded.forEach(f => {
+      if (f.geomType === "segment" && f.name) {
+        const cleanTitle = f.name.replace(/\s*-\s*Đoạn\s+\d+$/i, "").trim();
+        const key = `${f.layerId}|${cleanTitle}`;
+        if (cleanTitle && !cleanTitle.startsWith(fileName + " #") && !seenNames.has(key)) {
+          seenNames.add(key);
+          const midLat = (f.p1[0] + f.p2[0]) / 2;
+          const midLon = (f.p1[1] + f.p2[1]) / 2;
+          const vn = wgs84ToVn2000(midLat, midLon);
+          state.features.push({
+            id: `kml_txt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            layerId: f.layerId,
+            geomType: "point",
+            name: cleanTitle,
+            lat: midLat,
+            lon: midLon,
+            vnX: vn.x,
+            vnY: vn.y,
+            h: 0,
+            markerStyle: "dot",
+            isImportedText: true,
+            project: f.project || getActiveProject().name,
+            note: `Text đính kèm từ ${fileName}`,
+            createdAt: new Date().toLocaleString("vi-VN")
+          });
+        }
+      }
+    });
+    saveAppState();
+    renderAllVectorFeatures();
+  };
+
+  // Hỗ trợ đọc thêm TEXT / MTEXT trong file DXF khi nạp vào để luôn hiển thị text trên bản đồ
+  const _prevHandleImportDxf = window.handleImportGisFile;
+  window.handleImportGisFile = async function(event) {
+    const file = event && event.target && event.target.files && event.target.files[0];
+    if (file && file.name.toLowerCase().endsWith(".dxf")) {
+      const dxfText = await file.text();
+      const lines = String(dxfText || "").split(/
+?
+/).map(l => l.trim());
+      const textItems = [];
+      for (let i = 0; i < lines.length - 1; i += 2) {
+        if (lines[i] === "0" && (lines[i + 1] === "TEXT" || lines[i + 1] === "MTEXT")) {
+          let tx = null, ty = null, tVal = "";
+          let j = i + 2;
+          while (j < lines.length - 1) {
+            const c = Number(lines[j]);
+            const v = lines[j + 1];
+            if (c === 0) break;
+            if (c === 10) tx = parseFloat(v);
+            else if (c === 20) ty = parseFloat(v);
+            else if (c === 1) tVal = v.replace(/\[A-Za-z0-9]+;/g, "").replace(/[{}]/g, "").trim();
+            j += 2;
+          }
+          if (tx !== null && ty !== null && !isNaN(tx) && !isNaN(ty) && tVal) {
+            textItems.push({ x: tx, y: ty, text: tVal });
+          }
+        }
+      }
+      if (typeof _prevHandleImportDxf === "function") {
+        await _prevHandleImportDxf(event);
+      }
+      if (textItems.length > 0) {
+        const targetLayer = state.layers[state.layers.length - 1];
+        const lyrId = targetLayer ? targetLayer.id : "default_points";
+        textItems.forEach((it, idx) => {
+          const w = vn2000ToWgs84(it.x, it.y);
+          if (w && isFinite(w.lat) && isFinite(w.lon)) {
+            state.features.push({
+              id: `dxf_txt_${Date.now()}_${idx}`,
+              layerId: lyrId,
+              geomType: "point",
+              name: it.text,
+              lat: w.lat,
+              lon: w.lon,
+              vnX: w.easting,
+              vnY: w.northing,
+              h: 0,
+              markerStyle: "dot",
+              isImportedText: true,
+              project: getActiveProject().name,
+              note: `Text đính kèm từ ${file.name}`,
+              createdAt: new Date().toLocaleString("vi-VN")
+            });
+          }
+        });
+        saveAppState();
+        renderAllVectorFeatures();
+        showToast(`Đã hiển thị thêm ${textItems.length} nhãn text từ file ${file.name}!`);
+      }
+      return;
+    }
+    if (typeof _prevHandleImportDxf === "function") {
+      return _prevHandleImportDxf(event);
+    }
+  };
+})();
+</script>
+
 </body>
 </html>
