@@ -5708,7 +5708,7 @@ const AUTH_ACTIVE_KEY = "PD_GIS_PRO_1_2_4_ACTIVE_SESSION";
 const GAS_URL_STORAGE_KEY = "PD_GIS_PRO_1_2_4_GAS_URL";
 
 // Dán URL Google Apps Script Web App của bạn tại đây để kích hoạt mặc định cho mọi máy khách:
-const DEFAULT_GOOGLE_SHEETS_WEBAPP_URL = "";
+const DEFAULT_GOOGLE_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwj8tzw9JEyUoXnb7SAQktuM_ifzS04KeHNTN_8kYyUXDD072zSJS7bcZZ1C_3RSy_I/exec";
 
 // Key Quản trị mặc định của Trưởng Ban QLDA Tăng Văn Phương (chỉ Admin mới tạo/quản lý Key)
 const MASTER_ADMIN_RECORD = {
@@ -6175,6 +6175,37 @@ function toggleLockUserKey(keyCode) {
   showToast(`Đã đổi trạng thái Key ${keyCode} → ${u.status}`);
 }
 
+function jsonpFetchUsers(url, timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    const cbName = "__pdgisJsonpCb_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+    const script = document.createElement("script");
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("JSONP timeout"));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      if (script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+    }
+
+    window[cbName] = (payload) => {
+      cleanup();
+      resolve(payload);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("JSONP script load error"));
+    };
+
+    const sep = url.includes("?") ? "&" : "?";
+    script.src = `${url}${sep}action=list_users&callback=${cbName}&_t=${Date.now()}`;
+    document.body.appendChild(script);
+  });
+}
+
 async function syncUsersFromGoogleSheets() {
   const url = getGasWebAppUrl();
   if (!url) {
@@ -6182,7 +6213,8 @@ async function syncUsersFromGoogleSheets() {
     return;
   }
   try {
-    const res = await fetch(`${url}?action=list_users`);
+    const res = await fetch(`${url}?action=list_users&_t=${Date.now()}`, { mode: "cors" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (data && Array.isArray(data.users)) {
       const localReg = loadAuthRegistry();
@@ -6193,9 +6225,27 @@ async function syncUsersFromGoogleSheets() {
       saveAuthRegistry(Array.from(mapByKey.values()));
       renderAdminKeyManagerModal();
       showToast(`Đã đồng bộ ${data.users.length} người dùng từ Google Sheets!`);
+      return;
     }
-  } catch (e) {
-    showToast("Không đọc được từ Google Sheets (kiểm tra quyền Anyone của Web App).");
+    throw new Error("Invalid payload");
+  } catch (fetchErr) {
+    try {
+      const data = await jsonpFetchUsers(url);
+      if (data && Array.isArray(data.users)) {
+        const localReg = loadAuthRegistry();
+        const mapByKey = new Map(localReg.map(u => [u.keyCode, u]));
+        data.users.forEach(ru => {
+          if (ru.keyCode) mapByKey.set(ru.keyCode, Object.assign(mapByKey.get(ru.keyCode) || {}, ru));
+        });
+        saveAuthRegistry(Array.from(mapByKey.values()));
+        renderAdminKeyManagerModal();
+        showToast(`Đã đồng bộ ${data.users.length} người dùng từ Google Sheets!`);
+        return;
+      }
+      showToast("Web App phản hồi nhưng chưa có danh sách người dùng.");
+    } catch (jsonpErr) {
+      showToast("Không đọc được từ Google Sheets (kiểm tra quyền Anyone của Web App).");
+    }
   }
 }
 
