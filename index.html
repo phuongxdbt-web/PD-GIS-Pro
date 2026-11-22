@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro 1.2.4 </title>
+  <title>PD GIS Pro 1.2.4 - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1069,7 +1069,7 @@
 
     <div class="menu-section-title">2. Dữ liệu bản đồ, Vẽ & Thùng rác</div>
     <div class="menu-item" onclick="closeDrawer(); openCreatePolygonGuide()"><span>⬠ Tạo dữ liệu Vùng (GPS / Vẽ tay / Tự do)</span><span>›</span></div>
-    <div class="menu-item" onclick="closeDrawer(); triggerImportFile()"><span>📂 Nạp file KMZ (tự nổ đoạn), KML, GeoJSON, GPX</span><span>›</span></div>
+    <div class="menu-item" onclick="closeDrawer(); triggerImportFile()"><span>📂 Nạp file KMZ (tự nổ đoạn), KML, GeoJSON, GPX, DXF</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('layersModal')"><span>📚 Quản lý các lớp & Tệp KML/KMZ</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('trashModal')"><span id="drawerTrashLabel">🗑️ Thùng rác dữ liệu đã xóa (0)</span><span>›</span></div>
     <div class="menu-item" onclick="closeDrawer(); openModal('parcelModal')"><span>📐 Quét tọa độ sổ đỏ từ ảnh & Cắt khung</span><span>›</span></div>
@@ -1091,7 +1091,7 @@
 </div>
 
 <!-- Input ẩn -->
-<input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
+<input type="file" id="gisFileInput" accept=".kmz,.kml,.geojson,.json,.gpx,.dxf,.csv,.txt" style="display:none" onchange="handleImportGisFile(event)" />
 <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="handleRestoreJson(event)" />
 <input type="file" id="ocrImageInput" accept="image/*" style="display:none" onchange="handleOcrImageFile(event)" />
 
@@ -7191,6 +7191,199 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+</script>
+
+
+<script>
+/* ============================================================================
+   HỖ TRỢ NẠP & TỰ NỔ ĐOẠN FILE AUTOCAD DXF (VN-2000 -> WGS84)
+============================================================================ */
+(function initDxfImportSupport() {
+  function parseAndExplodeDxf(dxfText, fileName) {
+    const lines = String(dxfText || "").split(/\r?\n/).map(l => l.trim());
+    const entities = [];
+    let i = 0;
+
+    while (i < lines.length - 1) {
+      const code = lines[i];
+      const val = lines[i + 1];
+      if (code === "0" && (val === "LINE" || val === "LWPOLYLINE" || val === "POLYLINE" || val === "POINT")) {
+        const entType = val;
+        i += 2;
+        const props = {};
+        const polyPts = [];
+        let curX = null;
+
+        while (i < lines.length - 1) {
+          const gCode = Number(lines[i]);
+          const gVal = lines[i + 1];
+          if (gCode === 0 && gVal !== "VERTEX") break;
+
+          if (entType === "LINE") {
+            if (gCode === 10) props.x1 = parseFloat(gVal);
+            else if (gCode === 20) props.y1 = parseFloat(gVal);
+            else if (gCode === 11) props.x2 = parseFloat(gVal);
+            else if (gCode === 21) props.y2 = parseFloat(gVal);
+          } else if (entType === "POINT") {
+            if (gCode === 10) props.x = parseFloat(gVal);
+            else if (gCode === 20) props.y = parseFloat(gVal);
+          } else if (entType === "LWPOLYLINE") {
+            if (gCode === 70) props.flags = parseInt(gVal, 10) || 0;
+            else if (gCode === 10) curX = parseFloat(gVal);
+            else if (gCode === 20 && curX !== null) {
+              polyPts.push({ x: curX, y: parseFloat(gVal) });
+              curX = null;
+            }
+          } else if (entType === "POLYLINE") {
+            if (gCode === 70) props.flags = parseInt(gVal, 10) || 0;
+            if (gCode === 0 && gVal === "VERTEX") {
+              let vx = null, vy = null;
+              let j = i + 2;
+              while (j < lines.length - 1) {
+                const vc = Number(lines[j]);
+                const vv = lines[j + 1];
+                if (vc === 0) break;
+                if (vc === 10) vx = parseFloat(vv);
+                else if (vc === 20) vy = parseFloat(vv);
+                j += 2;
+              }
+              if (vx !== null && vy !== null && !isNaN(vx) && !isNaN(vy)) {
+                polyPts.push({ x: vx, y: vy });
+              }
+              i = j;
+              continue;
+            }
+          }
+          i += 2;
+        }
+        entities.push({ entType, props, polyPts });
+        continue;
+      }
+      i += 2;
+    }
+
+    const layerId = "dxf_" + Date.now();
+    let segCount = 0;
+    let totalDist = 0;
+    const bounds = [];
+
+    const toWgsPair = (x, y) => {
+      if (isNaN(x) || isNaN(y)) return null;
+      const w = vn2000ToWgs84(x, y);
+      if (!w || !isFinite(w.lat) || !isFinite(w.lon)) return null;
+      return [w.lat, w.lon];
+    };
+
+    entities.forEach((ent, idx) => {
+      const baseName = `${fileName} #${idx + 1}`;
+      if (ent.entType === "LINE") {
+        const p1 = toWgsPair(ent.props.x1, ent.props.y1);
+        const p2 = toWgsPair(ent.props.x2, ent.props.y2);
+        if (p1 && p2) {
+          bounds.push(p1, p2);
+          const d = explodePolylineToSegments([p1, p2], {
+            layerId,
+            baseName,
+            project: getActiveProject().name,
+            color: "#38bdf8",
+            width: 3,
+            note: `Nạp từ DXF ${fileName}`
+          });
+          totalDist += d;
+          segCount += 1;
+        }
+      } else if (ent.entType === "POINT") {
+        const pt = toWgsPair(ent.props.x, ent.props.y);
+        if (pt) {
+          bounds.push(pt);
+          const vn = normalizeVn2000Pair(ent.props.x, ent.props.y);
+          state.features.push({
+            id: `dxf_pt_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 5)}`,
+            layerId,
+            geomType: "point",
+            name: baseName,
+            lat: pt[0],
+            lon: pt[1],
+            vnX: vn.easting,
+            vnY: vn.northing,
+            h: 0,
+            project: getActiveProject().name,
+            note: `Nạp từ DXF ${fileName}`,
+            createdAt: new Date().toLocaleString("vi-VN")
+          });
+        }
+      } else if ((ent.entType === "LWPOLYLINE" || ent.entType === "POLYLINE") && ent.polyPts.length >= 2) {
+        const lls = ent.polyPts.map(p => toWgsPair(p.x, p.y)).filter(Boolean);
+        if (lls.length >= 2) {
+          if ((ent.props.flags & 1) === 1 && lls.length >= 3) {
+            lls.push(lls[0]);
+          }
+          lls.forEach(ll => bounds.push(ll));
+          const d = explodePolylineToSegments(lls, {
+            layerId,
+            baseName,
+            project: getActiveProject().name,
+            color: "#38bdf8",
+            width: 3,
+            note: `Tự nổ đoạn từ DXF ${fileName}`
+          });
+          totalDist += d;
+          segCount += Math.max(0, lls.length - 1);
+        }
+      }
+    });
+
+    if (segCount === 0 && bounds.length === 0) {
+      showToast(`Không tìm thấy đối tượng LINE / POLYLINE / POINT hợp lệ trong ${fileName}.`);
+      return;
+    }
+
+    state.layers.push({
+      id: layerId,
+      name: `${fileName} (Nổ ${segCount} đoạn)`,
+      type: "Dữ liệu DXF",
+      visible: true,
+      opacity: 100,
+      color: "#38bdf8",
+      width: 3,
+      fillColor: "#10b981",
+      labelSize: 11,
+      showSegLength: true
+    });
+
+    state.selectedQuickLayerId = layerId;
+    saveAppState();
+    renderAllVectorFeatures();
+    if (bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] });
+    }
+    showToast(`Đã nạp ${fileName}: tự nổ ${segCount} đoạn (${formatLength(totalDist)}).`);
+  }
+
+  const _origHandleImport = window.handleImportGisFile;
+  window.handleImportGisFile = async function(event) {
+    const file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) {
+      if (typeof _origHandleImport === "function") return _origHandleImport(event);
+      return;
+    }
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "dxf") {
+      showToast(`Đang nạp & tự nổ đoạn tệp DXF ${file.name}...`);
+      try {
+        const txt = await file.text();
+        parseAndExplodeDxf(txt, file.name);
+      } catch (err) {
+        showToast("Lỗi đọc file DXF: " + (err && err.message ? err.message : "định dạng không hỗ trợ"));
+      }
+      event.target.value = "";
+      return;
+    }
+    if (typeof _origHandleImport === "function") {
+      return _origHandleImport(event);
+    }
+  };
+})();
 </script>
 
 </body>
