@@ -3589,7 +3589,7 @@ function openFeatureDetailModal(featureId) {
   document.getElementById("featDetailTitle").textContent = `📄 ${f.name}`;
 
   let html = "";
-  if (f.geomType === "point") {
+ if (f.geomType === "point") {
     html = `
       <div><b>Loại:</b> Điểm mốc tọa độ</div>
       <div><b>X(E) VN-2000:</b> <span style="color:#fbbf24;font-weight:700;">${f.vnX.toFixed(3)} m</span></div>
@@ -3597,6 +3597,8 @@ function openFeatureDetailModal(featureId) {
       <div><b>WGS84:</b> ${f.lat.toFixed(7)}°, ${f.lon.toFixed(7)}°</div>
       <div><b>Cao độ H:</b> ${(f.h || 0).toFixed(3)} m</div>
     `;
+  }
+```[cite: 1]
   } else if (f.geomType === "segment") {
     html = `
       <div><b>Loại:</b> Đoạn tuyến / Cạnh ranh</div>
