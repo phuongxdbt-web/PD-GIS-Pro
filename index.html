@@ -6639,5 +6639,193 @@ window.addEventListener("DOMContentLoaded", () => {
   startContinuousGpsWatch();
 });
 </script>
+
+<script>
+/* ============================================================================
+   PD GIS PRO 1.2.4 ADDON — KHÓA CHỌN LỌC TẠO TÒ MÒ & RÀNG BUỘC 1 THIẾT BỊ
+   (Không chạm vào Google Sheets, dán thêm ở cuối file 1.2.4)
+============================================================================ */
+(function initKeyTeaserAndSingleDeviceGuard() {
+  const DEVICE_ID_KEY = "PD_GIS_PRO_1_2_4_DEVICE_ID";
+  const DEVICE_BINDINGS_KEY = "PD_GIS_PRO_1_2_4_KEY_DEVICE_MAP";
+
+  function getOrCreateDeviceId() {
+    let devId = "";
+    try { devId = localStorage.getItem(DEVICE_ID_KEY) || ""; } catch (e) {}
+    if (!devId) {
+      const sig = [
+        navigator.platform || "",
+        screen.width || "",
+        screen.height || "",
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+        Math.random().toString(36).slice(2, 8)
+      ].join("|");
+      let h = 0x811c9dc5;
+      for (let i = 0; i < sig.length; i++) {
+        h ^= sig.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      devId = "DEV-" + (h >>> 0).toString(16).toUpperCase().padStart(8, "0");
+      try { localStorage.setItem(DEVICE_ID_KEY, devId); } catch (e) {}
+    }
+    return devId;
+  }
+
+  function loadDeviceBindings() {
+    try { return JSON.parse(localStorage.getItem(DEVICE_BINDINGS_KEY) || "{}"); } catch (e) { return {}; }
+  }
+
+  function saveDeviceBindings(mapObj) {
+    try { localStorage.setItem(DEVICE_BINDINGS_KEY, JSON.stringify(mapObj)); } catch (e) {}
+  }
+
+  function isGuestWithoutKey() {
+    return !currentAccountId || currentUserRole === "GUEST";
+  }
+
+  function promptKeyTeaser(featureLabel) {
+    showToast(`🔒 ${featureLabel} dành cho Key cá nhân • Bấm "🔑 Nhập Key" để mở khóa & giữ dữ liệu riêng.`);
+  }
+
+  // 1. Ràng buộc 1 Key = 1 thiết bị duy nhất cho mọi tài khoản, TRỪ ADMIN
+  const _origLoginWithAccessKey = window.loginWithAccessKey;
+  if (typeof _origLoginWithAccessKey === "function") {
+    window.loginWithAccessKey = async function() {
+      const rawKey = (document.getElementById("authKeyCodeInput")?.value || "").trim().toUpperCase();
+      const check = validatePersonalKeyFormat(rawKey);
+      const reg = typeof loadAuthRegistry === "function" ? loadAuthRegistry() : [];
+      const foundRec = reg.find(x => x.keyCode === rawKey);
+      const effectiveRole = (foundRec && foundRec.role) || check.role || "PRO";
+
+      if (check.valid && effectiveRole !== "ADMIN") {
+        const myDevId = getOrCreateDeviceId();
+        const bindings = loadDeviceBindings();
+        const boundDev = bindings[rawKey];
+        if (boundDev && boundDev !== myDevId) {
+          showToast(`⛔ Key ${rawKey} chỉ được dùng trên 1 thiết bị duy nhất (đã gắn với ${boundDev}).`);
+          return;
+        }
+        if (!boundDev) {
+          bindings[rawKey] = myDevId;
+          saveDeviceBindings(bindings);
+        }
+      }
+      return _origLoginWithAccessKey.apply(this, arguments);
+    };
+  }
+
+  // 2. Chọn lọc khóa các tính năng "tạo tò mò" khi chưa có Key (không khóa cứng toàn bộ bản đồ/đo vẽ)
+  // - Khóa thêm lớp ngoài / ảnh quy hoạch / WMS / vẽ vùng / hình học chuẩn / buffer
+  // - Khóa bật bắt điểm (🧲), nhãn kích thước (m), và bấm line ra thước đo chi tiết
+  // - Khóa mở Bảng thống kê dự án & Quản lý lớp
+  const lockedModalsForGuest = new Set([
+    "projectStatsModal",
+    "layersModal",
+    "imageOverlayModal",
+    "wmsLayerModal",
+    "geomShapeModal",
+    "bufferZoneModal",
+    "parcelModal"
+  ]);
+
+  const _origOpenModalAddon = window.openModal;
+  if (typeof _origOpenModalAddon === "function") {
+    window.openModal = function(id) {
+      if (isGuestWithoutKey() && lockedModalsForGuest.has(id)) {
+        const nameMap = {
+          projectStatsModal: "Bảng thống kê tổng hợp dự án",
+          layersModal: "Quản lý các lớp dữ liệu",
+          imageOverlayModal: "Phủ ảnh quy hoạch",
+          wmsLayerModal: "Lớp bản đồ WMS/TMS",
+          geomShapeModal: "Vẽ hình học chuẩn",
+          bufferZoneModal: "Tạo vùng Buffer",
+          parcelModal: "Quét tọa độ sổ đỏ & vẽ thửa"
+        };
+        promptKeyTeaser(nameMap[id] || "Tính năng nâng cao");
+        return;
+      }
+      return _origOpenModalAddon.apply(this, arguments);
+    };
+  }
+
+  const _origToggleSnap = window.toggleSnapToStart;
+  if (typeof _origToggleSnap === "function") {
+    window.toggleSnapToStart = function() {
+      if (isGuestWithoutKey()) {
+        promptKeyTeaser("Bắt điểm đầu & đường nét hiện hữu");
+        return;
+      }
+      return _origToggleSnap.apply(this, arguments);
+    };
+  }
+
+  const _origToggleSegLbl = window.toggleQuickSegLabels;
+  if (typeof _origToggleSegLbl === "function") {
+    window.toggleQuickSegLabels = function() {
+      if (isGuestWithoutKey()) {
+        promptKeyTeaser("Nhãn kích thước từng đoạn (m)");
+        return;
+      }
+      return _origToggleSegLbl.apply(this, arguments);
+    };
+  }
+
+  // Chỉ cho vẽ đường Line khi chưa có Key, không cho tạo Vùng / Polygon
+  const _origStartDrawing = window.startDrawing;
+  if (typeof _origStartDrawing === "function") {
+    window.startDrawing = function(mode) {
+      if (isGuestWithoutKey() && mode === "polygon") {
+        promptKeyTeaser("Vẽ Vùng / Ranh giới thửa (chế độ khách chỉ vẽ được Line)");
+        return;
+      }
+      return _origStartDrawing.apply(this, arguments);
+    };
+  }
+
+  // Chặn bấm vào đoạn Line mở thước đo/thông tin khi chưa có Key
+  const _origHandleCanvasClick = window.handleCanvasFeatureClick;
+  if (typeof _origHandleCanvasClick === "function") {
+    window.handleCanvasFeatureClick = function(e) {
+      if (isGuestWithoutKey()) {
+        const clickPt = map.latLngToContainerPoint(e.latlng);
+        for (let i = state.features.length - 1; i >= 0; i--) {
+          const f = state.features[i];
+          if (f.hidden === true || f.geomType !== "segment") continue;
+          const a = map.latLngToContainerPoint(f.p1);
+          const b = map.latLngToContainerPoint(f.p2);
+          const proj = L.LineUtil.closestPointOnSegment(clickPt, a, b);
+          if (clickPt.distanceTo(proj) <= 10) {
+            promptKeyTeaser("Xem kích thước & chi tiết đoạn Line");
+            return;
+          }
+        }
+      }
+      return _origHandleCanvasClick.apply(this, arguments);
+    };
+  }
+
+  // Hiển thị mã thiết bị hiện tại trong cổng Key để người dùng dễ nhận biết
+  const _origOpenAuthGate = window.openAuthGateModal;
+  if (typeof _origOpenAuthGate === "function") {
+    window.openAuthGateModal = function() {
+      _origOpenAuthGate.apply(this, arguments);
+      const st = document.getElementById("authCurrentStatusText");
+      const devId = getOrCreateDeviceId();
+      if (st && !currentAccountId) {
+        st.textContent = `Chưa có Key • Mã máy: ${devId} (1 Key = 1 thiết bị)`;
+      }
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    getOrCreateDeviceId();
+    if (isGuestWithoutKey()) {
+      document.getElementById("btnSnapStart")?.classList.remove("active");
+      document.getElementById("btnQuickSegLabels")?.classList.remove("active");
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
