@@ -7734,7 +7734,7 @@ function saveEditedPointCoordsAndStyle() {
   f.vnY = Number(yVal.toFixed(3));
   f.lat = wgs.lat;
   f.lon = wgs.lon;
-  f.h = isNaN(hVal) ? 0.000 : Number(hVal.toFixed(3));
+  f.h = isNaN(hVal) ? 0.000 : Number(hVal.toFixed(4));
   f.markerStyle = styleVal;
   f.createdAt = new Date().toLocaleString("vi-VN");
 
