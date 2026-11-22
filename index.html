@@ -91,6 +91,30 @@
       stroke: #ffffff;
     }
 
+    
+    /* Nhãn tên mốc & text đính kèm luôn hiển thị rõ trên bản đồ */
+    .point-permanent-label {
+      background: rgba(15, 23, 42, 0.88);
+      color: #f8fafc;
+      border: 1px solid rgba(56, 189, 248, 0.78);
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+      transform: translate(-50%, 8px);
+      pointer-events: none;
+    }
+    .point-marker-shape {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+      cursor: pointer;
+    }
+
     /* Nhãn kích thước từng đoạn line */
     .seg-label {
       background: rgba(15, 23, 42, 0.88);
@@ -738,59 +762,6 @@
       text-overflow: ellipsis; white-space: nowrap;
     }
 
-
-    /* Kiểu nút điểm dễ nhận dạng & Nhãn tên mốc luôn hiển thị */
-    .moc-always-label {
-      background: rgba(15, 23, 42, 0.92);
-      color: #fde047;
-      border: 1px solid rgba(250, 204, 21, 0.85);
-      border-radius: 5px;
-      padding: 1px 6px;
-      font-size: 11px;
-      font-weight: 800;
-      white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.65);
-      transform: translate(-50%, -135%);
-      pointer-events: none;
-    }
-    .pt-style-pin {
-      width: 20px; height: 20px;
-      border-radius: 50% 50% 50% 0;
-      transform: translate(-50%, -85%) rotate(-45deg);
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .pt-style-pin::after {
-      content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ffffff;
-    }
-    .pt-style-diamond {
-      width: 14px; height: 14px;
-      transform: translate(-50%, -50%) rotate(45deg);
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
-    }
-    .pt-style-square {
-      width: 14px; height: 14px;
-      border-radius: 3px;
-      transform: translate(-50%, -50%);
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
-    }
-    .pt-style-target {
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      border: 2.5px solid #ffffff;
-      box-shadow: 0 0 0 2px rgba(15,23,42,0.85), 0 2px 6px rgba(0,0,0,0.7);
-      position: relative;
-    }
-    .pt-style-target::after {
-      content: ""; position: absolute; top: 50%; left: 50%;
-      width: 5px; height: 5px; border-radius: 50%; background: #ffffff;
-      transform: translate(-50%, -50%);
-    }
-
     #toastBox {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
       z-index: 5000; background: rgba(15, 23, 42, 0.96); color: #f8fafc;
@@ -1287,43 +1258,40 @@
       <button class="close-x" onclick="closeModal('featureDetailModal')">✕</button>
     </div>
     <div id="featDetailBody" style="font-size:12.5px;line-height:1.55;"></div>
-
-    <div id="approvedDataEditBox" class="list-card" style="display:none;margin-top:8px;border-color:rgba(251,191,36,0.55);background:rgba(15,23,42,0.9);">
-      <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:6px;">📐 SỐ LIỆU THEO PHÊ DUYỆT (Chỉnh Cao độ & Tọa độ VN-2000)</div>
+    <div id="featPointEditBox" style="display:none;margin-top:8px;padding:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.4);border-radius:12px;">
+      <div style="font-size:11.5px;font-weight:800;color:#38bdf8;margin-bottom:6px;">📐 CHỈNH TỌA ĐỘ VN-2000 & CAO ĐỘ (WGS84 TỰ CHẠY THEO)</div>
       <div class="grid-2 form-group" style="margin-bottom:6px;">
         <div>
           <label class="form-label">X(E) VN-2000 (m):</label>
-          <input type="number" step="0.001" id="editVnXInput" class="form-input" oninput="onApprovedCoordInputChange()" />
+          <input type="number" step="any" id="editPtVnX" class="form-input" oninput="previewEditPointVn2000()" />
         </div>
         <div>
           <label class="form-label">Y(N) VN-2000 (m):</label>
-          <input type="number" step="0.001" id="editVnYInput" class="form-input" oninput="onApprovedCoordInputChange()" />
+          <input type="number" step="any" id="editPtVnY" class="form-input" oninput="previewEditPointVn2000()" />
         </div>
       </div>
       <div class="grid-2 form-group" style="margin-bottom:6px;">
         <div>
-          <label class="form-label">Cao độ H theo phê duyệt (m):</label>
-          <input type="number" step="0.001" id="editElevHInput" class="form-input" />
+          <label class="form-label">⛰️ Cao độ H (m):</label>
+          <input type="number" step="any" id="editPtElevation" class="form-input" />
         </div>
         <div>
-          <label class="form-label">WGS84 tự cập nhật:</label>
-          <div id="editWgs84Preview" style="font-size:11.5px;font-weight:700;color:#34d399;padding:9px 8px;background:#1e293b;border-radius:10px;border:1px solid var(--border-subtle);">---</div>
+          <label class="form-label">🎯 Kiểu nút điểm hiển thị:</label>
+          <select id="editPtMarkerStyle" class="form-select">
+            <option value="dot">🔴 Chấm tròn chuẩn</option>
+            <option value="crosshair_circle">⊕ Tâm ngắm trắc địa</option>
+            <option value="triangle">🔺 Tam giác mốc địa chính</option>
+            <option value="square">🟦 Hình vuông cọc mốc</option>
+            <option value="diamond">🔶 Hình thoi điểm khống chế</option>
+            <option value="pin">📍 Ghim định vị</option>
+          </select>
         </div>
       </div>
-      <button type="button" class="btn-primary" style="background:#d97706;padding:8px 10px;font-size:12px;" onclick="saveApprovedCoordAndElevation()">✓ Lưu số liệu theo phê duyệt</button>
+      <div style="font-size:11.5px;color:#34d399;margin-bottom:7px;">
+        🌐 Hệ WGS84 tự động quy đổi: <strong id="editPtWgsLiveText">---</strong>
+      </div>
+      <button type="button" class="btn-primary" style="background:#0f766e;padding:8px;" onclick="saveEditedPointCoordsAndStyle()">💾 Lưu tọa độ VN-2000, Cao độ & Kiểu nút</button>
     </div>
-
-    <div id="pointStylePickerBox" class="list-card" style="display:none;margin-top:8px;border-color:rgba(56,189,248,0.45);background:rgba(15,23,42,0.9);">
-      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:5px;">🔘 Kiểu nút điểm dễ nhận dạng (Mốc luôn hiện tên):</div>
-      <select id="featPointStyleSelect" class="form-select" onchange="assignPointStyleToInspectedFeature(this.value)">
-        <option value="circle">● Chấm tròn chuẩn</option>
-        <option value="pin">📍 Ghim định vị</option>
-        <option value="diamond">◆ Hình thoi</option>
-        <option value="square">■ Hình vuông</option>
-        <option value="target">◎ Hồng tâm mục tiêu</option>
-      </select>
-    </div>
-
     <div id="featAttachmentBox" style="margin-top:8px;"></div>
     <div class="grid-2" style="margin-top:8px;">
       <div>
@@ -1333,7 +1301,7 @@
       <div>
         <label class="form-label">✍️ Nhãn thẻ tùy biến (tên mới):</label>
         <div style="display:flex;gap:5px;">
-          <input type="text" id="featCustomTagInput" class="form-input" placeholder="Nhập nhãn mới..." onkeydown="if(event.key==='Enter'){event.preventDefault();applyCustomTagToInspectedFeature();}" />
+          <input type="text" id="featCustomTagInput" class="form-input" placeholder="Nhập tên thẻ mới..." />
           <button type="button" class="mini-btn" style="background:#2563eb;color:#fff;border:0;white-space:nowrap;" onclick="applyCustomTagToInspectedFeature()">Gắn</button>
         </div>
       </div>
@@ -1741,6 +1709,16 @@
         <option value="vn2000">Hệ chiếu tọa độ VN-2000 (X, Y)</option>
         <option value="wgs84">Google Maps / WGS84 (Vĩ độ, Kinh độ)</option>
       </select>
+    </div>
+    <div class="grid-2 form-group">
+      <div>
+        <label class="form-label">📌 Đặt tên mốc:</label>
+        <input type="text" id="inCoordPointName" class="form-input" placeholder="VD: Mốc DC-01 / N3-C5" />
+      </div>
+      <div>
+        <label class="form-label">⛰️ Cao độ H (m):</label>
+        <input type="number" step="any" id="inCoordElevation" class="form-input" placeholder="VD: 12.45" value="0" />
+      </div>
     </div>
     <div class="grid-2 form-group">
       <div>
@@ -3849,37 +3827,41 @@ function renderAllVectorFeaturesNow() {
     if (f.geomType === "point") {
       if (!viewBounds.contains([f.lat, f.lon])) continue;
       const ptColor = lyrCfg?.color || "#ef4444";
-      const ptStyle = f.pointStyle || "circle";
-      if (ptStyle === "circle") {
+      const mStyle = f.markerStyle || "dot";
+      if (mStyle === "dot") {
         L.circleMarker([f.lat, f.lon], {
           renderer: desktopVectorRenderer,
           interactive: false,
           radius: 6, color: "#fff", weight: 2, fillColor: ptColor, fillOpacity: lyrOp, opacity: lyrOp
         }).addTo(vectorLayerGroup);
       } else {
-        const styleClass =
-          ptStyle === "pin" ? "pt-style-pin" :
-          ptStyle === "diamond" ? "pt-style-diamond" :
-          ptStyle === "square" ? "pt-style-square" : "pt-style-target";
+        let shapeSvg = "";
+        if (mStyle === "triangle") {
+          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "square") {
+          shapeSvg = `<svg width="18" height="18" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "diamond") {
+          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+        } else if (mStyle === "crosshair_circle") {
+          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="${ptColor}" fill-opacity="0.35" stroke="#ffffff" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="23" stroke="#ffffff" stroke-width="1.8"/><line x1="1" y1="12" x2="23" y2="12" stroke="#ffffff" stroke-width="1.8"/></svg>`;
+        } else {
+          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+        }
         L.marker([f.lat, f.lon], {
           interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="${styleClass}" style="background:${ptColor};opacity:${lyrOp};"></div>`
-          })
+          icon: L.divIcon({ className: "", html: `<div class="point-marker-shape" style="opacity:${lyrOp};">${shapeSvg}</div>` })
         }).addTo(vectorLayerGroup);
       }
 
-      const isMoc = /(?:^|\s|[-_])m[oố]c(?:\s|[-_0-9]|$)/i.test(String(f.name || ""));
-      if (isMoc && f.name) {
-        L.marker([f.lat, f.lon], {
-          interactive: false,
-          icon: L.divIcon({
-            className: "",
-            html: `<div class="moc-always-label" style="opacity:${lyrOp};">${f.name}</div>`
-          })
-        }).addTo(labelLayerGroup);
-      }
+      // Riêng mốc & text đính kèm theo file nhập vào LUÔN LUÔN hiển thị tên
+      const displayLabel = f.tagName ? `${f.name} [${f.tagName}]` : (f.name || "Mốc");
+      L.marker([f.lat, f.lon], {
+        interactive: false,
+        icon: L.divIcon({
+          className: "",
+          html: `<div class="point-permanent-label" style="opacity:${lyrOp};">${displayLabel}</div>`
+        })
+      }).addTo(labelLayerGroup);
     } else if (f.geomType === "segment") {
       const minLat = Math.min(f.p1[0], f.p2[0]);
       const maxLat = Math.max(f.p1[0], f.p2[0]);
@@ -4925,14 +4907,19 @@ function submitCoordInput(createPin) {
     vnX = vn.x; vnY = vn.y;
   }
 
+  const customPtName = (document.getElementById("inCoordPointName")?.value || "").trim() || "Điểm nhập tay";
+  const customElev = parseFloat(document.getElementById("inCoordElevation")?.value);
+  const finalElev = isNaN(customElev) ? 0 : customElev;
+
   if (createPin) {
     state.features.push({
       id: "inpt_" + Date.now(), layerId: "default_points", geomType: "point",
-      name: "Điểm nhập tay", lat, lon, vnX, vnY, h: 0,
+      name: customPtName, lat, lon, vnX, vnY, h: finalElev,
       project: getActiveProject().name, note: "", createdAt: new Date().toLocaleString("vi-VN")
     });
     saveAppState();
     renderAllVectorFeatures();
+    showToast(`Đã tạo mốc "${customPtName}" (H = ${finalElev.toFixed(2)} m)`);
   }
   closeModal("coordInputModal");
   map.setView([lat, lon], 19);
@@ -6725,108 +6712,6 @@ function handleAttachPhotoToInspectedFeature(event) {
   event.target.value = "";
 }
 
-
-function onApprovedCoordInputChange() {
-  const vx = parseFloat(document.getElementById("editVnXInput")?.value);
-  const vy = parseFloat(document.getElementById("editVnYInput")?.value);
-  const prev = document.getElementById("editWgs84Preview");
-  if (!prev) return;
-  if (isNaN(vx) || isNaN(vy)) {
-    prev.textContent = "---";
-    return;
-  }
-  const wgs = vn2000ToWgs84(vx, vy);
-  if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
-    prev.textContent = `${wgs.lat.toFixed(7)}°, ${wgs.lon.toFixed(7)}°`;
-  }
-}
-
-function saveApprovedCoordAndElevation() {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  if (!f || f.geomType !== "point") return;
-  const vx = parseFloat(document.getElementById("editVnXInput")?.value);
-  const vy = parseFloat(document.getElementById("editVnYInput")?.value);
-  const eh = parseFloat(document.getElementById("editElevHInput")?.value);
-  if (isNaN(vx) || isNaN(vy)) {
-    showToast("Vui lòng nhập tọa độ X(E) và Y(N) VN-2000 hợp lệ.");
-    return;
-  }
-  const wgs = vn2000ToWgs84(vx, vy);
-  f.vnX = wgs.easting;
-  f.vnY = wgs.northing;
-  f.lat = wgs.lat;
-  f.lon = wgs.lon;
-  if (!isNaN(eh)) f.h = eh;
-  f.approvedData = true;
-  f.updatedAt = new Date().toLocaleString("vi-VN");
-  saveAppState();
-  renderAllVectorFeatures();
-  openFeatureDetailModal(f.id);
-  showToast("Đã lưu số liệu theo phê duyệt (tọa độ VN-2000 & cao độ H)!");
-}
-
-function assignPointStyleToInspectedFeature(styleKey) {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  if (!f || f.geomType !== "point") return;
-  f.pointStyle = styleKey || "circle";
-  saveAppState();
-  renderAllVectorFeatures();
-  showToast("Đã cập nhật kiểu nút điểm.");
-}
-
-function applyCustomTagToInspectedFeature() {
-  const f = state.features.find(x => x.id === inspectedFeatureId);
-  const inp = document.getElementById("featCustomTagInput");
-  const tagName = (inp?.value || "").trim();
-  if (!f) return;
-  if (!tagName) {
-    showToast("Vui lòng nhập tên nhãn thẻ tùy biến mới.");
-    return;
-  }
-  if (!Array.isArray(state.tags)) state.tags = [];
-  if (!state.tags.some(t => t.name.toLowerCase() === tagName.toLowerCase())) {
-    state.tags.push({
-      id: "tag_" + Date.now(),
-      name: tagName,
-      desc: "Nhãn tùy biến",
-      color: "#000000",
-      bg: "#38bdf8"
-    });
-  }
-  f.tagName = tagName;
-  if (inp) inp.value = "";
-  saveAppState();
-  populateInspectedFeatureTagAndPhotos(f);
-  showToast(`Đã gắn nhãn thẻ tùy biến "${tagName}"!`);
-}
-
-const _origPopulateTagAndPhotos124 = populateInspectedFeatureTagAndPhotos;
-populateInspectedFeatureTagAndPhotos = function(f) {
-  _origPopulateTagAndPhotos124(f);
-  const editBox = document.getElementById("approvedDataEditBox");
-  const styleBox = document.getElementById("pointStylePickerBox");
-  const customInp = document.getElementById("featCustomTagInput");
-  if (customInp) customInp.value = "";
-
-  if (f && f.geomType === "point") {
-    if (editBox) editBox.style.display = "block";
-    if (styleBox) styleBox.style.display = "block";
-    const xInp = document.getElementById("editVnXInput");
-    const yInp = document.getElementById("editVnYInput");
-    const hInp = document.getElementById("editElevHInput");
-    if (xInp) xInp.value = Number(f.vnX || 0).toFixed(3);
-    if (yInp) yInp.value = Number(f.vnY || 0).toFixed(3);
-    if (hInp) hInp.value = Number(f.h || 0).toFixed(2);
-    onApprovedCoordInputChange();
-
-    const stSel = document.getElementById("featPointStyleSelect");
-    if (stSel) stSel.value = f.pointStyle || "circle";
-  } else {
-    if (editBox) editBox.style.display = "none";
-    if (styleBox) styleBox.style.display = "none";
-  }
-};
-
 const _origOpenFeatureDetailModal = openFeatureDetailModal;
 openFeatureDetailModal = function(featureId) {
   _origOpenFeatureDetailModal(featureId);
@@ -7607,6 +7492,219 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     if (typeof _origHandleImport === "function") {
       return _origHandleImport(event);
+    }
+  };
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   BỔ SUNG HÌNH 1 & HÌNH 2:
+   - Chỉnh tọa độ VN-2000 & Cao độ H => WGS84 tự động cập nhật
+   - Nhãn thẻ tùy biến (tên mới) + Chọn kiểu nút điểm
+   - Text đính kèm file nhập vào (KML/KMZ/GeoJSON/DXF) luôn hiển thị như tên mốc
+============================================================================ */
+(function initPointEditorAndPermanentTextLabels() {
+  window.previewEditPointVn2000 = function() {
+    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
+    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
+    const outEl = document.getElementById("editPtWgsLiveText");
+    if (!outEl) return;
+    if (isNaN(xVal) || isNaN(yVal)) {
+      outEl.textContent = "Nhập đủ X(E) và Y(N) hợp lệ...";
+      return;
+    }
+    const wgs = vn2000ToWgs84(xVal, yVal);
+    if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
+      outEl.textContent = `${wgs.lat.toFixed(7)}°, ${wgs.lon.toFixed(7)}°`;
+    } else {
+      outEl.textContent = "Ngoài phạm vi hệ chiếu";
+    }
+  };
+
+  window.saveEditedPointCoordsAndStyle = function() {
+    const f = state.features.find(x => x.id === inspectedFeatureId);
+    if (!f || f.geomType !== "point") return;
+
+    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
+    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
+    const hVal = parseFloat(document.getElementById("editPtElevation")?.value);
+    const styleVal = document.getElementById("editPtMarkerStyle")?.value || "dot";
+
+    if (isNaN(xVal) || isNaN(yVal)) {
+      showToast("Vui lòng nhập tọa độ X(E) và Y(N) VN-2000 hợp lệ.");
+      return;
+    }
+    const wgs = vn2000ToWgs84(xVal, yVal);
+    if (!wgs || !isFinite(wgs.lat) || !isFinite(wgs.lon)) {
+      showToast("Tọa độ VN-2000 không hợp lệ.");
+      return;
+    }
+
+    f.vnX = wgs.easting;
+    f.vnY = wgs.northing;
+    f.lat = wgs.lat;
+    f.lon = wgs.lon;
+    f.h = isNaN(hVal) ? 0 : hVal;
+    f.markerStyle = styleVal;
+    f.createdAt = new Date().toLocaleString("vi-VN");
+
+    saveAppState();
+    renderAllVectorFeatures();
+    map.setView([f.lat, f.lon], Math.max(map.getZoom(), 18));
+    openFeatureDetailModal(f.id);
+    showToast(`Đã cập nhật mốc "${f.name}": VN-2000 & WGS84 tự đồng bộ!`);
+  };
+
+  window.applyCustomTagToInspectedFeature = function() {
+    const f = state.features.find(x => x.id === inspectedFeatureId);
+    const inp = document.getElementById("featCustomTagInput");
+    const customName = (inp?.value || "").trim();
+    if (!f) return;
+    if (!customName) {
+      showToast("Vui lòng nhập tên nhãn thẻ mới.");
+      return;
+    }
+    if (!Array.isArray(state.tags)) state.tags = [];
+    if (!state.tags.some(t => t.name.toLowerCase() === customName.toLowerCase())) {
+      state.tags.push({
+        id: "tag_" + Date.now(),
+        name: customName,
+        desc: "Nhãn thẻ tùy biến",
+        color: "#000000",
+        bg: "#38bdf8"
+      });
+    }
+    f.tagName = customName;
+    if (inp) inp.value = "";
+    saveAppState();
+    renderAllVectorFeatures();
+    populateInspectedFeatureTagAndPhotos(f);
+    showToast(`Đã gắn nhãn thẻ tùy biến "${customName}"!`);
+  };
+
+  // Mở rộng openFeatureDetailModal để hiển thị khung chỉnh VN-2000, Cao độ H, Kiểu nút cho điểm mốc
+  const _prevOpenDetail = window.openFeatureDetailModal;
+  window.openFeatureDetailModal = function(featureId) {
+    if (typeof _prevOpenDetail === "function") _prevOpenDetail(featureId);
+    const f = state.features.find(x => x.id === featureId);
+    const editBox = document.getElementById("featPointEditBox");
+    if (!editBox) return;
+    if (f && f.geomType === "point") {
+      editBox.style.display = "block";
+      document.getElementById("editPtVnX").value = Number(f.vnX).toFixed(3);
+      document.getElementById("editPtVnY").value = Number(f.vnY).toFixed(3);
+      document.getElementById("editPtElevation").value = Number(f.h || 0).toFixed(2);
+      document.getElementById("editPtMarkerStyle").value = f.markerStyle || "dot";
+      document.getElementById("editPtWgsLiveText").textContent = `${Number(f.lat).toFixed(7)}°, ${Number(f.lon).toFixed(7)}°`;
+    } else {
+      editBox.style.display = "none";
+    }
+  };
+
+  // Đảm bảo các text đính kèm theo file nhập vào (KML/KMZ/GeoJSON/DXF) luôn có điểm nhãn text hiển thị
+  const _prevParseKml = window.parseAndExplodeKml;
+  window.parseAndExplodeKml = function(kmlString, fileName) {
+    const beforeIds = new Set(state.features.map(f => f.id));
+    if (typeof _prevParseKml === "function") _prevParseKml(kmlString, fileName);
+    const newlyAdded = state.features.filter(f => !beforeIds.has(f.id));
+    const seenNames = new Set();
+    newlyAdded.forEach(f => {
+      if (f.geomType === "segment" && f.name) {
+        const cleanTitle = f.name.replace(/\s*-\s*Đoạn\s+\d+$/i, "").trim();
+        const key = `${f.layerId}|${cleanTitle}`;
+        if (cleanTitle && !cleanTitle.startsWith(fileName + " #") && !seenNames.has(key)) {
+          seenNames.add(key);
+          const midLat = (f.p1[0] + f.p2[0]) / 2;
+          const midLon = (f.p1[1] + f.p2[1]) / 2;
+          const vn = wgs84ToVn2000(midLat, midLon);
+          state.features.push({
+            id: `kml_txt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            layerId: f.layerId,
+            geomType: "point",
+            name: cleanTitle,
+            lat: midLat,
+            lon: midLon,
+            vnX: vn.x,
+            vnY: vn.y,
+            h: 0,
+            markerStyle: "dot",
+            isImportedText: true,
+            project: f.project || getActiveProject().name,
+            note: `Text đính kèm từ ${fileName}`,
+            createdAt: new Date().toLocaleString("vi-VN")
+          });
+        }
+      }
+    });
+    saveAppState();
+    renderAllVectorFeatures();
+  };
+
+  // Hỗ trợ đọc thêm TEXT / MTEXT trong file DXF khi nạp vào để luôn hiển thị text trên bản đồ
+  const _prevHandleImportDxf = window.handleImportGisFile;
+  window.handleImportGisFile = async function(event) {
+    const file = event && event.target && event.target.files && event.target.files[0];
+    if (file && file.name.toLowerCase().endsWith(".dxf")) {
+      const dxfText = await file.text();
+      const lines = String(dxfText || "").split(/
+?
+/).map(l => l.trim());
+      const textItems = [];
+      for (let i = 0; i < lines.length - 1; i += 2) {
+        if (lines[i] === "0" && (lines[i + 1] === "TEXT" || lines[i + 1] === "MTEXT")) {
+          let tx = null, ty = null, tVal = "";
+          let j = i + 2;
+          while (j < lines.length - 1) {
+            const c = Number(lines[j]);
+            const v = lines[j + 1];
+            if (c === 0) break;
+            if (c === 10) tx = parseFloat(v);
+            else if (c === 20) ty = parseFloat(v);
+            else if (c === 1) tVal = v.replace(/\[A-Za-z0-9]+;/g, "").replace(/[{}]/g, "").trim();
+            j += 2;
+          }
+          if (tx !== null && ty !== null && !isNaN(tx) && !isNaN(ty) && tVal) {
+            textItems.push({ x: tx, y: ty, text: tVal });
+          }
+        }
+      }
+      if (typeof _prevHandleImportDxf === "function") {
+        await _prevHandleImportDxf(event);
+      }
+      if (textItems.length > 0) {
+        const targetLayer = state.layers[state.layers.length - 1];
+        const lyrId = targetLayer ? targetLayer.id : "default_points";
+        textItems.forEach((it, idx) => {
+          const w = vn2000ToWgs84(it.x, it.y);
+          if (w && isFinite(w.lat) && isFinite(w.lon)) {
+            state.features.push({
+              id: `dxf_txt_${Date.now()}_${idx}`,
+              layerId: lyrId,
+              geomType: "point",
+              name: it.text,
+              lat: w.lat,
+              lon: w.lon,
+              vnX: w.easting,
+              vnY: w.northing,
+              h: 0,
+              markerStyle: "dot",
+              isImportedText: true,
+              project: getActiveProject().name,
+              note: `Text đính kèm từ ${file.name}`,
+              createdAt: new Date().toLocaleString("vi-VN")
+            });
+          }
+        });
+        saveAppState();
+        renderAllVectorFeatures();
+        showToast(`Đã hiển thị thêm ${textItems.length} nhãn text từ file ${file.name}!`);
+      }
+      return;
+    }
+    if (typeof _prevHandleImportDxf === "function") {
+      return _prevHandleImportDxf(event);
     }
   };
 })();
