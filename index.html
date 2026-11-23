@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
-  <title>PD GIS Pro 1.2.4 - Ban QLDA Phương Đông</title>
+  <title>PD GIS Pro 1.2.5 - Ban QLDA Phương Đông</title>
 
   <!-- Leaflet GIS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -3471,6 +3471,7 @@ function parseAndExplodeKml(kmlString, fileName) {
           createdAt: new Date().toLocaleString("vi-VN")
         });
       } else if (latlngs.length >= 2) {
+        const beforeKmlIdx = state.features.length;
         const d = explodePolylineToSegments(latlngs, {
           layerId,
           baseName: pmName,
@@ -3479,6 +3480,9 @@ function parseAndExplodeKml(kmlString, fileName) {
           width: 3,
           note: `Tự nổ đoạn từ ${fileName}`
         });
+        for (let k = beforeKmlIdx; k < state.features.length; k++) {
+          if (state.features[k].geomType === "segment") state.features[k].hideSegLabelOnMap = true;
+        }
         totalDist += d;
         segCount += (latlngs.length - 1);
       }
@@ -3881,7 +3885,7 @@ function renderAllVectorFeaturesNow() {
       }
       bucket.coords.push([f.p1, f.p2]);
 
-      const allowSegLabel = state.showSegLabels !== false && (lyrCfg?.showSegLength !== false);
+      const allowSegLabel = !f.hideSegLabelOnMap && state.showSegLabels !== false && (lyrCfg?.showSegLength !== false);
       if (allowSegLabel && currentZoom >= 17 && f.lengthM >= 0.4 && renderedLabelCount < MAX_DOM_LABELS) {
         const midLat = (f.p1[0] + f.p2[0]) / 2;
         const midLon = (f.p1[1] + f.p2[1]) / 2;
@@ -6781,6 +6785,171 @@ window.addEventListener("DOMContentLoaded", () => {
   locateUserNow(true);
   startContinuousGpsWatch();
 });
+
+/* ============================================================================
+   FIX NÚT VỊ TRÍ HIỆN TẠI (🎯) & TỰ XOAY ĐIỀU HƯỚNG KIỂU GOOGLE MAPS
+   KHI TỰ ĐỘNG DI CHUYỂN BẢN ĐỒ THEO GPS
+============================================================================ */
+(function initGoogleMapsAutoRotateLocate() {
+  let _navHeadingDeg = 0;
+  let _lastCoursePt = null;
+  let _navSensorBound = false;
+
+  function computeHeadingFromCourse(lat, lon) {
+    if (!_lastCoursePt) {
+      _lastCoursePt = { lat, lon };
+      return null;
+    }
+    const dM = typeof calcSegmentMetrics === "function"
+      ? calcSegmentMetrics([_lastCoursePt.lat, _lastCoursePt.lon], [lat, lon])
+      : null;
+    if (dM && dM.distM >= 1.5 && typeof dM.az === "number" && !isNaN(dM.az)) {
+      _lastCoursePt = { lat, lon };
+      return dM.az;
+    }
+    return null;
+  }
+
+  function applyGoogleMapsHeadingRotation(headingDeg) {
+    if (typeof headingDeg !== "number" || isNaN(headingDeg)) return;
+    _navHeadingDeg = (((headingDeg % 360) + 360) % 360);
+
+    const mapPane = map && typeof map.getPanes === "function" ? map.getPanes().mapPane : null;
+    if (mapPane) {
+      if (state.autoFollowGps && !state.lockMapRotation) {
+        mapPane.style.transformOrigin = "center center";
+        const curTr = mapPane.style.transform || "";
+        const stripped = curTr.replace(/\s*rotate\([^)]*\)/g, "").trim();
+        mapPane.style.transform = `${stripped} rotate(${(-_navHeadingDeg).toFixed(1)}deg)`.trim();
+      } else {
+        const curTr = mapPane.style.transform || "";
+        mapPane.style.transform = curTr.replace(/\s*rotate\([^)]*\)/g, "").trim();
+      }
+    }
+
+    const compassEl = document.getElementById("mapCompassArrow");
+    if (compassEl) {
+      compassEl.style.transform = `rotate(${(-_navHeadingDeg).toFixed(1)}deg)`;
+    }
+  }
+
+  function bindCompassSensorForNav() {
+    if (_navSensorBound) return;
+    _navSensorBound = true;
+    const onOrient = (ev) => {
+      if (!state.autoFollowGps || state.lockMapRotation) return;
+      let deg = null;
+      if (typeof ev.webkitCompassHeading === "number" && !isNaN(ev.webkitCompassHeading)) {
+        deg = ev.webkitCompassHeading;
+      } else if (typeof ev.alpha === "number" && !isNaN(ev.alpha)) {
+        deg = (360 - ev.alpha) % 360;
+      }
+      if (deg !== null) {
+        applyGoogleMapsHeadingRotation(deg);
+      }
+    };
+    window.addEventListener("deviceorientationabsolute", onOrient, true);
+    window.addEventListener("deviceorientation", onOrient, true);
+  }
+
+  const _origOnGps = window.onGpsPositionUpdate;
+  if (typeof _origOnGps === "function") {
+    window.onGpsPositionUpdate = function(pos, flyToPos = false) {
+      _origOnGps.apply(this, arguments);
+      if (!pos || !pos.coords) return;
+      const { latitude, longitude, heading } = pos.coords;
+
+      let hDeg = null;
+      if (typeof heading === "number" && !isNaN(heading) && heading >= 0) {
+        hDeg = heading;
+        _lastCoursePt = { lat: latitude, lon: longitude };
+      } else {
+        hDeg = computeHeadingFromCourse(latitude, longitude);
+      }
+
+      if (state.autoFollowGps && !state.lockMapRotation) {
+        bindCompassSensorForNav();
+        if (hDeg !== null) applyGoogleMapsHeadingRotation(hDeg);
+        map.setView([latitude, longitude], Math.max(map.getZoom(), 17), { animate: false });
+      } else if (flyToPos) {
+        map.setView([latitude, longitude], Math.max(map.getZoom(), 17), { animate: false });
+      }
+    };
+  }
+
+  // Đảm bảo nút vị trí hiện tại (🎯) luôn phản hồi ngay, kể cả khi GPS ngoài trời chưa có fix hoặc đang trên PC
+  window.locateUserNow = function(forceFly = true) {
+    if (latestGps && latestGps.hasFix && typeof latestGps.lat === "number" && typeof latestGps.lon === "number") {
+      map.setView([latestGps.lat, latestGps.lon], Math.max(map.getZoom(), 17), { animate: false });
+      if (state.autoFollowGps && !state.lockMapRotation) {
+        bindCompassSensorForNav();
+        applyGoogleMapsHeadingRotation(_navHeadingDeg);
+      }
+      if (typeof updateCenterHud === "function") updateCenterHud();
+      showToast("Đã định vị về vị trí GPS hiện tại.");
+    } else if (forceFly) {
+      const c = map.getCenter();
+      map.setView([c.lat, c.lng], Math.max(map.getZoom(), 16), { animate: false });
+      showToast("Đang lấy tín hiệu GPS... (nếu trên PC/không có GPS, giữ nguyên khung bản đồ hiện tại).");
+    }
+
+    if (!navigator.geolocation) {
+      if (forceFly) showToast("Thiết bị không hỗ trợ định vị GPS.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (typeof _origOnGps === "function") _origOnGps(pos, true);
+        if (pos && pos.coords) {
+          map.setView([pos.coords.latitude, pos.coords.longitude], Math.max(map.getZoom(), 17), { animate: false });
+          if (state.autoFollowGps && !state.lockMapRotation) {
+            bindCompassSensorForNav();
+            if (typeof pos.coords.heading === "number" && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
+              applyGoogleMapsHeadingRotation(pos.coords.heading);
+            }
+          }
+        }
+      },
+      (err) => {
+        if (forceFly) {
+          const code = err && err.code;
+          if (code === 1) showToast("Trình duyệt đang chặn quyền truy cập Vị trí (GPS). Hãy cấp quyền Vị trí cho trang web.");
+          else showToast("Chưa bắt được tín hiệu GPS mới, đang giữ khung nhìn hiện tại.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 1500 }
+    );
+  };
+
+  const _origToggleAutoGps = window.toggleAutoFollowGps;
+  window.toggleAutoFollowGps = function(checked) {
+    if (typeof _origToggleAutoGps === "function") _origToggleAutoGps(checked);
+    const chk = document.getElementById("cfgAutoGpsChk");
+    if (chk) chk.checked = Boolean(checked);
+    if (checked) {
+      bindCompassSensorForNav();
+      window.locateUserNow(true);
+      showToast("Đã bật tự động di chuyển & xoay hướng bản đồ theo GPS (kiểu Google Maps).");
+    } else {
+      const mapPane = map && typeof map.getPanes === "function" ? map.getPanes().mapPane : null;
+      if (mapPane) {
+        mapPane.style.transform = (mapPane.style.transform || "").replace(/\s*rotate\([^)]*\)/g, "").trim();
+      }
+      showToast("Đã tắt tự động di chuyển & xoay bản đồ theo GPS.");
+    }
+  };
+
+  const _origResetNorth = window.resetMapNorth;
+  window.resetMapNorth = function() {
+    _navHeadingDeg = 0;
+    const mapPane = map && typeof map.getPanes === "function" ? map.getPanes().mapPane : null;
+    if (mapPane) {
+      mapPane.style.transform = (mapPane.style.transform || "").replace(/\s*rotate\([^)]*\)/g, "").trim();
+    }
+    if (typeof _origResetNorth === "function") _origResetNorth();
+  };
+})();
 </script>
 
 <script>
@@ -7358,7 +7527,7 @@ window.addEventListener("DOMContentLoaded", () => {
    HỖ TRỢ NẠP & TỰ NỔ ĐOẠN FILE AUTOCAD DXF (VN-2000 -> WGS84)
 ============================================================================ */
 (function initDxfImportSupport() {
-  function parseAndExplodeDxf(dxfText, fileName) {
+  function parseDxfAndExplodeQuiet(dxfText, fileName) {
     const lines = String(dxfText || "").split(/\r?\n/).map(l => l.trim());
     const entities = [];
     let i = 0;
@@ -7433,6 +7602,31 @@ window.addEventListener("DOMContentLoaded", () => {
       return [w.lat, w.lon];
     };
 
+    const addQuietSegment = (p1, p2, segName) => {
+      const m = calcSegmentMetrics(p1, p2);
+      if (m.distM < 0.001) return;
+      totalDist += m.distM;
+      segCount += 1;
+      state.features.push({
+        id: `dxf_seg_${Date.now()}_${segCount}_${Math.random().toString(36).slice(2, 5)}`,
+        layerId,
+        geomType: "segment",
+        name: segName,
+        p1,
+        p2,
+        lengthM: m.distM,
+        azimuth: m.az,
+        vn1: m.vn1,
+        vn2: m.vn2,
+        color: "#38bdf8",
+        width: 3,
+        hideSegLabelOnMap: true,
+        project: getActiveProject().name,
+        note: `Nạp & nổ đoạn từ DXF ${fileName} (bấm vào đoạn để xem kích thước)`,
+        createdAt: new Date().toLocaleString("vi-VN")
+      });
+    };
+
     entities.forEach((ent, idx) => {
       const baseName = `${fileName} #${idx + 1}`;
       if (ent.entType === "LINE") {
@@ -7440,16 +7634,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const p2 = toWgsPair(ent.props.x2, ent.props.y2);
         if (p1 && p2) {
           bounds.push(p1, p2);
-          const d = explodePolylineToSegments([p1, p2], {
-            layerId,
-            baseName,
-            project: getActiveProject().name,
-            color: "#38bdf8",
-            width: 3,
-            note: `Nạp từ DXF ${fileName}`
-          });
-          totalDist += d;
-          segCount += 1;
+          addQuietSegment(p1, p2, `${baseName} - Đoạn 1`);
         }
       } else if (ent.entType === "POINT") {
         const pt = toWgsPair(ent.props.x, ent.props.y);
@@ -7478,16 +7663,9 @@ window.addEventListener("DOMContentLoaded", () => {
             lls.push(lls[0]);
           }
           lls.forEach(ll => bounds.push(ll));
-          const d = explodePolylineToSegments(lls, {
-            layerId,
-            baseName,
-            project: getActiveProject().name,
-            color: "#38bdf8",
-            width: 3,
-            note: `Tự nổ đoạn từ DXF ${fileName}`
-          });
-          totalDist += d;
-          segCount += Math.max(0, lls.length - 1);
+          for (let k = 0; k < lls.length - 1; k++) {
+            addQuietSegment(lls[k], lls[k + 1], `${baseName} - Đoạn ${k + 1}`);
+          }
         }
       }
     });
@@ -7507,7 +7685,7 @@ window.addEventListener("DOMContentLoaded", () => {
       width: 3,
       fillColor: "#10b981",
       labelSize: 11,
-      showSegLength: true
+      showSegLength: false
     });
 
     state.selectedQuickLayerId = layerId;
@@ -7516,7 +7694,35 @@ window.addEventListener("DOMContentLoaded", () => {
     if (bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] });
     }
-    showToast(`Đã nạp ${fileName}: tự nổ ${segCount} đoạn (${formatLength(totalDist)}).`);
+    showToast(`Đã nạp ${fileName}: nổ ${segCount} đoạn (${formatLength(totalDist)}) • Bấm vào đoạn để xem kích thước.`);
+  }
+
+  function parseDxfWithoutExplode(dxfText, fileName) { return parseDxfAndExplodeQuiet(dxfText, fileName); }
+
+  // Render non-exploded DXF polylines cleanly on map without altering existing segment/point/polygon logic
+  const _prevRenderVec = window.renderAllVectorFeaturesNow;
+  if (typeof _prevRenderVec === "function") {
+    window.renderAllVectorFeaturesNow = function() {
+      _prevRenderVec();
+      const globalOpacity = (state.layerOpacity ?? 100) / 100;
+      const layerMap = new Map(state.layers.map(l => [l.id, l]));
+      const viewBounds = map.getBounds().pad(0.2);
+      state.features.forEach((f) => {
+        if (f.hidden === true || f.geomType !== "polyline_no_explode" || !Array.isArray(f.coords)) return;
+        const lyrCfg = layerMap.get(f.layerId);
+        if (lyrCfg && lyrCfg.visible === false) return;
+        const polyBounds = L.latLngBounds(f.coords);
+        if (!viewBounds.intersects(polyBounds)) return;
+        const lyrOp = ((lyrCfg?.opacity ?? 100) / 100) * globalOpacity;
+        L.polyline(f.coords, {
+          renderer: desktopVectorRenderer,
+          interactive: false,
+          color: lyrCfg?.color || f.color || "#38bdf8",
+          weight: (lyrCfg?.width || f.width || 3) + 1,
+          opacity: lyrOp
+        }).addTo(vectorLayerGroup);
+      });
+    };
   }
 
   const _origHandleImport = window.handleImportGisFile;
@@ -7528,10 +7734,10 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     const ext = file.name.split(".").pop().toLowerCase();
     if (ext === "dxf") {
-      showToast(`Đang nạp & tự nổ đoạn tệp DXF ${file.name}...`);
+      showToast(`Đang nạp tệp DXF ${file.name} (không nổ đoạn)...`);
       try {
         const txt = await file.text();
-        parseAndExplodeDxf(txt, file.name);
+        parseDxfAndExplodeQuiet(txt, file.name);
       } catch (err) {
         showToast("Lỗi đọc file DXF: " + (err && err.message ? err.message : "định dạng không hỗ trợ"));
       }
@@ -7542,163 +7748,17 @@ window.addEventListener("DOMContentLoaded", () => {
       return _origHandleImport(event);
     }
   };
-})();
-</script>
+})();</script>
 
 
 <script>
-/* ============================================================================
-   BỔ SUNG HÌNH 1 & HÌNH 2:
-   - Chỉnh tọa độ VN-2000 & Cao độ H => WGS84 tự động cập nhật
-   - Nhãn thẻ tùy biến (tên mới) + Chọn kiểu nút điểm
-   - Text đính kèm file nhập vào (KML/KMZ/GeoJSON/DXF) luôn hiển thị như tên mốc
-============================================================================ */
-(function initPointEditorAndPermanentTextLabels() {
-  window.previewEditPointVn2000 = function() {
-    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
-    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
-    const outEl = document.getElementById("editPtWgsLiveText");
-    if (!outEl) return;
-    if (isNaN(xVal) || isNaN(yVal)) {
-      outEl.textContent = "Nhập đủ X(E) và Y(N) hợp lệ...";
-      return;
-    }
-    const wgs = vn2000ToWgs84(xVal, yVal);
-    if (wgs && isFinite(wgs.lat) && isFinite(wgs.lon)) {
-      outEl.textContent = `${wgs.lat.toFixed(7)}°, ${wgs.lon.toFixed(7)}°`;
-    } else {
-      outEl.textContent = "Ngoài phạm vi hệ chiếu";
-    }
-  };
-
-  window.saveEditedPointCoordsAndStyle = function() {
-    const f = state.features.find(x => x.id === inspectedFeatureId);
-    if (!f || f.geomType !== "point") return;
-
-    const xVal = parseFloat(document.getElementById("editPtVnX")?.value);
-    const yVal = parseFloat(document.getElementById("editPtVnY")?.value);
-    const hVal = parseFloat(document.getElementById("editPtElevation")?.value);
-    const styleVal = document.getElementById("editPtMarkerStyle")?.value || "dot";
-
-    if (isNaN(xVal) || isNaN(yVal)) {
-      showToast("Vui lòng nhập tọa độ X(E) và Y(N) VN-2000 hợp lệ.");
-      return;
-    }
-    const wgs = vn2000ToWgs84(xVal, yVal);
-    if (!wgs || !isFinite(wgs.lat) || !isFinite(wgs.lon)) {
-      showToast("Tọa độ VN-2000 không hợp lệ.");
-      return;
-    }
-
-    f.vnX = wgs.easting;
-    f.vnY = wgs.northing;
-    f.lat = wgs.lat;
-    f.lon = wgs.lon;
-    f.h = isNaN(hVal) ? 0 : hVal;
-    f.markerStyle = styleVal;
-    f.createdAt = new Date().toLocaleString("vi-VN");
-
-    saveAppState();
-    renderAllVectorFeatures();
-    map.setView([f.lat, f.lon], Math.max(map.getZoom(), 18));
-    openFeatureDetailModal(f.id);
-    showToast(`Đã cập nhật mốc "${f.name}": VN-2000 & WGS84 tự đồng bộ!`);
-  };
-
-  window.applyCustomTagToInspectedFeature = function() {
-    const f = state.features.find(x => x.id === inspectedFeatureId);
-    const inp = document.getElementById("featCustomTagInput");
-    const customName = (inp?.value || "").trim();
-    if (!f) return;
-    if (!customName) {
-      showToast("Vui lòng nhập tên nhãn thẻ mới.");
-      return;
-    }
-    if (!Array.isArray(state.tags)) state.tags = [];
-    if (!state.tags.some(t => t.name.toLowerCase() === customName.toLowerCase())) {
-      state.tags.push({
-        id: "tag_" + Date.now(),
-        name: customName,
-        desc: "Nhãn thẻ tùy biến",
-        color: "#000000",
-        bg: "#38bdf8"
-      });
-    }
-    f.tagName = customName;
-    if (inp) inp.value = "";
-    saveAppState();
-    renderAllVectorFeatures();
-    populateInspectedFeatureTagAndPhotos(f);
-    showToast(`Đã gắn nhãn thẻ tùy biến "${customName}"!`);
-  };
-
-  // Mở rộng openFeatureDetailModal để hiển thị khung chỉnh VN-2000, Cao độ H, Kiểu nút cho điểm mốc
-  const _prevOpenDetail = window.openFeatureDetailModal;
-  window.openFeatureDetailModal = function(featureId) {
-    if (typeof _prevOpenDetail === "function") _prevOpenDetail(featureId);
-    const f = state.features.find(x => x.id === featureId);
-    const editBox = document.getElementById("featPointEditBox");
-    if (!editBox) return;
-    if (f && f.geomType === "point") {
-      editBox.style.display = "block";
-      document.getElementById("editPtVnX").value = Number(f.vnX).toFixed(3);
-      document.getElementById("editPtVnY").value = Number(f.vnY).toFixed(3);
-      document.getElementById("editPtElevation").value = Number(f.h || 0).toFixed(2);
-      document.getElementById("editPtMarkerStyle").value = f.markerStyle || "dot";
-      document.getElementById("editPtWgsLiveText").textContent = `${Number(f.lat).toFixed(7)}°, ${Number(f.lon).toFixed(7)}°`;
-    } else {
-      editBox.style.display = "none";
-    }
-  };
-
-  // Đảm bảo các text đính kèm theo file nhập vào (KML/KMZ/GeoJSON/DXF) luôn có điểm nhãn text hiển thị
-  const _prevParseKml = window.parseAndExplodeKml;
-  window.parseAndExplodeKml = function(kmlString, fileName) {
-    const beforeIds = new Set(state.features.map(f => f.id));
-    if (typeof _prevParseKml === "function") _prevParseKml(kmlString, fileName);
-    const newlyAdded = state.features.filter(f => !beforeIds.has(f.id));
-    const seenNames = new Set();
-    newlyAdded.forEach(f => {
-      if (f.geomType === "segment" && f.name) {
-        const cleanTitle = f.name.replace(/\s*-\s*Đoạn\s+\d+$/i, "").trim();
-        const key = `${f.layerId}|${cleanTitle}`;
-        if (cleanTitle && !cleanTitle.startsWith(fileName + " #") && !seenNames.has(key)) {
-          seenNames.add(key);
-          const midLat = (f.p1[0] + f.p2[0]) / 2;
-          const midLon = (f.p1[1] + f.p2[1]) / 2;
-          const vn = wgs84ToVn2000(midLat, midLon);
-          state.features.push({
-            id: `kml_txt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            layerId: f.layerId,
-            geomType: "point",
-            name: cleanTitle,
-            lat: midLat,
-            lon: midLon,
-            vnX: vn.x,
-            vnY: vn.y,
-            h: 0,
-            markerStyle: "dot",
-            isImportedText: true,
-            project: f.project || getActiveProject().name,
-            note: `Text đính kèm từ ${fileName}`,
-            createdAt: new Date().toLocaleString("vi-VN")
-          });
-        }
-      }
-    });
-    saveAppState();
-    renderAllVectorFeatures();
-  };
-
-  // Hỗ trợ đọc thêm TEXT / MTEXT trong file DXF khi nạp vào để luôn hiển thị text trên bản đồ
-  const _prevHandleImportDxf = window.handleImportGisFile;
+(function initDxfTextLabelsOnly() {
+  const _origDxfHandler = window.handleImportGisFile;
   window.handleImportGisFile = async function(event) {
     const file = event && event.target && event.target.files && event.target.files[0];
     if (file && file.name.toLowerCase().endsWith(".dxf")) {
       const dxfText = await file.text();
-      const lines = String(dxfText || "").split(/
-?
-/).map(l => l.trim());
+      const lines = String(dxfText || "").split(/\r?\n/).map(l => l.trim());
       const textItems = [];
       for (let i = 0; i < lines.length - 1; i += 2) {
         if (lines[i] === "0" && (lines[i + 1] === "TEXT" || lines[i + 1] === "MTEXT")) {
@@ -7718,8 +7778,8 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         }
       }
-      if (typeof _prevHandleImportDxf === "function") {
-        await _prevHandleImportDxf(event);
+      if (typeof _origDxfHandler === "function") {
+        await _origDxfHandler(event);
       }
       if (textItems.length > 0) {
         const targetLayer = state.layers[state.layers.length - 1];
@@ -7751,8 +7811,8 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       return;
     }
-    if (typeof _prevHandleImportDxf === "function") {
-      return _prevHandleImportDxf(event);
+    if (typeof _origDxfHandler === "function") {
+      return _origDxfHandler(event);
     }
   };
 })();
