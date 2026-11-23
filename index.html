@@ -92,18 +92,19 @@
     }
 
     
-    /* Nhãn tên mốc & text đính kèm luôn hiển thị rõ trên bản đồ */
+    /* Nhãn tên mốc & text đính kèm: bỏ khung đóng hộp để giãn size tự do theo từng layer */
     .point-permanent-label {
-      background: rgba(15, 23, 42, 0.88);
+      background: transparent;
       color: #f8fafc;
-      border: 1px solid rgba(56, 189, 248, 0.78);
-      padding: 1px 6px;
-      border-radius: 5px;
+      border: none;
+      padding: 0;
+      border-radius: 0;
       font-size: 11px;
+      line-height: 1.15;
       font-weight: 800;
       white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
-      transform: translate(-50%, 8px);
+      text-shadow: 0 0 3px rgba(2, 6, 23, 0.95), 0 1px 3px rgba(0, 0, 0, 0.95);
+      transform: translate(-50%, -50%);
       pointer-events: none;
     }
     .point-marker-shape {
@@ -1689,6 +1690,15 @@
         <label class="form-label">Cỡ chữ nhãn (px):</label>
         <input type="number" id="stLabelSize" class="form-input" min="9" max="28" value="11" />
       </div>
+    </div>
+    <div class="list-card" style="margin-bottom:10px;">
+      <div class="slider-title">
+        <span>↔️ Giãn chữ & giãn khoảng cách nhãn lớp này:</span>
+        <span id="stLabelSpreadVal">1.0x (0px)</span>
+      </div>
+      <input type="range" min="0" max="24" step="1" id="stLabelSpread" value="0"
+             oninput="document.getElementById('stLabelSpreadVal').textContent = (1 + this.value * 0.05).toFixed(2) + 'x (dãn ' + this.value + 'px)'" />
+      <div style="font-size:11px;color:#94a3b8;margin-top:3px;">Giúp dãn chữ và tách khoảng cách cho các lớp dày nhãn như KCN Hàm Kiệm I mà vẫn giữ KCN Tuy Phong thoáng.</div>
     </div>
     <div class="grid-2">
       <button class="btn-primary" onclick="saveLayerStyleConfig()">Lưu cài đặt hiển thị</button>
@@ -3857,13 +3867,18 @@ function renderAllVectorFeaturesNow() {
         }).addTo(vectorLayerGroup);
       }
 
-      // Riêng mốc & text đính kèm theo file nhập vào LUÔN LUÔN hiển thị tên
+      // Riêng mốc & text đính kèm theo file nhập vào LUÔN LUÔN hiển thị tên & giãn cỡ chữ/giãn chữ tự do theo layer (không đóng khung)
       const displayLabel = f.tagName ? `${f.name} [${f.tagName}]` : (f.name || "Mốc");
+      const lyrLblSize = Number(lyrCfg?.labelSize) || 11;
+      const spreadPx = Number(lyrCfg?.labelSpread) || 0;
+      const letterSp = spreadPx > 0 ? (spreadPx * 0.06).toFixed(2) + "em" : "normal";
+      const extraY = spreadPx > 0 ? Math.round(((i % 5) - 2) * (spreadPx * 0.65)) : 0;
+      const extraX = spreadPx > 0 ? Math.round((((i * 3) % 5) - 2) * (spreadPx * 0.45)) : 0;
       L.marker([f.lat, f.lon], {
         interactive: false,
         icon: L.divIcon({
           className: "",
-          html: `<div class="point-permanent-label" style="opacity:${lyrOp};">${displayLabel}</div>`
+          html: `<div class="point-permanent-label" style="opacity:${lyrOp};font-size:${lyrLblSize}px !important;letter-spacing:${letterSp};transform:translate(calc(-50% + ${extraX}px), calc(-50% + ${extraY}px));">${displayLabel}</div>`
         })
       }).addTo(labelLayerGroup);
     } else if (f.geomType === "segment") {
@@ -5410,6 +5425,11 @@ function openLayerStyleEditor(id) {
   document.getElementById("stStrokeWidth").value = l.width || 3;
   document.getElementById("stFillColor").value = l.fillColor || "#10b981";
   document.getElementById("stLabelSize").value = l.labelSize || 11;
+  const sp = Number(l.labelSpread) || 0;
+  const spEl = document.getElementById("stLabelSpread");
+  if (spEl) spEl.value = sp;
+  const spLbl = document.getElementById("stLabelSpreadVal");
+  if (spLbl) spLbl.textContent = `${(1 + sp * 0.05).toFixed(2)}x (dãn ${sp}px)`;
   document.getElementById("stShowSegLength").checked = l.showSegLength !== false;
   const op = l.opacity ?? 100;
   document.getElementById("stLayerOpacity").value = op;
@@ -5424,18 +5444,19 @@ function saveLayerStyleConfig() {
   l.width = Number(document.getElementById("stStrokeWidth").value) || 3;
   l.fillColor = document.getElementById("stFillColor").value;
   l.labelSize = Number(document.getElementById("stLabelSize").value) || 11;
+  l.labelSpread = Number(document.getElementById("stLabelSpread")?.value) || 0;
   l.showSegLength = document.getElementById("stShowSegLength").checked;
   l.opacity = Number(document.getElementById("stLayerOpacity").value);
   saveAppState();
-  renderAllVectorFeatures();
+  renderAllVectorFeaturesNow();
   closeModal("layerStyleModal");
-  showToast("Đã cập nhật hiển thị lớp.");
+  showToast(`Đã cập nhật hiển thị lớp (cỡ chữ ${l.labelSize}px).`);
 }
 
 function resetLayerStyleDefault() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
-  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.labelSize = 11; l.showSegLength = true; l.opacity = 100;
+  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.labelSize = 11; l.labelSpread = 0; l.showSegLength = true; l.opacity = 100;
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
