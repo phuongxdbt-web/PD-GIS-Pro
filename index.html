@@ -2109,7 +2109,7 @@
 
     <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;gap:8px;">
       <span style="font-size:11px;color:#94a3b8;" id="authCurrentStatusText">Chưa kích hoạt Key riêng</span>
-      <button type="button" class="mini-btn" style="color:#f87171;" onclick="logoutCurrentAccount()">Đăng xuất Key</button>
+      <button type="button" id="btnLogoutCurrentKey" class="mini-btn" style="color:#f87171;display:none;" onclick="logoutCurrentAccount()">Đăng xuất Key</button>
     </div>
   </div>
 </div>
@@ -5968,27 +5968,42 @@ function openAuthGateModal() {
   const modal = document.getElementById("authGateModal");
   if (!modal) return;
   modal.classList.add("open");
+  const isAdmin = currentUserRole === "ADMIN";
   const statusEl = document.getElementById("authCurrentStatusText");
   if (statusEl) {
     statusEl.textContent = currentAccountId
       ? `Đang dùng Key: ${currentKeyCode} (${currentAccountLabel})`
       : "Chưa kích hoạt Key riêng";
   }
+  const logoutBtn = document.getElementById("btnLogoutCurrentKey");
+  if (logoutBtn) {
+    logoutBtn.style.display = currentAccountId ? "inline-block" : "none";
+  }
   const reg = loadAuthRegistry();
   const box = document.getElementById("savedAccountsQuickBox");
   if (box) {
-    box.innerHTML = reg.length > 0
-      ? `<div class="form-label">Key đã lưu trên thiết bị này:</div>` + reg.slice(0, 6).map(u => `
-          <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;cursor:pointer;"
-               onclick="document.getElementById('authKeyCodeInput').value='${u.keyCode}'; document.getElementById('authIdentifierInput').value='${u.identifier || ""}'; loginWithAccessKey();">
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:#f8fafc;">${u.displayName || u.identifier} <span class="key-badge-pill">${u.role || "PRO"}</span></div>
-              <div style="font-size:11px;color:#38bdf8;font-family:ui-monospace,monospace;">${u.keyCode}</div>
-            </div>
-            <span style="font-size:11.5px;color:#34d399;font-weight:700;">Vào ›</span>
-          </div>
-        `).join("")
-      : "";
+    if (!currentAccountId) {
+      box.innerHTML = "";
+      return;
+    }
+    const visibleList = isAdmin
+      ? reg
+      : reg.filter(u => u.keyCode === currentKeyCode || u.accId === currentAccountId);
+
+    if (visibleList.length === 0) {
+      box.innerHTML = "";
+      return;
+    }
+    box.innerHTML = `<div class="form-label">${isAdmin ? "Key đã lưu trên thiết bị này (Toàn bộ hệ thống):" : "Thông tin Key & Tài khoản đang đăng nhập:"}</div>` + visibleList.map(u => `
+      <div class="list-card" style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;${isAdmin ? "cursor:pointer;" : ""}"
+           ${isAdmin ? `onclick="document.getElementById('authKeyCodeInput').value='${u.keyCode}'; document.getElementById('authIdentifierInput').value='${u.identifier || ""}'; loginWithAccessKey();"` : ""}>
+        <div>
+          <div style="font-size:12.5px;font-weight:700;color:#f8fafc;">${u.displayName || u.identifier} <span class="key-badge-pill">${u.role || "PRO"}</span></div>
+          <div style="font-size:11px;color:#38bdf8;font-family:ui-monospace,monospace;">${u.keyCode}</div>
+        </div>
+        <span style="font-size:11.5px;color:#34d399;font-weight:700;">${isAdmin ? "Vào ›" : "Đang kích hoạt"}</span>
+      </div>
+    `).join("");
   }
 }
 
@@ -6180,6 +6195,10 @@ function logoutCurrentAccount() {
   updateAccountHeaderBadge();
   const statusEl = document.getElementById("authCurrentStatusText");
   if (statusEl) statusEl.textContent = "Đã đăng xuất Key cá nhân";
+  const logoutBtn = document.getElementById("btnLogoutCurrentKey");
+  if (logoutBtn) logoutBtn.style.display = "none";
+  const box = document.getElementById("savedAccountsQuickBox");
+  if (box) box.innerHTML = "";
   showToast("Đã đăng xuất Key.");
 }
 
@@ -6829,9 +6848,38 @@ window.addEventListener("DOMContentLoaded", () => {
           showToast(`⛔ Key ${rawKey} chỉ được dùng trên 1 thiết bị duy nhất (đã gắn với ${boundDev}).`);
           return;
         }
+        if (foundRec && foundRec.deviceId && foundRec.deviceId !== myDevId) {
+          showToast(`⛔ Key ${rawKey} đã kích hoạt trên thiết bị khác (${foundRec.deviceId}). Mỗi Key chỉ dùng cho 1 thiết bị duy nhất.`);
+          return;
+        }
+        const gasUrl = typeof getGasWebAppUrl === "function" ? getGasWebAppUrl() : "";
+        if (gasUrl) {
+          try {
+            const verifyResp = await fetch(gasUrl, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({
+                action: "verify_or_bind_device",
+                keyCode: rawKey,
+                deviceId: myDevId,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toLocaleString("vi-VN")
+              })
+            });
+            const vData = await verifyResp.json();
+            if (vData && vData.allowed === false) {
+              showToast(`⛔ ${vData.message || `Key ${rawKey} đã gắn với thiết bị khác (${vData.boundDeviceId || ""}). Mỗi Key chỉ dùng cho 1 thiết bị duy nhất.`}`);
+              return;
+            }
+          } catch (e) {}
+        }
         if (!boundDev) {
           bindings[rawKey] = myDevId;
           saveDeviceBindings(bindings);
+        }
+        if (foundRec && !foundRec.deviceId) {
+          foundRec.deviceId = myDevId;
+          saveAuthRegistry(reg);
         }
       }
       return _origLoginWithAccessKey.apply(this, arguments);
