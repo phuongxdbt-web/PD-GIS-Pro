@@ -1691,6 +1691,28 @@
         <input type="number" id="stLabelSize" class="form-input" min="9" max="28" value="11" />
       </div>
     </div>
+    <div class="grid-2 form-group">
+      <div>
+        <label class="form-label">Màu nút / điểm mốc:</label>
+        <input type="color" id="stPointColor" class="form-input" style="height:40px;padding:3px;" value="#ef4444" />
+      </div>
+      <div>
+        <label class="form-label">Kích thước nút (px):</label>
+        <input type="number" id="stPointSize" class="form-input" min="3" max="24" value="6" />
+      </div>
+    </div>
+    <div class="list-card" style="margin-bottom:10px;">
+      <div class="grid-2" style="gap:10px;">
+        <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;cursor:pointer;">
+          <span>🔘 Hiển thị nút / mốc:</span>
+          <input type="checkbox" id="stShowPoints" checked />
+        </label>
+        <label style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;cursor:pointer;">
+          <span>🔤 Hiển thị chữ mốc:</span>
+          <input type="checkbox" id="stShowPointLabels" checked />
+        </label>
+      </div>
+    </div>
     <div class="list-card" style="margin-bottom:10px;">
       <div class="slider-title">
         <span>↔️ Giãn chữ & giãn khoảng cách nhãn lớp này:</span>
@@ -3840,47 +3862,57 @@ function renderAllVectorFeaturesNow() {
 
     if (f.geomType === "point") {
       if (!viewBounds.contains([f.lat, f.lon])) continue;
-      const ptColor = lyrCfg?.color || "#ef4444";
+      const ptColor = lyrCfg?.pointColor || lyrCfg?.color || "#ef4444";
+      const ptRadius = Math.max(3, Math.min(24, Number(lyrCfg?.pointSize) || 6));
+      const showBtn = !f.pointsHidden && (lyrCfg?.showPoints !== false);
+      const showLbl = !f.labelsHidden && (lyrCfg?.showPointLabels !== false);
       const mStyle = f.markerStyle || "dot";
-      if (mStyle === "dot") {
-        L.circleMarker([f.lat, f.lon], {
-          renderer: desktopVectorRenderer,
-          interactive: false,
-          radius: 6, color: "#fff", weight: 2, fillColor: ptColor, fillOpacity: lyrOp, opacity: lyrOp
-        }).addTo(vectorLayerGroup);
-      } else {
-        let shapeSvg = "";
-        if (mStyle === "triangle") {
-          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
-        } else if (mStyle === "square") {
-          shapeSvg = `<svg width="18" height="18" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
-        } else if (mStyle === "diamond") {
-          shapeSvg = `<svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
-        } else if (mStyle === "crosshair_circle") {
-          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="${ptColor}" fill-opacity="0.35" stroke="#ffffff" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="23" stroke="#ffffff" stroke-width="1.8"/><line x1="1" y1="12" x2="23" y2="12" stroke="#ffffff" stroke-width="1.8"/></svg>`;
+
+      if (showBtn) {
+        if (mStyle === "dot") {
+          L.circleMarker([f.lat, f.lon], {
+            renderer: desktopVectorRenderer,
+            interactive: false,
+            radius: ptRadius, color: "#fff", weight: 2, fillColor: ptColor, fillOpacity: lyrOp, opacity: lyrOp
+          }).addTo(vectorLayerGroup);
         } else {
-          shapeSvg = `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+          const boxPx = Math.max(14, ptRadius * 3.2);
+          let shapeSvg = "";
+          if (mStyle === "triangle") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+          } else if (mStyle === "square") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+          } else if (mStyle === "diamond") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+          } else if (mStyle === "crosshair_circle") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="${ptColor}" fill-opacity="0.35" stroke="#ffffff" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="23" stroke="#ffffff" stroke-width="1.8"/><line x1="1" y1="12" x2="23" y2="12" stroke="#ffffff" stroke-width="1.8"/></svg>`;
+          } else {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+          }
+          L.marker([f.lat, f.lon], {
+            interactive: false,
+            icon: L.divIcon({ className: "", html: `<div class="point-marker-shape" style="opacity:${lyrOp};">${shapeSvg}</div>` })
+          }).addTo(vectorLayerGroup);
         }
-        L.marker([f.lat, f.lon], {
-          interactive: false,
-          icon: L.divIcon({ className: "", html: `<div class="point-marker-shape" style="opacity:${lyrOp};">${shapeSvg}</div>` })
-        }).addTo(vectorLayerGroup);
       }
 
-      // Riêng mốc & text đính kèm theo file nhập vào LUÔN LUÔN hiển thị tên & giãn cỡ chữ/giãn chữ tự do theo layer (không đóng khung)
-      const displayLabel = f.tagName ? `${f.name} [${f.tagName}]` : (f.name || "Mốc");
-      const lyrLblSize = Number(lyrCfg?.labelSize) || 11;
-      const spreadPx = Number(lyrCfg?.labelSpread) || 0;
-      const letterSp = spreadPx > 0 ? (spreadPx * 0.06).toFixed(2) + "em" : "normal";
-      const extraY = spreadPx > 0 ? Math.round(((i % 5) - 2) * (spreadPx * 0.65)) : 0;
-      const extraX = spreadPx > 0 ? Math.round((((i * 3) % 5) - 2) * (spreadPx * 0.45)) : 0;
-      L.marker([f.lat, f.lon], {
-        interactive: false,
-        icon: L.divIcon({
-          className: "",
-          html: `<div class="point-permanent-label" style="opacity:${lyrOp};font-size:${lyrLblSize}px !important;letter-spacing:${letterSp};transform:translate(calc(-50% + ${extraX}px), calc(-50% + ${extraY}px));">${displayLabel}</div>`
-        })
-      }).addTo(labelLayerGroup);
+      if (showLbl) {
+        const displayLabel = f.tagName ? `${f.name} [${f.tagName}]` : (f.name || "Mốc");
+        const lyrLblSize = Number(lyrCfg?.labelSize) || 11;
+        const spreadPx = Number(lyrCfg?.labelSpread) || 0;
+        const letterSp = spreadPx > 0 ? (spreadPx * 0.06).toFixed(2) + "em" : "normal";
+        const baseSepX = Math.max(8, Math.round(ptRadius + 4));
+        const baseSepY = -Math.max(10, Math.round(ptRadius + 5));
+        const extraY = baseSepY + (spreadPx > 0 ? Math.round(((i % 5) - 2) * (spreadPx * 0.65)) : 0);
+        const extraX = baseSepX + (spreadPx > 0 ? Math.round((((i * 3) % 5) - 2) * (spreadPx * 0.45)) : 0);
+        L.marker([f.lat, f.lon], {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="point-permanent-label" style="opacity:${lyrOp};font-size:${lyrLblSize}px !important;letter-spacing:${letterSp};transform:translate(calc(-50% + ${extraX}px), calc(-50% + ${extraY}px));">${displayLabel}</div>`
+          })
+        }).addTo(labelLayerGroup);
+      }
     } else if (f.geomType === "segment") {
       const minLat = Math.min(f.p1[0], f.p2[0]);
       const maxLat = Math.max(f.p1[0], f.p2[0]);
@@ -5425,6 +5457,14 @@ function openLayerStyleEditor(id) {
   document.getElementById("stStrokeWidth").value = l.width || 3;
   document.getElementById("stFillColor").value = l.fillColor || "#10b981";
   document.getElementById("stLabelSize").value = l.labelSize || 11;
+  const ptColEl = document.getElementById("stPointColor");
+  if (ptColEl) ptColEl.value = l.pointColor || l.color || "#ef4444";
+  const ptSzEl = document.getElementById("stPointSize");
+  if (ptSzEl) ptSzEl.value = Number(l.pointSize) || 6;
+  const shPtEl = document.getElementById("stShowPoints");
+  if (shPtEl) shPtEl.checked = l.showPoints !== false;
+  const shPtLblEl = document.getElementById("stShowPointLabels");
+  if (shPtLblEl) shPtLblEl.checked = l.showPointLabels !== false;
   const sp = Number(l.labelSpread) || 0;
   const spEl = document.getElementById("stLabelSpread");
   if (spEl) spEl.value = sp;
@@ -5444,6 +5484,10 @@ function saveLayerStyleConfig() {
   l.width = Number(document.getElementById("stStrokeWidth").value) || 3;
   l.fillColor = document.getElementById("stFillColor").value;
   l.labelSize = Number(document.getElementById("stLabelSize").value) || 11;
+  l.pointColor = document.getElementById("stPointColor")?.value || l.color || "#ef4444";
+  l.pointSize = Math.max(3, Math.min(24, Number(document.getElementById("stPointSize")?.value) || 6));
+  l.showPoints = document.getElementById("stShowPoints")?.checked !== false;
+  l.showPointLabels = document.getElementById("stShowPointLabels")?.checked !== false;
   l.labelSpread = Number(document.getElementById("stLabelSpread")?.value) || 0;
   l.showSegLength = document.getElementById("stShowSegLength").checked;
   l.opacity = Number(document.getElementById("stLayerOpacity").value);
@@ -5456,7 +5500,7 @@ function saveLayerStyleConfig() {
 function resetLayerStyleDefault() {
   const l = state.layers.find(x => x.id === editingLayerId);
   if (!l) return;
-  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.labelSize = 11; l.labelSpread = 0; l.showSegLength = true; l.opacity = 100;
+  l.color = "#3b82f6"; l.width = 3; l.fillColor = "#10b981"; l.pointColor = "#ef4444"; l.pointSize = 6; l.showPoints = true; l.showPointLabels = true; l.labelSize = 11; l.labelSpread = 0; l.showSegLength = true; l.opacity = 100;
   saveAppState();
   renderAllVectorFeatures();
   closeModal("layerStyleModal");
@@ -6589,11 +6633,11 @@ function toggleAllPointsVisibility() {
   allPointsHiddenQuick = !allPointsHiddenQuick;
   document.getElementById("btnToggleAllPoints")?.classList.toggle("active", !allPointsHiddenQuick);
   state.features.forEach(f => {
-    if (f.geomType === "point") f.hidden = allPointsHiddenQuick;
+    if (f.geomType === "point") f.pointsHidden = allPointsHiddenQuick;
   });
   saveAppState();
   renderAllVectorFeatures();
-  showToast(allPointsHiddenQuick ? "Đã ẨN toàn bộ chấm điểm nút (Point)." : "Đã HIỆN lại toàn bộ chấm điểm nút (Point).");
+  showToast(allPointsHiddenQuick ? "Đã TẮT chấm nút điểm (giữ nguyên chữ độc lập)." : "Đã BẬT lại chấm nút điểm.");
 }
 
 /* ============================================================================
