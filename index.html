@@ -131,12 +131,12 @@
 
     /* Thanh công cụ trên cùng */
     .top-bar {
-      position: absolute; top: env(safe-area-inset-top, 10px); left: 10px; right: 10px;
+      position: absolute; top: env(safe-area-inset-top, 8px); left: 8px; right: 8px;
       z-index: 900; display: flex; align-items: center; justify-content: space-between;
       gap: 8px; pointer-events: none;
     }
     .top-left-group, .top-right-group {
-      display: flex; align-items: center; gap: 6px; pointer-events: auto;
+      display: flex; align-items: center; gap: 4px; pointer-events: auto; flex-shrink: 0;
     }
     .glass-pill {
       background: var(--panel-dark); backdrop-filter: blur(8px);
@@ -154,31 +154,37 @@
 
     /* Cụm thông tin bên trái */
     .left-stack {
-      position: absolute; top: calc(env(safe-area-inset-top, 8px) + 46px); left: 8px;
-      z-index: 850; display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+      position: absolute; top: calc(env(safe-area-inset-top, 8px) + 44px); left: 8px;
+      bottom: calc(env(safe-area-inset-bottom, 8px) + 196px);
+      z-index: 850; display: flex; flex-direction: column; gap: 4px; pointer-events: none;
     }
     .left-stack > * { pointer-events: auto; }
     .speed-box {
-      width: 54px; text-align: center; padding: 5px 3px;
+      width: 50px; text-align: center; padding: 4px 2px;
       background: var(--panel-dark); border: 1px solid var(--border-subtle);
-      border-radius: 10px;
+      border-radius: 9px;
     }
-    .speed-val { font-size: 15px; font-weight: 800; color: #38bdf8; line-height: 1.1; }
-    .speed-unit { font-size: 8.5px; color: var(--text-muted); font-weight: 700; }
+    .speed-val { font-size: 14px; font-weight: 800; color: #38bdf8; line-height: 1.05; }
+    .speed-unit { font-size: 8px; color: var(--text-muted); font-weight: 700; }
 
     .project-badge {
-      max-width: 185px; background: rgba(30, 41, 59, 0.94);
-      border: 1px solid rgba(59, 130, 246, 0.55); border-radius: 10px;
-      padding: 5px 8px; font-size: 11px; font-weight: 700; color: #e2e8f0;
-      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      max-width: 154px; background: rgba(30, 41, 59, 0.94);
+      border: 1px solid rgba(59, 130, 246, 0.55); border-radius: 9px;
+      padding: 4px 8px; font-size: 11px; font-weight: 700; color: #e2e8f0;
+      cursor: pointer; display: flex; align-items: center; gap: 4px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     #activeProjectLabel { overflow: hidden; text-overflow: ellipsis; }
 
     .draw-toolbar {
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 2px;
+      flex: 1 1 auto; min-height: 0; max-height: 360px;
       background: var(--panel-dark); border: 1px solid var(--border-subtle);
-      border-radius: 11px; padding: 3px;
+      border-radius: 10px; padding: 3px;
+    }
+    .left-stack .draw-toolbar .icon-btn {
+      width: 30px; height: auto; flex: 1 1 0; min-height: 20px; max-height: 28px;
+      font-size: 13px; border-radius: 7px; padding: 0;
     }
 
     /* Cụm nút bên phải */
@@ -216,9 +222,9 @@
       font-size: 20px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55); cursor: pointer;
     }
 
-    /* Thanh HUD Tọa độ dưới cùng */
+    /* Thanh HUD Tọa độ nằm phía trên thanh lớp */
     .bottom-hud {
-      position: absolute; bottom: env(safe-area-inset-bottom, 8px); left: 8px; right: 8px;
+      position: absolute; bottom: calc(env(safe-area-inset-bottom, 8px) + 46px); left: 8px; right: 8px;
       z-index: 880; background: var(--panel-dark); backdrop-filter: blur(10px);
       border: 1px solid var(--border-subtle); border-radius: 13px;
       padding: 7px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
@@ -269,16 +275,36 @@
     }
     input[type="range"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
 
-    /* Thanh đo trực tiếp khi đang vẽ vùng / đường / nét vẽ tự do */
+    /* Thanh đo trực tiếp khi đang vẽ vùng / đường / nét vẽ tự do (Kéo thả tự do + Đổi Trên/Dưới + Thu gọn 1 dòng) */
     #drawMeasureBar {
-      position: absolute; top: calc(env(safe-area-inset-top, 10px) + 50px);
+      position: fixed; top: calc(env(safe-area-inset-top, 10px) + 50px);
       left: 50%; transform: translateX(-50%); z-index: 965;
       background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(250, 204, 21, 0.65);
-      color: #f8fafc; border-radius: 14px; padding: 7px 11px;
-      display: none; flex-direction: column; gap: 6px; min-width: 295px; max-width: 95vw;
+      color: #f8fafc; border-radius: 14px; padding: 6px 10px;
+      display: none; flex-direction: column; gap: 5px; min-width: 280px; max-width: 94vw;
       box-shadow: 0 10px 26px rgba(0,0,0,0.65);
+      touch-action: none;
     }
     #drawMeasureBar.open { display: flex; }
+    #drawMeasureBar.custom-dragged { transform: none; }
+    .draw-drag-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 2px 4px; margin: -2px -2px 1px -2px;
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
+      cursor: grab; user-select: none;
+    }
+    .draw-drag-header:active { cursor: grabbing; }
+    .draw-drag-grip {
+      font-size: 11px; font-weight: 800; color: #94a3b8;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    #drawMeasureBar.compact-bar {
+      min-width: 230px; padding: 5px 8px; gap: 4px;
+    }
+    #drawMeasureBar.compact-bar #drawBannerText,
+    #drawMeasureBar.compact-bar .draw-secondary-btns {
+      display: none !important;
+    }
     .draw-stats-row {
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
       font-size: 12px; font-weight: 800; color: #fde047; font-variant-numeric: tabular-nums;
@@ -586,22 +612,45 @@
 
     #quickSelectedLayerBar {
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 8px) + 152px);
+      bottom: env(safe-area-inset-bottom, 8px);
       left: 8px;
       right: 8px;
-      max-width: 560px;
+      width: auto;
+      max-width: 540px;
       z-index: 890;
       background: var(--panel-dark);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(56, 189, 248, 0.45);
       border-radius: 12px;
-      padding: 6px 9px;
+      padding: 5px 7px;
       display: none;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      overflow-x: hidden;
+      scrollbar-width: none;
     }
+    #quickSelectedLayerBar::-webkit-scrollbar { display: none; }
     #quickSelectedLayerBar.open { display: flex; }
+    #quickSelectedLayerBar.half-hidden .quick-extra-action,
+    #quickSelectedLayerBar.half-hidden button.quick-extra-action {
+      display: none !important;
+    }
+    #quickSelectedLayerBar.half-hidden {
+      left: 8px;
+      right: 8px;
+      width: auto;
+      max-width: 540px;
+    }
+    #quickSelectedLayerBar.half-hidden #quickLayerSelect {
+      flex: 0 1 92px;
+      min-width: 64px;
+      max-width: 92px;
+    }
+    #quickSelectedLayerBar.half-hidden #quickLayerOpacitySlider {
+      flex: 1 1 auto;
+      min-width: 48px;
+    }
     #quickLayerSelect {
       max-width: 135px;
       background: #1e293b;
@@ -615,7 +664,7 @@
 
     #reopenQuickSliderPill {
       position: absolute;
-      bottom: calc(env(safe-area-inset-bottom, 8px) + 154px);
+      bottom: env(safe-area-inset-bottom, 8px);
       left: 8px;
       z-index: 889;
       display: none;
@@ -758,8 +807,8 @@
     }
     .account-pill-btn {
       background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(52, 211, 153, 0.5);
-      color: #34d399; border-radius: 12px; padding: 4px 8px; font-size: 11px;
-      font-weight: 800; cursor: pointer; max-width: 130px; overflow: hidden;
+      color: #34d399; border-radius: 10px; padding: 4px 7px; font-size: 10.5px;
+      font-weight: 800; cursor: pointer; max-width: 102px; overflow: hidden;
       text-overflow: ellipsis; white-space: nowrap;
     }
 
@@ -828,7 +877,107 @@
       }
     }
 
-  </style>
+      /* Bảng điều khiển Nhấn ghim & Dẫn đường (#pinNavBar) */
+    #pinNavBar {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 10px) + 198px);
+      left: 10px;
+      right: 10px;
+      max-width: 440px;
+      z-index: 960;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.65);
+      border-radius: 14px;
+      padding: 8px 11px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+      touch-action: none;
+    }
+    #pinNavBar.open { display: flex; }
+    #pinNavBar.custom-dragged { transform: none; }
+    .pin-nav-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      cursor: grab;
+      user-select: none;
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
+      padding-bottom: 4px;
+    }
+    .pin-nav-head:active { cursor: grabbing; }
+    .pin-nav-metrics {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #38bdf8;
+      font-variant-numeric: tabular-nums;
+    }
+    .pin-nav-coords {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.35;
+    }
+    .pin-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .pin-target-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75);
+      transform: translate(-50%, -100%);
+    }
+
+    #featureDetailModal.floating-detail {
+      background: transparent;
+      backdrop-filter: none;
+      pointer-events: none;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 54px 10px 10px;
+    }
+    #featureDetailModal.floating-detail .modal-card {
+      pointer-events: auto;
+      max-width: 390px;
+      margin: 0;
+      position: relative;
+      touch-action: none;
+    }
+    #featureDetailModal .modal-head {
+      cursor: grab;
+      user-select: none;
+    }
+    #featureDetailModal .modal-head:active {
+      cursor: grabbing;
+    }
+    #featureDetailModal.compact-card .detail-collapsible-body {
+      display: none !important;
+    }
+    #featureDetailModal.compact-card .modal-card {
+      max-height: 64px;
+      overflow: hidden;
+      padding-bottom: 10px;
+    }
+
+</style>
 </head>
 <body>
 <div id="appShell">
@@ -852,6 +1001,13 @@
 
   <!-- Thanh đo trực tiếp khi đang vẽ vùng / đường / nét vẽ tự do -->
   <div id="drawMeasureBar">
+    <div class="draw-drag-header" id="drawMeasureDragHandle" title="Giữ và kéo để di chuyển khung đo vẽ tới vị trí bất kỳ">
+      <span class="draw-drag-grip">⋮⋮ Kéo di chuyển khung đo</span>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button type="button" class="mini-btn" style="padding:2px 6px;font-size:11px;" id="btnFlipDrawBarPos" onclick="toggleDrawMeasureBarDock(event)" title="Chuyển nhanh khung đo lên Trên / xuống Dưới">⇅</button>
+        <button type="button" class="mini-btn" style="padding:2px 6px;font-size:11px;color:#fbbf24;" id="btnCompactDrawBar" onclick="toggleDrawMeasureBarCompact(event)" title="Thu gọn thành thanh 1 dòng / Mở rộng">—</button>
+      </div>
+    </div>
     <div class="draw-stats-row">
       <span id="livePerimeterText">Chu vi: 0.00 m</span>
       <span id="liveAreaText" style="color:#34d399;">Diện tích: 0.00 m²</span>
@@ -860,11 +1016,33 @@
       Con trỏ mũi tên • Tự bắt điểm đường nét hiện hữu
     </div>
     <div class="draw-btn-strip">
-      <button class="mini-btn" id="btnFreehandToggle" style="background:#334155;" onclick="toggleFreehandMode()" title="Bật/Tắt chế độ Nét vẽ tự do">✍️ Tự do</button>
-      <button class="mini-btn" style="background:#334155;" onclick="undoLastDrawPoint()" title="Hoàn tác đỉnh vừa chọn">↩ Hoàn tác</button>
-      <button class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="snapCurrentPointToStart()" title="Khép vòng về điểm đầu">🧲 Bắt đầu</button>
+      <span class="draw-secondary-btns" style="display:inline-flex;gap:4px;flex-wrap:wrap;">
+        <button class="mini-btn" id="btnFreehandToggle" style="background:#334155;" onclick="toggleFreehandMode()" title="Bật/Tắt chế độ Nét vẽ tự do">✍️ Tự do</button>
+        <button class="mini-btn" style="background:#334155;" onclick="undoLastDrawPoint()" title="Hoàn tác đỉnh vừa chọn">↩ Hoàn tác</button>
+        <button class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="snapCurrentPointToStart()" title="Khép vòng về điểm đầu">🧲 Bắt đầu</button>
+      </span>
       <button class="mini-btn" style="background:#10b981;color:#fff;border:0;" onclick="promptSaveDrawnGeometry()" title="Lưu dữ liệu đo vẽ">✓ Lưu đo vẽ</button>
       <button class="mini-btn" style="background:#ef4444;color:#fff;border:0;" onclick="cancelDrawing()" title="Hủy vẽ">✕ Hủy</button>
+    </div>
+  </div>
+
+  <!-- Khung Nhấn ghim & Dẫn đường đi tới điểm ghim -->
+  <div id="pinNavBar">
+    <div class="pin-nav-head" id="pinNavDragHandle" title="Giữ kéo để đổi vị trí khung dẫn đường">
+      <span style="font-size:11.5px;font-weight:800;color:#fbbf24;">⋮⋮ GHIM & DẪN ĐƯỜNG TỚI ĐIỂM</span>
+      <button type="button" class="close-x" style="width:24px;height:24px;font-size:12px;" onclick="clearNavigationPin(event)" title="Xóa ghim & tắt dẫn đường">✕</button>
+    </div>
+    <div class="pin-nav-metrics">
+      <span id="pinDistText">Khoảng cách: ---</span>
+      <span id="pinBearingText" style="color:#34d399;">Hướng: ---</span>
+    </div>
+    <div class="pin-nav-coords" id="pinCoordsText">Chạm bản đồ (hoặc bấm Thả ghim tại tâm) để đặt điểm đích.</div>
+    <div class="pin-nav-actions">
+      <button type="button" class="mini-btn" style="background:#0284c7;color:#fff;border:0;" onclick="dropPinAtMapCenter()">📍 Ghim tại tâm</button>
+      <button type="button" class="mini-btn" style="background:#0f766e;color:#fff;border:0;" id="btnCalcRoadRoute" onclick="routeToNavPin(true)">🛣️ Đường bộ</button>
+      <button type="button" class="mini-btn" style="background:#4f46e5;color:#fff;border:0;" onclick="routeToNavPin(false)">🧭 Chỉ phương</button>
+      <button type="button" class="mini-btn" style="background:#d97706;color:#fff;border:0;" onclick="openPinInGoogleMaps()">🗺️ Google Maps</button>
+      <button type="button" class="mini-btn" onclick="saveNavPinAsPoint()">💾 Lưu mốc</button>
     </div>
   </div>
 
@@ -878,20 +1056,24 @@
   <!-- Thanh công cụ trên cùng -->
   <div class="top-bar">
     <div class="top-left-group">
-      <button class="icon-btn" title="Mở menu chính" onclick="openDrawer()">☰</button>
+      <button class="icon-btn" style="width:32px;height:32px;" title="Mở menu chính" onclick="openDrawer()">☰</button>
       <button class="account-pill-btn" id="headerAccountBtn" onclick="openAuthGateModal()" title="Đăng nhập bằng Key / Xin cấp Key tự động">
         🔑 Nhập Key
       </button>
-      <button class="admin-crown-btn" id="headerAdminKeyBtn" onclick="openModal('adminKeyManagerModal')" title="Quản trị Key & Thống kê người dùng Google Sheets">
-        👑 QL Key
+      <button class="icon-btn" id="btnToggleAdminKeyPill" style="display:none;width:28px;height:28px;font-size:12px;border-color:rgba(251,191,36,0.55);color:#fbbf24;" title="Ẩn / Hiện nhanh nút Quản trị Key" onclick="toggleHomeAdminKeyVisibility()">👑</button>
+      <button class="admin-crown-btn" id="headerAdminKeyBtn" style="display:none;" onclick="openModal('adminKeyManagerModal')" title="Quản trị Key & Thống kê người dùng Google Sheets">
+        QL Key
       </button>
     </div>
-    <div class="top-right-group glass-pill">
-      <button class="icon-btn" title="Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
-      <button class="icon-btn" title="Bảng thống kê tổng hợp theo dự án" onclick="openModal('projectStatsModal')">📊</button>
-      <button class="icon-btn" title="Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
-      <button class="icon-btn" title="Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
-      <button class="icon-btn" title="Cài đặt & Tùy chọn" onclick="openModal('settingsModal')">⚙️</button>
+    <div class="top-right-group glass-pill" id="topRightToolsGroup" style="padding:3px 4px;gap:3px;border-radius:11px;">
+      <button class="icon-btn" id="btnToggleRightTools" style="width:26px;height:28px;font-size:11px;border-radius:7px;background:#1e293b;color:#38bdf8;" title="Thu gọn / Mở rộng thanh công cụ phải" onclick="toggleTopRightTools()">▶</button>
+      <div id="topRightToolsItems" style="display:flex;align-items:center;gap:3px;">
+        <button class="icon-btn" style="width:28px;height:28px;font-size:13px;border-radius:7px;" title="Mở máy ảnh khảo sát AR" onclick="openSurveyCamera()">📷</button>
+        <button class="icon-btn" style="width:28px;height:28px;font-size:13px;border-radius:7px;" title="Bảng thống kê tổng hợp theo dự án" onclick="openModal('projectStatsModal')">📊</button>
+        <button class="icon-btn" style="width:28px;height:28px;font-size:13px;border-radius:7px;" title="Tìm kiếm dữ liệu" onclick="openModal('searchModal')">🔍</button>
+        <button class="icon-btn" style="width:28px;height:28px;font-size:13px;border-radius:7px;" title="Quản lý các lớp dữ liệu" onclick="openModal('layersModal')">📚</button>
+        <button class="icon-btn" style="width:28px;height:28px;font-size:13px;border-radius:7px;" title="Cài đặt & Tùy chọn" onclick="openModal('settingsModal')">⚙️</button>
+      </div>
     </div>
   </div>
 
@@ -902,8 +1084,8 @@
         <div class="speed-val" id="speedVal">0.0</div>
         <div class="speed-unit">KM/H</div>
       </div>
-      <div class="project-badge" onclick="openModal('projectScopeModal')" title="Chọn hoặc quản lý phạm vi dự án">
-        🏗️ <span id="activeProjectLabel">0. Chế độ chung cho tất cả dự án</span>
+      <div class="project-badge" id="projectBadgeBtn" onclick="openModal('projectScopeModal')" title="Tất cả dự án • Bấm để chọn hoặc quản lý dự án">
+        🏗️ <span id="activeProjectLabel">Tất cả dự án</span>
       </div>
     </div>
 
@@ -918,6 +1100,7 @@
       <button class="icon-btn" title="Bảng kê các lớp — Chọn xóa lớp / thửa" onclick="openQuickDeleteLayerModal()">🗑️</button>
       <button class="icon-btn" id="btnTracklog" title="Bật/Tắt tuyến Tracklog GPS" onclick="toggleTracklog()">🏃</button>
       <button class="icon-btn" title="Vẽ ranh giới từ tọa độ / Quét sổ đỏ từ ảnh" onclick="openModal('parcelModal')">📐</button>
+      <button class="icon-btn" id="btnPinNavMode" title="Nhấn ghim & Dẫn đường đi tới vị trí ghim" onclick="togglePinNavigationMode()">📌</button>
       <button class="icon-btn" title="Thanh trượt làm mờ các lớp & lớp nền" onclick="toggleOpacityPanel()">💧</button>
     </div>
   </div>
@@ -966,18 +1149,20 @@
     </div>
   </div>
 
-  <!-- Thanh chỉnh độ mờ & cài đặt nhanh theo lớp đang chọn -->
+  <!-- Thanh chỉnh độ mờ & cài đặt nhanh theo lớp đang chọn (Hỗ trợ 2 bước: Thu nửa thanh & Ẩn hẳn) -->
   <div id="quickSelectedLayerBar">
     <select id="quickLayerSelect" title="Chọn lớp cần chỉnh" onchange="onQuickLayerSelectChange(this.value)"></select>
-    <button class="mini-btn" style="padding:4px 6px;background:#0f766e;color:#fff;border:0;" title="Thêm nhanh đối tượng vào lớp đang chọn" onclick="quickAddFeatureToSelectedLayer()">＋</button>
-    <button class="mini-btn" style="padding:4px 6px;" title="Bay tới lớp đang chọn" onclick="flyToSelectedQuickLayer()">🔍</button>
+    <button class="mini-btn quick-extra-action" style="padding:4px 6px;background:#0f766e;color:#fff;border:0;" title="Thêm nhanh đối tượng vào lớp đang chọn" onclick="quickAddFeatureToSelectedLayer()">＋</button>
+    <button id="btnHalfHideQuickBar" class="mini-btn" style="padding:4px 6px;font-size:11px;color:#38bdf8;font-weight:800;" type="button" title="Bước 1: Thu nửa thanh (giữ lại nút lõi & kéo độ mờ)" onclick="toggleHalfHideQuickLayerBar()">◧</button>
+    <button class="mini-btn quick-extra-action" style="padding:4px 6px;" title="Bay tới lớp đang chọn" onclick="flyToSelectedQuickLayer()">🔍</button>
     <button id="quickLayerEyeBtn" class="mini-btn" style="padding:4px 6px;" type="button" title="Ẩn / Hiện nhanh lớp đang chọn" onclick="toggleQuickSelectedLayerVisibility()">👁️</button>
     <button class="mini-btn" style="padding:4px 6px;" type="button" title="Cài đặt màu, độ rộng nét, cỡ chữ theo lớp đang chọn" onclick="openSelectedQuickLayerStyle()">⚙️</button>
-    <button class="mini-btn" style="padding:4px 6px;" type="button" title="Xuất nhanh riêng lớp đang chọn" onclick="exportSelectedQuickLayer()">📤</button>
-    <button class="mini-btn" style="padding:4px 6px;color:#f87171;" type="button" title="Xóa lớp đang chọn vào thùng rác" onclick="deleteSelectedQuickLayerWithConfirm()">🗑️</button>
-    <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;min-width:54px;" oninput="onQuickLayerOpacityInput(this.value)" />
-    <span id="quickLayerOpacityVal" style="font-size:11.5px;font-weight:800;color:#38bdf8;min-width:32px;text-align:right;">100%</span>
-    <button class="mini-btn" style="padding:4px 7px;color:#fbbf24;" type="button" title="Ẩn thanh trượt lớp" onclick="setQuickLayerSliderHidden(true)">—</button>
+    <button class="mini-btn quick-extra-action" style="padding:4px 6px;" type="button" title="Xuất nhanh riêng lớp đang chọn" onclick="exportSelectedQuickLayer()">📤</button>
+    <button class="mini-btn quick-extra-action" style="padding:4px 6px;color:#f87171;" type="button" title="Xóa lớp đang chọn vào thùng rác" onclick="deleteSelectedQuickLayerWithConfirm()">🗑️</button>
+    <input type="range" id="quickLayerOpacitySlider" min="0" max="100" value="100" style="flex:1;margin:0;min-width:64px;" oninput="onQuickLayerOpacityInput(this.value)" />
+    <span id="quickLayerOpacityVal" style="font-size:11px;font-weight:800;color:#38bdf8;min-width:30px;text-align:right;">100%</span>
+    
+    <button class="mini-btn" style="padding:4px 6px;font-size:11px;color:#fbbf24;font-weight:800;" type="button" title="Bước 2: Ẩn hẳn thanh lớp vào trong" onclick="setQuickLayerSliderHidden(true)">✕</button>
   </div>
 
   <button id="reopenQuickSliderPill" type="button" onclick="setQuickLayerSliderHidden(false)" title="Hiện lại thanh trượt độ mờ lớp">
@@ -1103,7 +1288,6 @@
 
     <div class="menu-section-title">3. Quản lý Key, Người dùng & Google Sheets</div>
     <div class="menu-item" onclick="closeDrawer(); openAuthGateModal()"><span>🔑 Cổng nhập Key & Xin cấp Key tự động</span><span>›</span></div>
-    <div class="menu-item" id="drawerAdminKeyItem" style="display:none;border-color:rgba(251,191,36,0.5);" onclick="closeDrawer(); openModal('adminKeyManagerModal')"><span style="color:#fbbf24;">👑 Quản trị Key & Đếm người dùng (Admin)</span><span>›</span></div>
 
     <div class="menu-section-title">4. Viễn thám, UAV & Xuất dữ liệu</div>
     <div class="menu-item" onclick="closeDrawer(); openModal('satelliteModal')"><span>🛰️ Tìm ảnh vệ tinh (Sentinel-2)</span><span>›</span></div>
@@ -1254,11 +1438,29 @@
 <!-- ===================================================================== -->
 <div class="modal-backdrop" id="featureDetailModal">
   <div class="modal-card">
-    <div class="modal-head">
+    <div class="modal-head" id="featDetailDragHandle" title="Giữ và kéo để di chuyển khung chi tiết">
       <span class="modal-title" id="featDetailTitle">📄 Chi tiết đối tượng</span>
-      <button class="close-x" onclick="closeModal('featureDetailModal')">✕</button>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <button type="button" class="close-x" id="btnCompactFeatureDetail" onclick="toggleCompactFeatureDetail(event)" title="Thu nhỏ / Mở rộng khung">—</button>
+        <button type="button" class="close-x" onclick="closeModal('featureDetailModal')">✕</button>
+      </div>
     </div>
+    <div class="detail-collapsible-body">
     <div id="featDetailBody" style="font-size:12.5px;line-height:1.55;"></div>
+    <div id="featMarkerShapeQuickRow" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.38);border-radius:11px;">
+      <label class="form-label" style="margin-bottom:5px;color:#38bdf8;">🎯 Hình dạng nút mốc trên bản đồ:</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="featQuickShapeSelect" class="form-select" onchange="applyQuickMarkerShapeFromDetail(this.value)">
+          <option value="dot">🔴 Chấm tròn chuẩn</option>
+          <option value="flag">🚩 Cờ mốc</option>
+          <option value="triangle">🔺 Tam giác</option>
+          <option value="square">🟦 Hình vuông</option>
+          <option value="cross">✚ Hình thập</option>
+          <option value="pin">📍 Ghim Google</option>
+          <option value="diamond">🔶 Hình thoi</option>
+        </select>
+      </div>
+    </div>
     <div id="featPointEditBox" style="display:none;margin-top:8px;padding:10px;background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.4);border-radius:12px;">
       <div style="font-size:11.5px;font-weight:800;color:#38bdf8;margin-bottom:6px;">📐 CHỈNH TỌA ĐỘ VN-2000 & CAO ĐỘ (WGS84 TỰ CHẠY THEO)</div>
       <div class="grid-2 form-group" style="margin-bottom:6px;">
@@ -1318,6 +1520,7 @@
       <button class="btn-secondary" onclick="copyInspectedFeatureCoords()">📋 Sao chép tọa độ</button>
       <button class="btn-secondary" onclick="renameInspectedFeature()">✏️ Đổi tên đối tượng</button>
       <button class="btn-secondary" style="color:#f87171;grid-column:span 2;" onclick="trashInspectedFeature()">🗑️ Chuyển vào thùng rác</button>
+    </div>
     </div>
   </div>
 </div>
@@ -2503,7 +2706,7 @@ const defaultState = {
   activeCrs: { id: "LD_2025", name: "VN-2000 / LÂM ĐỒNG (2025)", desc: "Lâm Đồng - Bình Thuận - Đắk Nông", lon0: 108.5 },
   crsTab: "new34",
   projects: [
-    { id: "proj_0", name: "0. Chế độ chung cho tất cả dự án", note: "Mặc định dùng chung toàn Ban QLDA" }
+    { id: "proj_0", name: "Tất cả dự án", note: "Mặc định dùng chung toàn Ban QLDA" }
   ],
   activeProjectId: "proj_0",
   deltaH: 0.0,
@@ -3878,14 +4081,16 @@ function renderAllVectorFeaturesNow() {
         } else {
           const boxPx = Math.max(14, ptRadius * 3.2);
           let shapeSvg = "";
-          if (mStyle === "triangle") {
-            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+          if (mStyle === "flag") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><line x1="6" y1="21" x2="6" y2="3" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/><polygon points="6,4 20,8 6,13" fill="${ptColor}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+          } else if (mStyle === "triangle") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="${ptColor}" stroke="#ffffff" stroke-width="2"/></svg>`;
           } else if (mStyle === "square") {
-            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="${ptColor}" stroke="#ffffff" stroke-width="2"/></svg>`;
+          } else if (mStyle === "cross" || mStyle === "crosshair_circle") {
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
           } else if (mStyle === "diamond") {
-            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2.2"/></svg>`;
-          } else if (mStyle === "crosshair_circle") {
-            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="${ptColor}" fill-opacity="0.35" stroke="#ffffff" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="23" stroke="#ffffff" stroke-width="1.8"/><line x1="1" y1="12" x2="23" y2="12" stroke="#ffffff" stroke-width="1.8"/></svg>`;
+            shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="${ptColor}" stroke="#ffffff" stroke-width="2"/></svg>`;
           } else {
             shapeSvg = `<svg width="${boxPx}" height="${boxPx}" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${ptColor}" stroke="#ffffff" stroke-width="1.5"/></svg>`;
           }
@@ -4015,6 +4220,15 @@ function syncQuickLayerBar() {
     document.getElementById("quickLayerEyeBtn").textContent = curLayer.visible !== false ? "👁️" : "🚫";
   }
 
+  bar.classList.toggle("half-hidden", Boolean(state.quickLayerHalfHidden));
+  const halfBtn = document.getElementById("btnHalfHideQuickBar");
+  if (halfBtn) {
+    halfBtn.classList.toggle("active", Boolean(state.quickLayerHalfHidden));
+    halfBtn.title = state.quickLayerHalfHidden
+      ? "Mở rộng lại đầy đủ các nút trên thanh lớp"
+      : "Bước 1: Thu nửa thanh (giữ lại nút lõi & kéo độ mờ)";
+  }
+
   if (state.quickLayerSliderHidden) {
     bar.classList.remove("open");
     reopenPill.classList.add("open");
@@ -4094,7 +4308,7 @@ function computeProjectStatistics() {
       const lyr = layerMap.get(f.layerId);
       if (lyr && lyr.visible === false) return;
     }
-    const projName = f.project || "0. Chế độ chung cho tất cả dự án";
+    const projName = f.project || "Tất cả dự án";
     if (filterProj !== "__ALL__" && projName !== filterProj) return;
 
     if (!rowsMap.has(projName)) {
@@ -4983,9 +5197,26 @@ function getActiveProject() {
   return state.projects.find(p => p.id === state.activeProjectId) || state.projects[0];
 }
 
+function formatCompactBadgeProjectName(fullName) {
+  const n = String(fullName || "").trim();
+  if (!n || /^0\.\s*(Chế độ chung cho tất cả dự án|Tất cả dự án)$/i.test(n) || n === "Tất cả dự án") {
+    return "Tất cả dự án";
+  }
+  return n;
+}
+
 function renderProjectsUI() {
+  if (Array.isArray(state.projects)) {
+    const p0 = state.projects.find(p => p.id === "proj_0");
+    if (p0 && /^0\.\s*(Chế độ chung cho tất cả dự án|Tất cả dự án)$/i.test(p0.name || "")) {
+      p0.name = "Tất cả dự án";
+    }
+  }
   const active = getActiveProject();
-  document.getElementById("activeProjectLabel").textContent = active.name;
+  const lblEl = document.getElementById("activeProjectLabel");
+  if (lblEl) lblEl.textContent = formatCompactBadgeProjectName(active.name);
+  const badgeEl = document.getElementById("projectBadgeBtn");
+  if (badgeEl) badgeEl.title = `${active.name} • Bấm để chọn hoặc quản lý dự án`;
 
   const container = document.getElementById("projectListContainer");
   if (container) {
@@ -5989,12 +6220,36 @@ function saveAuthRegistry(list) {
   try { localStorage.setItem(AUTH_REGISTRY_KEY, JSON.stringify(list)); } catch (e) {}
 }
 
+let homeAdminKeyExpanded = false;
+function toggleHomeAdminKeyVisibility() {
+  homeAdminKeyExpanded = !homeAdminKeyExpanded;
+  const adminBtn = document.getElementById("headerAdminKeyBtn");
+  const toggleBtn = document.getElementById("btnToggleAdminKeyPill");
+  if (adminBtn) adminBtn.style.display = homeAdminKeyExpanded ? "inline-flex" : "none";
+  if (toggleBtn) toggleBtn.classList.toggle("active", homeAdminKeyExpanded);
+}
+
+let topRightToolsCollapsed = false;
+function toggleTopRightTools() {
+  topRightToolsCollapsed = !topRightToolsCollapsed;
+  const items = document.getElementById("topRightToolsItems");
+  const btn = document.getElementById("btnToggleRightTools");
+  if (items) items.style.display = topRightToolsCollapsed ? "none" : "flex";
+  if (btn) {
+    btn.textContent = topRightToolsCollapsed ? "◀" : "▶";
+    btn.title = topRightToolsCollapsed ? "Hiện thanh công cụ (Chụp hình, Tìm kiếm, Layer, Cài đặt)" : "Thu gọn thanh công cụ phải";
+  }
+}
+
 function applyRolePermissionsUI() {
   const isAdmin = currentUserRole === "ADMIN";
   const isReadOnly = currentUserRole === "VIEW";
 
+  const toggleAdminBtn = document.getElementById("btnToggleAdminKeyPill");
+  if (toggleAdminBtn) toggleAdminBtn.style.display = isAdmin ? "inline-flex" : "none";
+
   const adminBtn = document.getElementById("headerAdminKeyBtn");
-  if (adminBtn) adminBtn.classList.toggle("visible", isAdmin);
+  if (adminBtn) adminBtn.style.display = (isAdmin && homeAdminKeyExpanded) ? "inline-flex" : "none";
 
   const drawerAdmin = document.getElementById("drawerAdminKeyItem");
   if (drawerAdmin) drawerAdmin.style.display = isAdmin ? "flex" : "none";
@@ -7880,6 +8135,577 @@ window.addEventListener("DOMContentLoaded", () => {
       return _origDxfHandler(event);
     }
   };
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   KÉO THẢ TỰ DO, ĐỔI VỊ TRÍ TRÊN/DƯỚI & THU GỌN 1 DÒNG CHO Ô ĐO VẼ (#drawMeasureBar)
+============================================================================ */
+(function initDraggableDrawMeasureBar() {
+  let _dockBottom = false;
+  let _isCompact = false;
+
+  window.toggleDrawMeasureBarDock = function(ev) {
+    if (ev) ev.stopPropagation();
+    const bar = document.getElementById("drawMeasureBar");
+    if (!bar) return;
+    _dockBottom = !_dockBottom;
+    bar.classList.remove("custom-dragged");
+    bar.style.left = "50%";
+    bar.style.transform = "translateX(-50%)";
+    if (_dockBottom) {
+      bar.style.top = "auto";
+      bar.style.bottom = "calc(env(safe-area-inset-bottom, 10px) + 165px)";
+      showToast("Đã chuyển khung đo vẽ xuống phía dưới.");
+    } else {
+      bar.style.bottom = "auto";
+      bar.style.top = "calc(env(safe-area-inset-top, 10px) + 50px)";
+      showToast("Đã đưa khung đo vẽ lên phía trên.");
+    }
+  };
+
+  window.toggleDrawMeasureBarCompact = function(ev) {
+    if (ev) ev.stopPropagation();
+    const bar = document.getElementById("drawMeasureBar");
+    const btn = document.getElementById("btnCompactDrawBar");
+    if (!bar) return;
+    _isCompact = !_isCompact;
+    bar.classList.toggle("compact-bar", _isCompact);
+    if (btn) {
+      btn.textContent = _isCompact ? "▢" : "—";
+      btn.title = _isCompact ? "Mở rộng đầy đủ khung đo vẽ" : "Thu gọn thành thanh 1 dòng";
+    }
+  };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const bar = document.getElementById("drawMeasureBar");
+    const handle = document.getElementById("drawMeasureDragHandle");
+    if (!bar || !handle) return;
+
+    // Chặn click/touch xuyên qua khung đo vẽ xuống bản đồ gây chấm nhầm đỉnh
+    ["click", "mousedown", "touchstart", "dblclick"].forEach(evtName => {
+      bar.addEventListener(evtName, (e) => e.stopPropagation());
+    });
+
+    let dragging = false;
+    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+
+    const getPoint = (e) => (e.touches && e.touches[0]) ? e.touches[0] : e;
+
+    const onStart = (e) => {
+      if (e.target && e.target.closest("button")) return;
+      e.stopPropagation();
+      const rect = bar.getBoundingClientRect();
+      bar.classList.add("custom-dragged");
+      bar.style.left = rect.left + "px";
+      bar.style.top = rect.top + "px";
+      bar.style.bottom = "auto";
+      bar.style.transform = "none";
+
+      const pt = getPoint(e);
+      startX = pt.clientX;
+      startY = pt.clientY;
+      origLeft = rect.left;
+      origTop = rect.top;
+      dragging = true;
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      const pt = getPoint(e);
+      const dx = pt.clientX - startX;
+      const dy = pt.clientY - startY;
+      const rect = bar.getBoundingClientRect();
+      const maxLeft = Math.max(4, window.innerWidth - rect.width - 4);
+      const maxTop = Math.max(4, window.innerHeight - rect.height - 4);
+      const nextLeft = Math.min(maxLeft, Math.max(4, origLeft + dx));
+      const nextTop = Math.min(maxTop, Math.max(4, origTop + dy));
+      bar.style.left = nextLeft + "px";
+      bar.style.top = nextTop + "px";
+    };
+
+    const onEnd = () => { dragging = false; };
+
+    handle.addEventListener("mousedown", onStart);
+    handle.addEventListener("touchstart", onStart, { passive: false });
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onEnd);
+    window.addEventListener("touchend", onEnd);
+  });
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   ẨN 2 BƯỚC CHO THANH LỚP (#quickSelectedLayerBar):
+   - Bước 1 (◧): Thu nửa thanh (ẩn nút phụ, chừa hộp chọn lớp + mắt + cài đặt + thanh trượt độ mờ)
+   - Bước 2 (✕): Ẩn hẳn thành nút nhỏ gọn góc dưới trái để mở lại bất cứ lúc nào
+============================================================================ */
+(function initTwoStepQuickLayerBar() {
+  function applyQuickBarDomState() {
+    const bar = document.getElementById("quickSelectedLayerBar");
+    const reopenPill = document.getElementById("reopenQuickSliderPill");
+    const halfBtn = document.getElementById("btnHalfHideQuickBar");
+    if (!bar) return;
+
+    const isHalf = Boolean(state.quickLayerHalfHidden);
+    const isHidden = Boolean(state.quickLayerSliderHidden);
+
+    bar.classList.toggle("half-hidden", isHalf);
+    if (halfBtn) {
+      halfBtn.classList.toggle("active", isHalf);
+      halfBtn.title = isHalf
+        ? "Mở rộng lại đầy đủ các nút trên thanh lớp"
+        : "Ẩn lần 1: Thu nửa thanh (giữ nút lõi & thanh kéo độ mờ)";
+    }
+
+    if (isHidden) {
+      bar.classList.remove("open");
+      if (reopenPill) reopenPill.classList.add("open");
+    } else {
+      bar.classList.add("open");
+      if (reopenPill) reopenPill.classList.remove("open");
+    }
+  }
+
+  window.toggleHalfHideQuickLayerBar = function() {
+    state.quickLayerSliderHidden = false;
+    state.quickLayerHalfHidden = !Boolean(state.quickLayerHalfHidden);
+    applyQuickBarDomState();
+    saveAppState();
+    showToast(
+      state.quickLayerHalfHidden
+        ? "Ẩn lần 1: Đã thu nửa thanh (giữ lại nút lõi & độ mờ)."
+        : "Đã mở rộng đầy đủ thanh lớp."
+    );
+  };
+
+  window.setQuickLayerSliderHidden = function(hidden) {
+    const wantHidden = Boolean(hidden);
+    state.quickLayerSliderHidden = wantHidden;
+    if (!wantHidden) {
+      // Mở lại từ nút nhỏ: hiển thị thanh lớp (mặc định mở gọn nửa thanh để dễ kéo độ mờ trên màn dọc)
+      if (typeof state.quickLayerHalfHidden !== "boolean") {
+        state.quickLayerHalfHidden = true;
+      }
+    }
+    applyQuickBarDomState();
+    saveAppState();
+    if (wantHidden) {
+      showToast("Ẩn lần 2: Đã ẩn hẳn thanh lớp vào trong.");
+    }
+  };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(applyQuickBarDomState, 80);
+  });
+})();
+</script>
+
+
+<script>
+/* ============================================================================
+   CHỨC NĂNG NHẤN GHIM & DẪN ĐƯỜNG ĐI TỚI VỊ TRÍ GHIM (OSRM + CHỈ PHƯƠNG + GMAPS)
+============================================================================ */
+(function initPinAndNavigationFeature() {
+  let _pinPickActive = false;
+  let _navTargetLatLng = null;
+  let _navPinMarker = null;
+  let _navRouteLine = null;
+  let _navOriginLine = null;
+
+  function getStartLatLng() {
+    if (typeof latestGps !== "undefined" && latestGps && latestGps.hasFix && isFinite(latestGps.lat) && isFinite(latestGps.lon)) {
+      return { lat: latestGps.lat, lon: latestGps.lon, isGps: true };
+    }
+    const c = map.getCenter();
+    return { lat: c.lat, lon: c.lng, isGps: false };
+  }
+
+  function formatDurationSec(sec) {
+    if (!isFinite(sec) || sec <= 0) return "";
+    const mins = Math.round(sec / 60);
+    if (mins < 60) return ` (~${mins} phút)`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return ` (~${h}g${m > 0 ? m + "p" : ""})`;
+  }
+
+  function updatePinHudInfo(extraRouteText = "") {
+    const distEl = document.getElementById("pinDistText");
+    const bearEl = document.getElementById("pinBearingText");
+    const coordEl = document.getElementById("pinCoordsText");
+    if (!_navTargetLatLng) {
+      if (distEl) distEl.textContent = "Khoảng cách: ---";
+      if (bearEl) bearEl.textContent = "Hướng: ---";
+      if (coordEl) coordEl.textContent = _pinPickActive
+        ? "Đang bật chế độ chọn ghim: Chạm vào điểm cần đi tới trên bản đồ..."
+        : "Bấm 'Ghim tại tâm' hoặc chạm bản đồ để đặt điểm đích.";
+      return;
+    }
+
+    const start = getStartLatLng();
+    const metrics = typeof calcSegmentMetrics === "function"
+      ? calcSegmentMetrics([start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng])
+      : { distM: map.distance([start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng]), az: 0 };
+
+    const vn = typeof wgs84ToVn2000 === "function"
+      ? wgs84ToVn2000(_navTargetLatLng.lat, _navTargetLatLng.lng)
+      : { x: 0, y: 0 };
+
+    const distStr = typeof formatLength === "function" ? formatLength(metrics.distM) : `${metrics.distM.toFixed(1)} m`;
+    if (distEl) distEl.textContent = `Chim bay: ${distStr}${extraRouteText}`;
+    if (bearEl) bearEl.textContent = `Phương vị: ${Math.round(metrics.az)}° (${start.isGps ? "Từ GPS" : "Từ tâm"})`;
+    if (coordEl) coordEl.innerHTML =
+      `VN-2000 X(E): <b>${vn.x.toFixed(2)}</b> • Y(N): <b>${vn.y.toFixed(2)}</b><br>` +
+      `WGS84: ${_navTargetLatLng.lat.toFixed(6)}, ${_navTargetLatLng.lng.toFixed(6)}`;
+  }
+
+  function redrawStraightBearingLine() {
+    if (_navOriginLine) {
+      try { map.removeLayer(_navOriginLine); } catch (e) {}
+      _navOriginLine = null;
+    }
+    if (!_navTargetLatLng) return;
+    const start = getStartLatLng();
+    _navOriginLine = L.polyline([[start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng]], {
+      color: "#f59e0b",
+      weight: 2.5,
+      dashArray: "6 6",
+      opacity: 0.9,
+      interactive: false
+    }).addTo(map);
+  }
+
+  async function fetchOsrmRoadRoute(startLL, targetLL) {
+    const url = `https://router.project-osrm.org/route/v1/driving/${startLL.lon},${startLL.lat};${targetLL.lng},${targetLL.lat}?overview=full&geometries=geojson`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    const route = data && Array.isArray(data.routes) && data.routes[0];
+    if (!route || !route.geometry || !Array.isArray(route.geometry.coordinates)) {
+      throw new Error("Không tìm thấy tuyến đường bộ.");
+    }
+    const latlngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    return {
+      latlngs,
+      distanceM: Number(route.distance) || 0,
+      durationS: Number(route.duration) || 0
+    };
+  }
+
+  window.routeToNavPin = async function(useRoadRoute = true) {
+    if (!_navTargetLatLng) {
+      showToast("Hãy nhấn cắm ghim đích trên bản đồ trước.");
+      return;
+    }
+    if (_navRouteLine) {
+      try { map.removeLayer(_navRouteLine); } catch (e) {}
+      _navRouteLine = null;
+    }
+    const start = getStartLatLng();
+    if (!useRoadRoute) {
+      redrawStraightBearingLine();
+      updatePinHudInfo(" • Đường chỉ phương thẳng");
+      showToast("Đã vẽ đường chỉ phương thẳng tới điểm ghim.");
+      return;
+    }
+
+    updatePinHudInfo(" • Đang tìm đường bộ...");
+    try {
+      const r = await fetchOsrmRoadRoute(start, _navTargetLatLng);
+      _navRouteLine = L.polyline(r.latlngs, {
+        color: "#38bdf8",
+        weight: 5,
+        opacity: 0.92,
+        interactive: false
+      }).addTo(map);
+      const roadDistStr = typeof formatLength === "function" ? formatLength(r.distanceM) : `${r.distanceM.toFixed(0)} m`;
+      updatePinHudInfo(` | Đường bộ: ${roadDistStr}${formatDurationSec(r.durationS)}`);
+      map.fitBounds(L.latLngBounds([[start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng], ...r.latlngs]), { padding: [45, 45] });
+      showToast(`Tuyến đường bộ tới ghim: ${roadDistStr}${formatDurationSec(r.durationS)}`);
+    } catch (err) {
+      redrawStraightBearingLine();
+      updatePinHudInfo(" • Đường chỉ phương (OSRM chưa có tuyến)");
+      showToast("Không lấy được đường bộ OSRM, đã vẽ đường chỉ phương tới điểm ghim.");
+    }
+  };
+
+  window.placeNavigationPinAt = function(latlng, autoRouteRoad = true) {
+    if (!latlng || !isFinite(latlng.lat) || !isFinite(latlng.lng)) return;
+    _navTargetLatLng = L.latLng(latlng.lat, latlng.lng);
+    _pinPickActive = false;
+    document.getElementById("btnPinNavMode")?.classList.remove("active");
+
+    if (_navPinMarker) {
+      try { map.removeLayer(_navPinMarker); } catch (e) {}
+      _navPinMarker = null;
+    }
+    _navPinMarker = L.marker([_navTargetLatLng.lat, _navTargetLatLng.lng], {
+      interactive: true,
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="pin-target-badge">📌</div>`
+      })
+    }).addTo(map);
+    _navPinMarker.on("click", (ev) => {
+      L.DomEvent.stopPropagation(ev);
+      openPinInGoogleMaps();
+    });
+
+    document.getElementById("pinNavBar")?.classList.add("open");
+    redrawStraightBearingLine();
+    updatePinHudInfo();
+    if (autoRouteRoad) {
+      window.routeToNavPin(true);
+    }
+  };
+
+  window.dropPinAtMapCenter = function() {
+    const c = map.getCenter();
+    window.placeNavigationPinAt(c, true);
+    showToast("Đã cắm ghim dẫn đường tại tâm bản đồ.");
+  };
+
+  window.togglePinNavigationMode = function() {
+    const bar = document.getElementById("pinNavBar");
+    const btn = document.getElementById("btnPinNavMode");
+    if (!_navTargetLatLng) {
+      _pinPickActive = !_pinPickActive;
+      if (btn) btn.classList.toggle("active", _pinPickActive);
+      if (bar) bar.classList.add("open");
+      updatePinHudInfo();
+      showToast(_pinPickActive
+        ? "Chạm vào bất kỳ điểm nào trên bản đồ để cắm ghim & dẫn đường!"
+        : "Đã tắt chế độ chọn ghim.");
+      return;
+    }
+    const isOpen = bar && bar.classList.contains("open");
+    if (isOpen) {
+      bar.classList.remove("open");
+      _pinPickActive = false;
+      if (btn) btn.classList.remove("active");
+    } else {
+      bar.classList.add("open");
+      updatePinHudInfo();
+    }
+  };
+
+  window.clearNavigationPin = function(ev) {
+    if (ev) ev.stopPropagation();
+    _pinPickActive = false;
+    _navTargetLatLng = null;
+    document.getElementById("btnPinNavMode")?.classList.remove("active");
+    document.getElementById("pinNavBar")?.classList.remove("open");
+    if (_navPinMarker) { try { map.removeLayer(_navPinMarker); } catch (e) {} _navPinMarker = null; }
+    if (_navRouteLine) { try { map.removeLayer(_navRouteLine); } catch (e) {} _navRouteLine = null; }
+    if (_navOriginLine) { try { map.removeLayer(_navOriginLine); } catch (e) {} _navOriginLine = null; }
+    showToast("Đã xóa ghim dẫn đường.");
+  };
+
+  window.openPinInGoogleMaps = function() {
+    if (!_navTargetLatLng) {
+      showToast("Chưa có ghim đích để mở Google Maps.");
+      return;
+    }
+    const dest = `${_navTargetLatLng.lat.toFixed(7)},${_navTargetLatLng.lng.toFixed(7)}`;
+    const hasGps = typeof latestGps !== "undefined" && latestGps && latestGps.hasFix;
+    const origParam = hasGps ? `&origin=${latestGps.lat.toFixed(7)},${latestGps.lon.toFixed(7)}` : "";
+    const url = `https://www.google.com/maps/dir/?api=1${origParam}&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+    window.open(url, "_blank", "noopener");
+  };
+
+  window.saveNavPinAsPoint = function() {
+    if (!_navTargetLatLng) return;
+    const vn = typeof wgs84ToVn2000 === "function"
+      ? wgs84ToVn2000(_navTargetLatLng.lat, _navTargetLatLng.lng)
+      : { x: 0, y: 0 };
+    const count = (state.features || []).filter(f => f.geomType === "point").length + 1;
+    state.features.push({
+      id: "navpt_" + Date.now(),
+      layerId: "default_points",
+      geomType: "point",
+      name: `Điểm ghim ${count}`,
+      lat: _navTargetLatLng.lat,
+      lon: _navTargetLatLng.lng,
+      vnX: vn.x,
+      vnY: vn.y,
+      h: typeof getEffectiveElevationM === "function" ? getEffectiveElevationM() : 0,
+      project: typeof getActiveProject === "function" ? getActiveProject().name : "Tất cả dự án",
+      note: "Lưu từ ghim dẫn đường",
+      createdAt: new Date().toLocaleString("vi-VN")
+    });
+    saveAppState();
+    renderAllVectorFeatures();
+    showToast(`Đã lưu "Điểm ghim ${count}" thành mốc tọa độ.`);
+  };
+
+  window.addEventListener("DOMContentLoaded", () => {
+    if (typeof map !== "undefined" && map && typeof map.on === "function") {
+      map.on("click", (e) => {
+        if (!_pinPickActive) return;
+        if (typeof drawMode !== "undefined" && drawMode) return;
+        if (typeof movingState !== "undefined" && movingState) return;
+        if (e && e.latlng) {
+          window.placeNavigationPinAt(e.latlng, true);
+          showToast("Đã cắm ghim & tính đường đi tới vị trí đã chọn!");
+        }
+      });
+    }
+
+    // Cho phép kéo di chuyển khung #pinNavBar tương tự khung đo vẽ
+    const bar = document.getElementById("pinNavBar");
+    const handle = document.getElementById("pinNavDragHandle");
+    if (bar && handle) {
+      ["click", "mousedown", "touchstart", "dblclick"].forEach(evtName => {
+        bar.addEventListener(evtName, (e) => e.stopPropagation());
+      });
+      let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+      const getPt = (e) => (e.touches && e.touches[0]) ? e.touches[0] : e;
+      const onStart = (e) => {
+        if (e.target && e.target.closest("button")) return;
+        e.stopPropagation();
+        const rect = bar.getBoundingClientRect();
+        bar.classList.add("custom-dragged");
+        bar.style.left = rect.left + "px";
+        bar.style.top = rect.top + "px";
+        bar.style.bottom = "auto";
+        bar.style.transform = "none";
+        const pt = getPt(e);
+        startX = pt.clientX; startY = pt.clientY;
+        origLeft = rect.left; origTop = rect.top;
+        dragging = true;
+      };
+      const onMove = (e) => {
+        if (!dragging) return;
+        if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
+        const pt = getPt(e);
+        const rect = bar.getBoundingClientRect();
+        const nextLeft = Math.min(Math.max(4, window.innerWidth - rect.width - 4), Math.max(4, origLeft + (pt.clientX - startX)));
+        const nextTop = Math.min(Math.max(4, window.innerHeight - rect.height - 4), Math.max(4, origTop + (pt.clientY - startY)));
+        bar.style.left = nextLeft + "px";
+        bar.style.top = nextTop + "px";
+      };
+      const onEnd = () => { dragging = false; };
+      handle.addEventListener("mousedown", onStart);
+      handle.addEventListener("touchstart", onStart, { passive: false });
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("mouseup", onEnd);
+      window.addEventListener("touchend", onEnd);
+    }
+  });
+})();
+</script>
+
+
+<script>
+(function initDraggableCompactFeatureDetail() {
+  window.toggleCompactFeatureDetail = function(ev) {
+    if (ev) ev.stopPropagation();
+    const modal = document.getElementById("featureDetailModal");
+    const btn = document.getElementById("btnCompactFeatureDetail");
+    if (!modal) return;
+    const isCompact = !modal.classList.contains("compact-card");
+    modal.classList.toggle("compact-card", isCompact);
+    if (btn) {
+      btn.textContent = isCompact ? "▢" : "—";
+      btn.title = isCompact ? "Mở rộng khung chi tiết" : "Thu nhỏ khung chi tiết";
+    }
+  };
+
+  window.applyQuickMarkerShapeFromDetail = function(shapeVal) {
+    if (typeof inspectedFeatureId === "undefined" || !inspectedFeatureId) return;
+    const f = state.features.find(x => x.id === inspectedFeatureId);
+    if (!f || f.geomType !== "point") return;
+    f.markerStyle = shapeVal || "dot";
+    saveAppState();
+    if (typeof renderAllVectorFeaturesNow === "function") renderAllVectorFeaturesNow();
+    else renderAllVectorFeatures();
+    showToast("Đã đổi hình dạng nút mốc.");
+  };
+
+  const _origOpenDetail = window.openFeatureDetailModal;
+  if (typeof _origOpenDetail === "function") {
+    window.openFeatureDetailModal = function(featureId) {
+      _origOpenDetail.apply(this, arguments);
+      const modal = document.getElementById("featureDetailModal");
+      const f = state.features.find(x => x.id === featureId);
+      const shapeRow = document.getElementById("featMarkerShapeQuickRow");
+      const shapeSel = document.getElementById("featQuickShapeSelect");
+      if (modal) {
+        modal.classList.add("floating-detail");
+        modal.classList.remove("compact-card");
+        const cBtn = document.getElementById("btnCompactFeatureDetail");
+        if (cBtn) cBtn.textContent = "—";
+      }
+      if (shapeRow && f) {
+        if (f.geomType === "point") {
+          shapeRow.style.display = "block";
+          if (shapeSel) shapeSel.value = f.markerStyle || "dot";
+        } else {
+          shapeRow.style.display = "none";
+        }
+      }
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("featureDetailModal");
+    const handle = document.getElementById("featDetailDragHandle");
+    if (!modal || !handle) return;
+    const card = modal.querySelector(".modal-card");
+    if (!card) return;
+
+    let dragging = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    const getPt = (e) => (e.touches && e.touches[0]) ? e.touches[0] : e;
+
+    const onStart = (e) => {
+      if (e.target && e.target.closest("button")) return;
+      e.stopPropagation();
+      modal.classList.add("floating-detail");
+      const rect = card.getBoundingClientRect();
+      card.style.position = "fixed";
+      card.style.left = rect.left + "px";
+      card.style.top = rect.top + "px";
+      card.style.right = "auto";
+      card.style.bottom = "auto";
+      const pt = getPt(e);
+      startX = pt.clientX;
+      startY = pt.clientY;
+      origLeft = rect.left;
+      origTop = rect.top;
+      dragging = true;
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      const pt = getPt(e);
+      const rect = card.getBoundingClientRect();
+      const nextLeft = Math.min(Math.max(4, window.innerWidth - rect.width - 4), Math.max(4, origLeft + (pt.clientX - startX)));
+      const nextTop = Math.min(Math.max(4, window.innerHeight - rect.height - 4), Math.max(4, origTop + (pt.clientY - startY)));
+      card.style.left = nextLeft + "px";
+      card.style.top = nextTop + "px";
+    };
+
+    const onEnd = () => { dragging = false; };
+
+    handle.addEventListener("mousedown", onStart);
+    handle.addEventListener("touchstart", onStart, { passive: false });
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onEnd);
+    window.addEventListener("touchend", onEnd);
+  });
 })();
 </script>
 
