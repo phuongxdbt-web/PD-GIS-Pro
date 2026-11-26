@@ -8383,21 +8383,126 @@ window.addEventListener("DOMContentLoaded", () => {
     }).addTo(map);
   }
 
+  let _roadCandidates = [];
+  let _selectedRoadIdx = 0;
+
+  function estimateRoadSpeedAdjustedSec(latlngs, distanceM, rawDurationS) {
+    const pts = Array.isArray(latlngs) ? latlngs : [];
+    const n = pts.length;
+    let hits = 0;
+    const step = Math.max(1, Math.floor(n / 40));
+    for (let i = 0; i < n; i += step) {
+      const [lat, lon] = pts[i];
+      if (lat >= 10.92 && lat <= 11.35 && lon >= 108.02 && lon <= 108.72) {
+        hits++;
+      }
+    }
+    const ratio = hits / Math.max(1, Math.ceil(n / step));
+    const base = Number(rawDurationS) || (distanceM / 16.67);
+    if (ratio >= 0.35 && distanceM >= 25000) {
+      const hwyM = distanceM * Math.min(0.88, ratio);
+      const locM = Math.max(0, distanceM - hwyM);
+      const est = (hwyM / 22.8) + (locM / 14.4);
+      return Math.min(base * 0.85, Math.max(base * 0.65, est));
+    }
+    const kmh = distanceM > 0 && base > 0 ? (distanceM / 1000) / (base / 3600) : 55;
+    if (distanceM > 25000 && kmh < 68) return base * 0.78;
+    return base;
+  }
+
+  function renderRoadOptionButtons() {
+    const bar = document.getElementById("pinNavBar");
+    if (!bar) return;
+    let box = document.getElementById("pinRoadRouteOptions");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "pinRoadRouteOptions";
+      box.style.cssText = "display:flex;gap:5px;flex-wrap:wrap;margin-top:2px;";
+      const actions = bar.querySelector(".pin-nav-actions");
+      if (actions && actions.parentNode) actions.parentNode.insertBefore(box, actions);
+      else bar.appendChild(box);
+    }
+    if (!Array.isArray(_roadCandidates) || _roadCandidates.length <= 1) {
+      box.innerHTML = "";
+      box.style.display = "none";
+      return;
+    }
+    box.style.display = "flex";
+    box.innerHTML = _roadCandidates.map((rt, idx) => {
+      const km = (rt.distanceM / 1000).toFixed(1);
+      const mins = Math.max(1, Math.round(rt.durationS / 60));
+      const active = idx === _selectedRoadIdx;
+      return `<button type="button" class="mini-btn" style="font-size:11px;padding:4px 7px;background:${active ? "#2563eb" : "#1e293b"};color:${active ? "#fff" : "#e2e8f0"};border-color:${active ? "#60a5fa" : "var(--border-subtle)"};" onclick="chooseRoadRoute(${idx})">${rt.label} (${km} km • ${mins}p)</button>`;
+    }).join("");
+  }
+
+  function paintSelectedRoadRoute(idx) {
+    if (!Array.isArray(_roadCandidates) || _roadCandidates.length === 0) return;
+    _selectedRoadIdx = Math.max(0, Math.min(Number(idx) || 0, _roadCandidates.length - 1));
+    const chosen = _roadCandidates[_selectedRoadIdx];
+    const start = getStartLatLng();
+
+    if (_navRouteLine) { try { map.removeLayer(_navRouteLine); } catch (e) {} _navRouteLine = null; }
+    if (_navOriginLine) { try { map.removeLayer(_navOriginLine); } catch (e) {} _navOriginLine = null; }
+
+    _navRouteLine = L.polyline(chosen.latlngs, {
+      color: _selectedRoadIdx === 0 ? "#38bdf8" : "#34d399",
+      weight: 5,
+      opacity: 0.94,
+      interactive: false
+    }).addTo(map);
+
+    const distStr = typeof formatLength === "function" ? formatLength(chosen.distanceM) : `${chosen.distanceM.toFixed(0)} m`;
+    updatePinHudInfo(` | ${chosen.label}: ${distStr}${formatDurationSec(chosen.durationS)}`);
+    renderRoadOptionButtons();
+    map.fitBounds(L.latLngBounds([[start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng], ...chosen.latlngs]), { padding: [45, 45] });
+  }
+
+  window.chooseRoadRoute = function(idx) {
+    paintSelectedRoadRoute(idx);
+    const chosen = _roadCandidates[_selectedRoadIdx];
+    if (chosen) {
+      showToast(`Đã chọn ${chosen.label}: ${(chosen.distanceM / 1000).toFixed(1)} km${formatDurationSec(chosen.durationS)}`);
+    }
+  };
+
   async function fetchOsrmRoadRoute(startLL, targetLL) {
-    const url = `https://router.project-osrm.org/route/v1/driving/${startLL.lon},${startLL.lat};${targetLL.lng},${targetLL.lat}?overview=full&geometries=geojson`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${startLL.lon},${startLL.lat};${targetLL.lng},${targetLL.lat}?overview=full&alternatives=true&geometries=geojson`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
-    const route = data && Array.isArray(data.routes) && data.routes[0];
-    if (!route || !route.geometry || !Array.isArray(route.geometry.coordinates)) {
-      throw new Error("Không tìm thấy tuyến đường bộ.");
+    const routes = data && Array.isArray(data.routes) ? data.routes : [];
+    const list = routes
+      .filter(r => r && r.geometry && Array.isArray(r.geometry.coordinates) && r.geometry.coordinates.length >= 2)
+      .map((r, i) => {
+        const lls = r.geometry.coordinates.map(c => [c[1], c[0]]);
+        const distM = Number(r.distance) || 0;
+        const rawDur = Number(r.duration) || 0;
+        return {
+          latlngs: lls,
+          distanceM: distM,
+          durationS: estimateRoadSpeedAdjustedSec(lls, distM, rawDur),
+          rawIdx: i
+        };
+      });
+
+    if (list.length === 0) throw new Error("Không tìm thấy tuyến đường bộ.");
+
+    list.sort((a, b) => a.durationS - b.durationS);
+    if (list.length === 1) {
+      list[0].label = "Cao tốc / Nhanh nhất";
+    } else {
+      list[0].label = "Cao tốc / Nhanh nhất";
+      let altIdx = 1;
+      for (let i = 2; i < list.length; i++) {
+        if (list[i].distanceM < list[altIdx].distanceM) altIdx = i;
+      }
+      list[altIdx].label = "Quốc lộ / Ngắn hơn";
+      for (let k = 0; k < list.length; k++) {
+        if (!list[k].label) list[k].label = `Tuyến ${k + 1}`;
+      }
     }
-    const latlngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
-    return {
-      latlngs,
-      distanceM: Number(route.distance) || 0,
-      durationS: Number(route.duration) || 0
-    };
+    return list;
   }
 
   window.routeToNavPin = async function(useRoadRoute = true) {
@@ -8405,32 +8510,29 @@ window.addEventListener("DOMContentLoaded", () => {
       showToast("Hãy nhấn cắm ghim đích trên bản đồ trước.");
       return;
     }
-    if (_navRouteLine) {
-      try { map.removeLayer(_navRouteLine); } catch (e) {}
-      _navRouteLine = null;
-    }
+    if (_navRouteLine) { try { map.removeLayer(_navRouteLine); } catch (e) {} _navRouteLine = null; }
     const start = getStartLatLng();
     if (!useRoadRoute) {
+      _roadCandidates = [];
+      renderRoadOptionButtons();
       redrawStraightBearingLine();
       updatePinHudInfo(" • Đường chỉ phương thẳng");
       showToast("Đã vẽ đường chỉ phương thẳng tới điểm ghim.");
       return;
     }
 
-    updatePinHudInfo(" • Đang tìm đường bộ...");
+    updatePinHudInfo(" • Đang tìm đường cao tốc / quốc lộ...");
     try {
-      const r = await fetchOsrmRoadRoute(start, _navTargetLatLng);
-      _navRouteLine = L.polyline(r.latlngs, {
-        color: "#38bdf8",
-        weight: 5,
-        opacity: 0.92,
-        interactive: false
-      }).addTo(map);
-      const roadDistStr = typeof formatLength === "function" ? formatLength(r.distanceM) : `${r.distanceM.toFixed(0)} m`;
-      updatePinHudInfo(` | Đường bộ: ${roadDistStr}${formatDurationSec(r.durationS)}`);
-      map.fitBounds(L.latLngBounds([[start.lat, start.lon], [_navTargetLatLng.lat, _navTargetLatLng.lng], ...r.latlngs]), { padding: [45, 45] });
-      showToast(`Tuyến đường bộ tới ghim: ${roadDistStr}${formatDurationSec(r.durationS)}`);
+      const candidates = await fetchOsrmRoadRoute(start, _navTargetLatLng);
+      _roadCandidates = candidates;
+      _selectedRoadIdx = 0;
+      paintSelectedRoadRoute(0);
+      const chosen = _roadCandidates[0];
+      const distStr = typeof formatLength === "function" ? formatLength(chosen.distanceM) : `${chosen.distanceM.toFixed(0)} m`;
+      showToast(`Tuyến ${chosen.label}: ${distStr}${formatDurationSec(chosen.durationS)}`);
     } catch (err) {
+      _roadCandidates = [];
+      renderRoadOptionButtons();
       redrawStraightBearingLine();
       updatePinHudInfo(" • Đường chỉ phương (OSRM chưa có tuyến)");
       showToast("Không lấy được đường bộ OSRM, đã vẽ đường chỉ phương tới điểm ghim.");
@@ -8709,5 +8811,518 @@ window.addEventListener("DOMContentLoaded", () => {
 })();
 </script>
 
+
+<script>
+/* ============================================================================
+   CHỌN NHIỀU TUYẾN ĐƯỜNG (CAO TỐC / QUỐC LỘ / CÁC PHƯƠNG ÁN) TRÊN KHUNG DẪN ĐƯỜNG
+============================================================================ */
+(function initMultiRoadRouteSelector() {
+  let _multiRoutes = [];
+  let _activeRouteIdx = 0;
+  let _altRouteLines = [];
+
+  function clearAltRouteLines() {
+    if (Array.isArray(_altRouteLines)) {
+      _altRouteLines.forEach(l => {
+        try { if (map && map.hasLayer(l)) map.removeLayer(l); } catch (e) {}
+      });
+    }
+    _altRouteLines = [];
+  }
+
+  function haversineMeters(a, b) {
+    if (!a || !b) return 0;
+    if (typeof map !== "undefined" && map && typeof map.distance === "function") {
+      return Number(map.distance([a[0], a[1]], [b[0], b[1]])) || 0;
+    }
+    const R = 6371000;
+    const toRad = d => (d * Math.PI) / 180;
+    const dLat = toRad(b[0] - a[0]);
+    const dLon = toRad(b[1] - a[1]);
+    const s1 = Math.sin(dLat / 2);
+    const s2 = Math.sin(dLon / 2);
+    const h = s1 * s1 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * s2 * s2;
+    return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  }
+
+  function buildWaypointsBetween(startLL, targetLL) {
+    // Tạo các điểm trung gian rẽ hướng (hành lang cao tốc / QL1A / đường nội địa) để luôn có nhiều tuyến đường bộ khác nhau
+    const lat1 = startLL.lat, lon1 = startLL.lon;
+    const lat2 = targetLL.lat, lon2 = targetLL.lng;
+    const midLat = (lat1 + lat2) / 2;
+    const midLon = (lon1 + lon2) / 2;
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
+
+    // Điểm trung gian phía Bắc / hành lang cao tốc
+    const northLat = Math.max(lat1, lat2) + Math.abs(dLat) * 0.14 + 0.035;
+    const northLon = midLon + dLon * 0.08;
+
+    // Điểm trung gian phía Nam / ven biển / QL1A
+    const southLat = Math.min(lat1, lat2) - Math.abs(dLat) * 0.14 - 0.035;
+    const southLon = midLon - dLon * 0.08;
+
+    return [
+      { key: "direct", label: "Tuyến 1 • Cao tốc / Nhanh", color: "#38bdf8", speedFactor: 0.78, pts: [] },
+      { key: "north", label: "Tuyến 2 • Hướng Bắc / QL", color: "#34d399", speedFactor: 0.92, pts: [[northLat, northLon]] },
+      { key: "south", label: "Tuyến 3 • Hướng Nam / Ven biển", color: "#facc15", speedFactor: 1.0, pts: [[southLat, southLon]] }
+    ];
+  }
+
+  async function queryOsrmThroughPoints(coordsList) {
+    const waypointStr = coordsList.map(p => `${p[1].toFixed(6)},${p[0].toFixed(6)}`).join(";");
+    const url = `https://router.project-osrm.org/route/v1/driving/${waypointStr}?overview=full&geometries=geojson`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    const r = data && Array.isArray(data.routes) && data.routes[0];
+    if (!r || !r.geometry || !Array.isArray(r.geometry.coordinates) || r.geometry.coordinates.length < 2) {
+      throw new Error("No route");
+    }
+    return {
+      latlngs: r.geometry.coordinates.map(c => [c[1], c[0]]),
+      distanceM: Number(r.distance) || 0,
+      durationS: Number(r.duration) || 0
+    };
+  }
+
+  function ensureMultiRouteBar() {
+    const bar = document.getElementById("pinNavBar");
+    if (!bar) return null;
+    let wrap = document.getElementById("multiRoadChoicesBar");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "multiRoadChoicesBar";
+      wrap.style.cssText = "display:none;flex-direction:column;gap:4px;padding:6px 8px;background:rgba(15,23,42,0.92);border:1px solid rgba(56,189,248,0.4);border-radius:10px;";
+      const actions = bar.querySelector(".pin-nav-actions");
+      if (actions && actions.parentNode) actions.parentNode.insertBefore(wrap, actions);
+      else bar.appendChild(wrap);
+    }
+    return wrap;
+  }
+
+  function renderMultiRouteChoices() {
+    const wrap = ensureMultiRouteBar();
+    if (!wrap) return;
+    if (!Array.isArray(_multiRoutes) || _multiRoutes.length === 0) {
+      wrap.style.display = "none";
+      wrap.innerHTML = "";
+      return;
+    }
+    wrap.style.display = "flex";
+    const chipsHtml = _multiRoutes.map((rt, idx) => {
+      const km = (rt.distanceM / 1000).toFixed(1);
+      const mins = Math.max(1, Math.round(rt.durationS / 60));
+      const isSel = idx === _activeRouteIdx;
+      return `<button type="button" class="mini-btn" style="font-size:11px;padding:4px 7px;background:${isSel ? "#2563eb" : "#1e293b"};color:${isSel ? "#ffffff" : "#e2e8f0"};border-color:${isSel ? "#60a5fa" : "rgba(148,163,184,0.3)"};font-weight:${isSel ? "800" : "600"};" onclick="selectMultiRoadRoute(${idx})">${rt.label} (${km}km • ${mins}p)</button>`;
+    }).join("");
+    wrap.innerHTML = `<div style="font-size:11px;font-weight:800;color:#fbbf24;">🛣️ CHỌN TUYẾN ĐƯỜNG BỘ (${_multiRoutes.length} tuyến):</div><div style="display:flex;gap:5px;flex-wrap:wrap;">${chipsHtml}</div>`;
+  }
+
+  window.selectMultiRoadRoute = function(idx) {
+    if (!Array.isArray(_multiRoutes) || _multiRoutes.length === 0) return;
+    _activeRouteIdx = Math.max(0, Math.min(Number(idx) || 0, _multiRoutes.length - 1));
+    const chosen = _multiRoutes[_activeRouteIdx];
+    clearAltRouteLines();
+
+    if (typeof _navRouteLine !== "undefined" && _navRouteLine) {
+      try { map.removeLayer(_navRouteLine); } catch (e) {}
+    }
+
+    // Vẽ các tuyến phụ mờ phía dưới để dễ so sánh
+    _multiRoutes.forEach((rt, i) => {
+      if (i === _activeRouteIdx) return;
+      const subLine = L.polyline(rt.latlngs, {
+        color: rt.color || "#94a3b8",
+        weight: 3,
+        dashArray: "5 5",
+        opacity: 0.45,
+        interactive: false
+      }).addTo(map);
+      _altRouteLines.push(subLine);
+    });
+
+    // Vẽ tuyến đang chọn nổi bật trên cùng
+    _navRouteLine = L.polyline(chosen.latlngs, {
+      color: chosen.color || "#38bdf8",
+      weight: 5.5,
+      opacity: 0.96,
+      interactive: false
+    }).addTo(map);
+
+    const distStr = typeof formatLength === "function" ? formatLength(chosen.distanceM) : `${chosen.distanceM.toFixed(0)} m`;
+    const mins = Math.max(1, Math.round(chosen.durationS / 60));
+    const hrs = Math.floor(mins / 60);
+    const remM = mins % 60;
+    const durStr = hrs > 0 ? ` (~${hrs}g${remM > 0 ? remM + "p" : ""})` : ` (~${mins}p)`;
+
+    if (typeof updatePinHudInfo === "function") {
+      updatePinHudInfo(` | ${chosen.label}: ${distStr}${durStr}`);
+    }
+    renderMultiRouteChoices();
+
+    const startPt = (typeof latestGps !== "undefined" && latestGps && latestGps.hasFix)
+      ? [latestGps.lat, latestGps.lon]
+      : [map.getCenter().lat, map.getCenter().lng];
+    const targetPt = chosen.latlngs[chosen.latlngs.length - 1];
+    if (startPt && targetPt) {
+      map.fitBounds(L.latLngBounds([startPt, targetPt, ...chosen.latlngs]), { padding: [45, 45] });
+    }
+    if (typeof showToast === "function") {
+      showToast(`Đã chọn ${chosen.label}: ${(chosen.distanceM / 1000).toFixed(1)} km${durStr}`);
+    }
+  };
+
+  const _prevRouteFn = window.routeToNavPin;
+  window.routeToNavPin = async function(useRoadRoute = true) {
+    if (!useRoadRoute) {
+      _multiRoutes = [];
+      clearAltRouteLines();
+      renderMultiRouteChoices();
+      if (typeof _prevRouteFn === "function") return _prevRouteFn(false);
+      return;
+    }
+
+    const startLL = (typeof latestGps !== "undefined" && latestGps && latestGps.hasFix)
+      ? { lat: latestGps.lat, lon: latestGps.lon }
+      : { lat: map.getCenter().lat, lon: map.getCenter().lng };
+
+    // Tìm tọa độ ghim đang hiển thị trên bản đồ hoặc qua _prevRouteFn
+    let targetLatLng = null;
+    const bar = document.getElementById("pinNavBar");
+    if (bar && bar.classList.contains("open")) {
+      const txt = document.getElementById("pinCoordsText")?.textContent || "";
+      const m = txt.match(/WGS84:\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+      if (m) targetLatLng = { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+    }
+
+    if (!targetLatLng) {
+      if (typeof _prevRouteFn === "function") return _prevRouteFn(true);
+      return;
+    }
+
+    if (typeof updatePinHudInfo === "function") {
+      updatePinHudInfo(" • Đang tìm nhiều tuyến đường...");
+    }
+
+    try {
+      const specs = buildWaypointsBetween(startLL, targetLatLng);
+      const found = [];
+      const seenSignatures = new Set();
+
+      for (const sp of specs) {
+        try {
+          const chain = [[startLL.lat, startLL.lon], ...sp.pts, [targetLatLng.lat, targetLatLng.lng]];
+          const res = await queryOsrmThroughPoints(chain);
+          const sig = `${Math.round(res.distanceM / 250)}_${res.latlngs.length}`;
+          if (!seenSignatures.has(sig)) {
+            seenSignatures.add(sig);
+            const adjDur = (res.durationS || (res.distanceM / 15)) * sp.speedFactor;
+            found.push({
+              label: sp.label,
+              color: sp.color,
+              latlngs: res.latlngs,
+              distanceM: res.distanceM,
+              durationS: adjDur
+            });
+          }
+        } catch (e) {}
+      }
+
+      if (found.length > 0) {
+        _multiRoutes = found;
+        _activeRouteIdx = 0;
+        window.selectMultiRoadRoute(0);
+        return;
+      }
+    } catch (e) {}
+
+    if (typeof _prevRouteFn === "function") return _prevRouteFn(true);
+  };
+})();
+</script>
+
+<script>
+/* ============================================================================
+   CHỌN NHIỀU TUYẾN ĐƯỜNG GIỐNG GOOGLE MAPS NGAY TRONG KHUNG GHIM & DẪN ĐƯỜNG
+   (Nền chuẩn chạy mượt, chỉ bổ sung chọn nhiều tuyến + thẻ thời gian/km trên bản đồ)
+============================================================================ */
+(function initGoogleMapsMultiRouteMode() {
+  let _gmapRoutes = [];
+  let _gmapActiveIdx = 0;
+  let _gmapSubLines = [];
+  let _gmapBadges = [];
+
+  function clearGmapOverlays() {
+    if (Array.isArray(_gmapSubLines)) {
+      _gmapSubLines.forEach(l => {
+        try { if (map && map.hasLayer(l)) map.removeLayer(l); } catch (e) {}
+      });
+    }
+    _gmapSubLines = [];
+
+    if (Array.isArray(_gmapBadges)) {
+      _gmapBadges.forEach(b => {
+        try { if (map && map.hasLayer(b)) map.removeLayer(b); } catch (e) {}
+      });
+    }
+    _gmapBadges = [];
+  }
+
+  function fmtDurationText(sec) {
+    const mins = Math.max(1, Math.round((Number(sec) || 0) / 60));
+    if (mins < 60) return `${mins} phút`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m > 0 ? `${h} giờ ${m} phút` : `${h} giờ`;
+  }
+
+  function buildCorridorWaypoints(startLL, targetLL) {
+    const lat1 = startLL.lat, lon1 = startLL.lon;
+    const lat2 = targetLL.lat, lon2 = targetLL.lng;
+    const midLat = (lat1 + lat2) / 2;
+    const midLon = (lon1 + lon2) / 2;
+    const spanLat = Math.max(0.03, Math.abs(lat2 - lat1));
+    const spanLon = Math.max(0.03, Math.abs(lon2 - lon1));
+
+    const northPt = [
+      Math.max(lat1, lat2) + spanLat * 0.15 + 0.025,
+      midLon + (lon2 - lon1) * 0.06
+    ];
+    const southPt = [
+      Math.min(lat1, lat2) - spanLat * 0.15 - 0.025,
+      midLon - (lon2 - lon1) * 0.06
+    ];
+    const sidePt = [
+      midLat + spanLat * 0.07,
+      midLon + (lat2 - lat1 >= 0 ? -spanLon * 0.13 : spanLon * 0.13)
+    ];
+
+    return [
+      { label: "Nhanh nhất", color: "#38bdf8", speedFactor: 0.78, pts: [] },
+      { label: "Hướng Bắc", color: "#34d399", speedFactor: 0.92, pts: [northPt] },
+      { label: "Hướng Nam", color: "#facc15", speedFactor: 1.0, pts: [southPt] },
+      { label: "Nhánh khác", color: "#c084fc", speedFactor: 1.05, pts: [sidePt] }
+    ];
+  }
+
+  async function requestOsrmPath(points) {
+    const coordsStr = points.map(p => `${Number(p[1]).toFixed(6)},${Number(p[0]).toFixed(6)}`).join(";");
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    const r = data && Array.isArray(data.routes) && data.routes[0];
+    if (!r || !r.geometry || !Array.isArray(r.geometry.coordinates) || r.geometry.coordinates.length < 2) {
+      throw new Error("No route");
+    }
+    return {
+      latlngs: r.geometry.coordinates.map(c => [c[1], c[0]]),
+      distanceM: Number(r.distance) || 0,
+      durationS: Number(r.duration) || 0
+    };
+  }
+
+  function ensureGmapBar() {
+    const bar = document.getElementById("pinNavBar");
+    if (!bar) return null;
+    let box = document.getElementById("gmapMultiRoutePanel");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "gmapMultiRoutePanel";
+      box.style.cssText = "display:none;flex-direction:column;gap:5px;padding:6px 8px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.45);border-radius:10px;";
+      const actions = bar.querySelector(".pin-nav-actions");
+      if (actions && actions.parentNode) actions.parentNode.insertBefore(box, actions);
+      else bar.appendChild(box);
+    }
+    return box;
+  }
+
+  function renderGmapSelectorButtons() {
+    const box = ensureGmapBar();
+    if (!box) return;
+    if (!Array.isArray(_gmapRoutes) || _gmapRoutes.length === 0) {
+      box.style.display = "none";
+      box.innerHTML = "";
+      return;
+    }
+
+    box.style.display = "flex";
+    const itemsHtml = _gmapRoutes.map((rt, idx) => {
+      const km = (rt.distanceM / 1000).toFixed(1);
+      const dur = fmtDurationText(rt.durationS);
+      const active = idx === _gmapActiveIdx;
+      return `
+        <button type="button" class="mini-btn"
+          style="font-size:11px;padding:4px 7px;text-align:left;background:${active ? "#2563eb" : "#1e293b"};color:${active ? "#ffffff" : "#e2e8f0"};border-color:${active ? "#93c5fd" : "rgba(148,163,184,0.3)"};font-weight:${active ? "800" : "600"};"
+          onclick="pickGoogleMapsRoute(${idx})">
+          ${active ? "▶ " : ""}${rt.label}: <b>${dur}</b> (${km} km)
+        </button>
+      `;
+    }).join("");
+
+    box.innerHTML = `
+      <div style="font-size:11px;font-weight:800;color:#fbbf24;">🗺️ CHỌN NHIỀU TUYẾN ĐƯỜNG (GIỐNG GOOGLE MAPS):</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">${itemsHtml}</div>
+    `;
+  }
+
+  function renderMapCalloutBadges() {
+    if (Array.isArray(_gmapBadges)) {
+      _gmapBadges.forEach(b => {
+        try { if (map && map.hasLayer(b)) map.removeLayer(b); } catch (e) {}
+      });
+    }
+    _gmapBadges = [];
+
+    _gmapRoutes.forEach((rt, idx) => {
+      if (!Array.isArray(rt.latlngs) || rt.latlngs.length < 2) return;
+      const pt = rt.latlngs[Math.floor(rt.latlngs.length * (0.42 + idx * 0.14)) % rt.latlngs.length];
+      const km = (rt.distanceM / 1000).toFixed(1);
+      const dur = fmtDurationText(rt.durationS);
+      const selected = idx === _gmapActiveIdx;
+
+      const mk = L.marker(pt, {
+        interactive: true,
+        zIndexOffset: selected ? 850 : 550,
+        icon: L.divIcon({
+          className: "",
+          html: `<div onclick="pickGoogleMapsRoute(${idx})" style="cursor:pointer;background:${selected ? "#ffffff" : "rgba(15,23,42,0.92)"};color:${selected ? "#0f172a" : "#f8fafc"};border:2px solid ${selected ? "#2563eb" : "#94a3b8"};border-radius:8px;padding:3px 7px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.55);transform:translate(-50%,-50%);">🚗 ${dur} • ${km} km</div>`
+        })
+      }).addTo(map);
+      _gmapBadges.push(mk);
+    });
+  }
+
+  window.pickGoogleMapsRoute = function(idx) {
+    if (!Array.isArray(_gmapRoutes) || _gmapRoutes.length === 0) return;
+    _gmapActiveIdx = Math.max(0, Math.min(Number(idx) || 0, _gmapRoutes.length - 1));
+    const chosen = _gmapRoutes[_gmapActiveIdx];
+    clearGmapOverlays();
+
+    if (typeof _navRouteLine !== "undefined" && _navRouteLine) {
+      try { map.removeLayer(_navRouteLine); } catch (e) {}
+    }
+
+    _gmapRoutes.forEach((rt, i) => {
+      if (i === _gmapActiveIdx) return;
+      const sub = L.polyline(rt.latlngs, {
+        color: "#cbd5e1",
+        weight: 4.5,
+        opacity: 0.55,
+        interactive: false
+      }).addTo(map);
+      _gmapSubLines.push(sub);
+    });
+
+    _navRouteLine = L.polyline(chosen.latlngs, {
+      color: chosen.color || "#38bdf8",
+      weight: 6,
+      opacity: 0.96,
+      interactive: false
+    }).addTo(map);
+
+    renderMapCalloutBadges();
+    renderGmapSelectorButtons();
+
+    const km = (chosen.distanceM / 1000).toFixed(1);
+    const durStr = ` (~${fmtDurationText(chosen.durationS)})`;
+    if (typeof updatePinHudInfo === "function") {
+      updatePinHudInfo(` | ${chosen.label}: ${km} km${durStr}`);
+    }
+
+    const startPt = (typeof latestGps !== "undefined" && latestGps && latestGps.hasFix)
+      ? [latestGps.lat, latestGps.lon]
+      : [map.getCenter().lat, map.getCenter().lng];
+    const endPt = chosen.latlngs[chosen.latlngs.length - 1];
+    if (startPt && endPt) {
+      map.fitBounds(L.latLngBounds([startPt, endPt, ...chosen.latlngs]), { padding: [45, 45] });
+    }
+    if (typeof showToast === "function") {
+      showToast(`Đã chọn ${chosen.label}: ${fmtDurationText(chosen.durationS)} (${km} km)`);
+    }
+  };
+
+  const _origClearNavPin = window.clearNavigationPin;
+  window.clearNavigationPin = function(ev) {
+    _gmapRoutes = [];
+    _gmapActiveIdx = 0;
+    clearGmapOverlays();
+    renderGmapSelectorButtons();
+    if (typeof _origClearNavPin === "function") return _origClearNavPin(ev);
+  };
+
+  const _origRouteToNavPin = window.routeToNavPin;
+  window.routeToNavPin = async function(useRoadRoute = true) {
+    if (!useRoadRoute) {
+      _gmapRoutes = [];
+      clearGmapOverlays();
+      renderGmapSelectorButtons();
+      if (typeof _origRouteToNavPin === "function") return _origRouteToNavPin(false);
+      return;
+    }
+
+    const startLL = (typeof latestGps !== "undefined" && latestGps && latestGps.hasFix)
+      ? { lat: latestGps.lat, lon: latestGps.lon }
+      : { lat: map.getCenter().lat, lon: map.getCenter().lng };
+
+    let targetLatLng = null;
+    const bar = document.getElementById("pinNavBar");
+    if (bar && bar.classList.contains("open")) {
+      const txt = document.getElementById("pinCoordsText")?.textContent || "";
+      const m = txt.match(/WGS84:\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+      if (m) targetLatLng = { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+    }
+
+    if (!targetLatLng) {
+      if (typeof _origRouteToNavPin === "function") return _origRouteToNavPin(true);
+      return;
+    }
+
+    if (typeof updatePinHudInfo === "function") {
+      updatePinHudInfo(" • Đang tìm các tuyến đường...");
+    }
+
+    try {
+      const specs = buildCorridorWaypoints(startLL, targetLatLng);
+      const found = [];
+      const seen = new Set();
+
+      for (const sp of specs) {
+        try {
+          const chain = [[startLL.lat, startLL.lon], ...sp.pts, [targetLatLng.lat, targetLatLng.lng]];
+          const res = await requestOsrmPath(chain);
+          const key = `${Math.round(res.distanceM / 300)}_${res.latlngs.length}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            found.push({
+              label: sp.label,
+              color: sp.color,
+              latlngs: res.latlngs,
+              distanceM: res.distanceM,
+              durationS: (res.durationS || (res.distanceM / 15)) * sp.speedFactor
+            });
+          }
+        } catch (e) {}
+      }
+
+      if (found.length > 0) {
+        found.sort((a, b) => a.durationS - b.durationS);
+        if (found[0]) found[0].label = "Nhanh nhất";
+        if (found[1]) found[1].label = "Phương án 2";
+        if (found[2]) found[2].label = "Phương án 3";
+        _gmapRoutes = found;
+        _gmapActiveIdx = 0;
+        window.pickGoogleMapsRoute(0);
+        return;
+      }
+    } catch (e) {}
+
+    if (typeof _origRouteToNavPin === "function") return _origRouteToNavPin(true);
+  };
+})();
+</script>
 </body>
+
+
 </html>
